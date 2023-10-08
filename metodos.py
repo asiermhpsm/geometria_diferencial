@@ -2,17 +2,53 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sympy as sp
 
+from matplotlib import cm
+from matplotlib.ticker import LinearLocator
+
+def sup_color():
+    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+
+    # Make data.
+    X = np.arange(-5, 5, 0.25)
+    Y = np.arange(-5, 5, 0.3)
+    X, Y = np.meshgrid(X, Y)
+    print('X', X)
+    print('Y', Y)
+    R = np.sqrt(X**2 + Y**2)
+    Z = np.sin(R)
+    print('Z', Z)
+
+    # Plot the surface.
+    surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm,
+                        linewidth=0, antialiased=False)
+
+    # Customize the z axis.
+    ax.set_zlim(-1.01, 1.01)
+    ax.zaxis.set_major_locator(LinearLocator(10))
+    # A StrMethodFormatter is used automatically
+    ax.zaxis.set_major_formatter('{x:.02f}')
+
+    # Add a color bar which maps values to colors.
+    fig.colorbar(surf, shrink=0.5, aspect=5)
+
+    plt.show()
+
+sup_color()
+
 
 def bola_unidad_3d():
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
 
     # Make data
-    u = np.linspace(0, 2 * np.pi, 100)
+    u = np.linspace(0, 2*np.pi, 100)
     v = np.linspace(0, np.pi, 100)
     x = 10 * np.outer(np.cos(u), np.sin(v))
+    print('X',x)
     y = 10 * np.outer(np.sin(u), np.sin(v))
+    print('Y',y)
     z = 10 * np.outer(np.ones(np.size(u)), np.cos(v))
+    print('Z',z)
 
     # Plot the surface
     ax.plot_surface(x, y, z)
@@ -39,7 +75,7 @@ def grafica_superficie(funciones):
             result = [sp.N(func.subs({u: u_val, v: v_val})) for func in parametrizacion]
             resultados[i, j, :] = result
     print(resultados)
-    x = 10 * np.outer( sp.N(parametrizacion[0].subs(u: u_val)), sp.N(parametrizacion[0].subs(v: v_val)) )
+    x = 10 * np.outer( sp.N(parametrizacion[0].subs({u: u_val})), sp.N(parametrizacion[0].subs({v: v_val})) )
     y = 10 * np.outer(np.sin(u), np.sin(v))
     z = 10 * np.outer(np.ones(np.size(u)), np.cos(v))
 
@@ -51,4 +87,4 @@ def grafica_superficie(funciones):
 
     plt.show()
 
-grafica_superficie(['cos(u)*sin(v)', 'cos(u)*sin(v)', 'sin(u)'])
+#grafica_superficie(['cos(u)*sin(v)', 'cos(u)*sin(v)', 'sin(u)'])
