@@ -8,14 +8,14 @@ from matplotlib.ticker import LinearLocator
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 
 # Definir arreglos unidimensionales para coordenadas x e y
-x = [1,2]
+x = [1,2,3]
 print(x)
-y = [3,4]
+y = [4,5]
 print(y)
 
 # Crear una malla bidimensional utilizando np.meshgrid()
 X, Y = np.meshgrid(x, y)
-Z=np.array([[1,2], [3,4]])
+Z=np.array([[1,2,3], [4,5,6]])
 
 # Imprimir las matrices resultantes X e Y
 print("Matriz X:")
