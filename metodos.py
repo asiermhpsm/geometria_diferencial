@@ -65,7 +65,7 @@ def grafica_superficie(funciones):
     u, v = sp.symbols('u v')
     parametrizacion = [sp.sympify(func) for func in funciones]
 
-    n_puntos=20
+    n_puntos=100
     
     # Establezco límites
     u_values = np.linspace(-np.pi/2, np.pi/2, n_puntos)
@@ -80,9 +80,9 @@ def grafica_superficie(funciones):
         y_aux = []
         z_aux = []
         for v_value in v_values:
-            x_aux.append(float(parametrizacion[0].subs({u: u_value, v: v_value}).evalf()))
-            y_aux.append(float(parametrizacion[1].subs({u: u_value, v: v_value}).evalf()))
-            z_aux.append(float(parametrizacion[2].subs({u: u_value, v: v_value}).evalf()))
+            x_aux.append(float(parametrizacion[0].subs({u: u_value, v: v_value})))
+            y_aux.append(float(parametrizacion[1].subs({u: u_value, v: v_value})))
+            z_aux.append(float(parametrizacion[2].subs({u: u_value, v: v_value})))
         X.append(x_aux)
         Y.append(y_aux)
         Z.append(z_aux)
