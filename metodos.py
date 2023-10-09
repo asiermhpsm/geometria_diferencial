@@ -60,59 +60,47 @@ def bola_unidad_3d():
 
 #bola_unidad_3d()
 
-def sustParam(u_values, v_values, func):
-    if (isinstance(u_values, list) and all( (isinstance(u_value, float) or isinstance(u_value, int)) for u_value in u_values)) and (isinstance(v_values, list) and all( (isinstance(v_value, float) or isinstance(v_value, int)) for v_value in v_values)):
-        func.subs({u: u_values, v: u_values})
-
 def grafica_superficie(funciones):
     # Estandarizo funciones
     u, v = sp.symbols('u v')
     parametrizacion = [sp.sympify(func) for func in funciones]
-    print(type(parametrizacion[0]))
 
-    n_puntos=100
+    n_puntos=20
     
     # Establezco límites
     u_values = np.linspace(-np.pi/2, np.pi/2, n_puntos)
-    u_values = np.linspace(0, 2*np.pi, n_puntos)
+    v_values = np.linspace(0, 2*np.pi, n_puntos)
 
-    X, Y = np.meshgrid(parametrizacion[0].subs({u: u_values, v: u_values}), parametrizacion[1].subs({u: u_values, v: u_values}))
-    print(X)
-    print(Y)
+    X = []
+    Y = []
+    Z = []
 
-    """
-    x=[]
-    y=[]
-    z=[]
-    for u_val in u_values:
+    for u_value in u_values:
         x_aux = []
         y_aux = []
         z_aux = []
-        for v_val in v_values:
-            x_aux.append(10*parametrizacion[0].subs({u: u_val, v: v_val}))
-            y_aux.append(10*parametrizacion[1].subs({u: u_val, v: v_val}))
-            z_aux.append(10*parametrizacion[2].subs({u: u_val, v: v_val}))
-        x.append(x_aux)
-        y.append(y_aux)
-        z.append(z_aux)
+        for v_value in v_values:
+            x_aux.append(float(parametrizacion[0].subs({u: u_value, v: v_value}).evalf()))
+            y_aux.append(float(parametrizacion[1].subs({u: u_value, v: v_value}).evalf()))
+            z_aux.append(float(parametrizacion[2].subs({u: u_value, v: v_value}).evalf()))
+        X.append(x_aux)
+        Y.append(y_aux)
+        Z.append(z_aux)
     
-    x=np.array(x)
-    y=np.array(y)
-    z=np.array(z)
+    X = np.array(X)
+    Y = np.array(Y)
+    Z = np.array(Z)
 
-    print('X', x)
-    print('Y',y)
-    print('Z', z)
-    """
-    """
+
     #Creo grafica
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
-    ax.plot_surface(x, y, z)
+    ax.plot_surface(X, Y, Z)
     ax.set_aspect('equal')
 
     plt.show()
-    """
+
+    
 
 
-grafica_superficie(['cos(u)*cos(v)', 'cos(u)*sin(v)', 'sin(u)'])
+grafica_superficie(['cos(u)*cos(v)', 'cos(u)*sin(v)', 'sin(v)'])
