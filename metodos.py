@@ -3,6 +3,20 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 def grafica(parametrizacion, u, v, limite_inf_u, limite_sup_u, limite_inf_v, limite_sup_v, resolucion=50):
+    """
+    Representa una superficie dada su parametrización
+    No se hacen comprobaciones de tipo
+
+    Argumentos:
+    parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
+    u                   primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    v                   segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    limite_inf_u        limite inferior de la variable u
+    limite_sup_u        limite superior de la variable u
+    limite_inf_v        limite inferior de la variable v
+    limite_sup_v        limite superior de la variable v
+    resolucion          resolucion con la que se grafica la superficie (50 significa 50x50 puntos)
+    """
     # Establezco límites
     u_values = np.linspace(limite_inf_u, limite_sup_u, resolucion)
     v_values = np.linspace(limite_inf_v, limite_sup_v, resolucion)
@@ -43,9 +57,9 @@ def normal(parametrizacion, u, v):
     No se hacen comprobaciones de tipo
 
     Argumentos:
-    parametrizacion      parametrizacion de superficie (lista de longitud 3 con funciones)
-    u               primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
-    v               segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
+    u                   primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    v                   segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
     """
     du_parametrizacion = [sp.diff(parametrizacion[i], u) for i in range(3)]
     dv_parametrizacion = [sp.diff(parametrizacion[i], v) for i in range(3)]
@@ -58,11 +72,11 @@ def normal_pt(parametrizacion, u, v, u0, v0):
     No se hacen comprobaciones de tipo
 
     Argumentos:
-    parametrizacion      parametrizacion de superficie (lista de longitud 3 con funciones)
-    u               primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
-    v               segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
-    u0              valor u del punto
-    v0              valor v del punto
+    parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
+    u                   primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    v                   segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    u0                  valor u del punto
+    v0                  valor v del punto
     """
     du_parametrizacion = [sp.diff(parametrizacion[i], u) for i in range(3)]
     dv_parametrizacion = [sp.diff(parametrizacion[i], v) for i in range(3)]
@@ -80,9 +94,9 @@ def primeraFormaFundamental(parametrizacion, u, v):
     No se hacen comprobaciones de tipo
 
     Argumentos:
-    parametrizacion      parametrizacion de superficie (lista de longitud 3 con funciones)
-    u               primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
-    v               segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
+    u                   primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    v                   segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
     """
     du_parametrizacion = [sp.diff(parametrizacion[i], u) for i in range(3)]
     dv_parametrizacion = [sp.diff(parametrizacion[i], v) for i in range(3)]
@@ -99,11 +113,11 @@ def primeraFormaFundamental_pt(parametrizacion, u, v, u0, v0):
     No se hacen comprobaciones de tipo
 
     Argumentos:
-    parametrizacion      parametrizacion de superficie (lista de longitud 3 con funciones)
-    u               primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
-    v               segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
-    u0              valor u del punto
-    v0              valor v del punto
+    parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
+    u                   primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    v                   segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    u0                  valor u del punto
+    v0                  valor v del punto
     """
     du_parametrizacion = [sp.diff(parametrizacion[i], u) for i in range(3)]
     dv_parametrizacion = [sp.diff(parametrizacion[i], v) for i in range(3)]
@@ -123,9 +137,9 @@ def segundoFormaFundamental(parametrizacion, u, v):
     No se hacen comprobaciones de tipo
 
     Argumentos:
-    parametrizacion      parametrizacion de superficie (lista de longitud 3 con funciones)
-    u               primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
-    v               segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
+    u                   primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    v                   segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
     """
     du_parametrizacion = [sp.diff(parametrizacion[i], u) for i in range(3)]
     dv_parametrizacion = [sp.diff(parametrizacion[i], v) for i in range(3)]
@@ -145,11 +159,11 @@ def segundoFormaFundamental_pt(parametrizacion, u, v, u0, v0):
     No se hacen comprobaciones de tipo
 
     Argumentos:
-    parametrizacion      parametrizacion de superficie (lista de longitud 3 con funciones)
-    u               primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
-    v               segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
-    u0              valor u del punto
-    v0              valor v del punto
+    parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
+    u                   primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    v                   segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    u0                  valor u del punto
+    v0                  valor v del punto
     """
     du_parametrizacion = [sp.diff(parametrizacion[i], u) for i in range(3)]
     dv_parametrizacion = [sp.diff(parametrizacion[i], v) for i in range(3)]
@@ -175,9 +189,9 @@ def curvaturaGauss(parametrizacion, u, v):
     No se hacen comprobaciones de tipo
 
     Argumentos:
-    parametrizacion      parametrizacion de superficie (lista de longitud 3 con funciones)
-    u               primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
-    v               segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
+    u                   primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    v                   segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
     """
     E, F, G = primeraFormaFundamental(parametrizacion, u, v)
     e, f, g = segundoFormaFundamental(parametrizacion, u, v)
@@ -189,11 +203,11 @@ def curvaturaGauss_pt(parametrizacion, u, v, u0, v0):
     No se hacen comprobaciones de tipo
 
     Argumentos:
-    parametrizacion      parametrizacion de superficie (lista de longitud 3 con funciones)
-    u               primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
-    v               segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
-    u0              valor u del punto
-    v0              valor v del punto
+    parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
+    u                   primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    v                   segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    u0                  valor u del punto
+    v0                  valor v del punto
     """
     E_pt, F_pt, G_pt = primeraFormaFundamental_pt(parametrizacion, u, v, u0, v0)
     e_pt, f_pt, g_pt = segundoFormaFundamental_pt(parametrizacion, u, v, u0, v0)
@@ -205,9 +219,9 @@ def curvaturaMedia(parametrizacion, u, v):
     No se hacen comprobaciones de tipo
 
     Argumentos:
-    parametrizacion      parametrizacion de superficie (lista de longitud 3 con funciones)
-    u               primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
-    v               segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
+    u                   primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    v                   segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
     """
     E, F, G = primeraFormaFundamental(parametrizacion, u, v)
     e, f, g = segundoFormaFundamental(parametrizacion, u, v)
@@ -219,11 +233,11 @@ def curvaturaMedia_pt(parametrizacion, u, v, u0, v0):
     No se hacen comprobaciones de tipo
 
     Argumentos:
-    parametrizacion      parametrizacion de superficie (lista de longitud 3 con funciones)
-    u               primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
-    v               segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
-    u0              valor u del punto
-    v0              valor v del punto
+    parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
+    u                   primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    v                   segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    u0                  valor u del punto
+    v0                  valor v del punto
     """
     E_pt, F_pt, G_pt = primeraFormaFundamental_pt(parametrizacion, u, v, u0, v0)
     e_pt, f_pt, g_pt = segundoFormaFundamental_pt(parametrizacion, u, v, u0, v0)
@@ -235,9 +249,9 @@ def curvaturasPrincipales(parametrizacion, u, v):
     No se hacen comprobaciones de tipo
 
     Argumentos:
-    parametrizacion      parametrizacion de superficie (lista de longitud 3 con funciones)
-    u               primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
-    v               segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
+    u                   primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    v                   segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
     """
     K = curvaturaGauss(parametrizacion, u, v)
     H = curvaturaMedia(parametrizacion, u, v)
@@ -250,11 +264,11 @@ def curvaturasPrincipales_pt(parametrizacion, u, v, u0, v0):
     No se hacen comprobaciones de tipo
 
     Argumentos:
-    parametrizacion      parametrizacion de superficie (lista de longitud 3 con funciones)
-    u               primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
-    v               segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
-    u0              valor u del punto
-    v0              valor v del punto
+    parametrizacio      parametrizacion de superficie (lista de longitud 3 con funciones)
+    u                   primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    v                   segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    u0                  valor u del punto
+    v0                  valor v del punto
     """
     K_pt = curvaturaGauss_pt(parametrizacion, u, v, u0, v0)
     H_pt = curvaturaMedia_pt(parametrizacion, u, v, u0, v0)
@@ -267,11 +281,11 @@ def clasicfPt(parametrizacion, u, v, u0, v0):
     No se hacen comprobaciones de tipo
 
     Argumentos:
-    parametrizacion      parametrizacion de superficie (lista de longitud 3 con funciones)
-    u               primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
-    v               segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
-    u0              valor u del punto
-    v0              valor v del punto
+    parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
+    u                   primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    v                   segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    u0                  valor u del punto
+    v0                  valor v del punto
     """
     K_pt = curvaturaGauss_pt(parametrizacion, u, v, u0, v0)
     if K_pt > 0:
@@ -287,11 +301,11 @@ def planoTangentePt(parametrizacion, u, v, u0, v0):
     No se hacen comprobaciones de tipo
 
     Argumentos:
-    parametrizacion      parametrizacion de superficie (lista de longitud 3 con funciones)
-    u               primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
-    v               segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
-    u0              valor u del punto
-    v0              valor v del punto
+    parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
+    u                   primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    v                   segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    u0                  valor u del punto
+    v0                  valor v del punto
     """
     x, y, z = sp.symbols('x, y, z', real = True)
     xyz = [x,y,z]
@@ -305,23 +319,40 @@ def planoTangentePt(parametrizacion, u, v, u0, v0):
 
     return sp.Matrix( sp.Matrix(du_parametrizacion_pt).cross(sp.Matrix(dv_parametrizacion_pt)) ).dot( sp.Matrix( [(xyz[i] - parametrizacion_pt[i]) for i in range(3)]) )
 
-def dirPrinc(parametrizacion, u, v, u0, v0):
+def dirPrinc_pt(parametrizacion, u, v, u0, v0):
+    """
+    Calcula las direcciones principales en un punto
+    No se hacen comprobaciones de tipo
+
+    Argumentos:
+    parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
+    u                   primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    v                   segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    u0                  valor u del punto
+    v0                  valor v del punto
+    """
     a, b = sp.symbols('u, v', real = True)
 
     k1_pt, k2_pt = curvaturasPrincipales_pt(parametrizacion, u, v, u0, v0)
-    print('Curvaturas:', k1_pt, k2_pt)
     E_pt, F_pt, G_pt = primeraFormaFundamental_pt(parametrizacion, u, v, u0, v0)
-    print('1a forma: ', E_pt, F_pt, G_pt)
     e_pt, f_pt, g_pt = segundoFormaFundamental_pt(parametrizacion, u, v, u0, v0)
-    print('2a forma', e_pt, f_pt, g_pt)
+
+    du_parametrizacion = [sp.diff(parametrizacion[i], u) for i in range(3)]
+    dv_parametrizacion = [sp.diff(parametrizacion[i], v) for i in range(3)]
+
+    du_parametrizacion_pt = [sp.N(du_parametrizacion[i].subs([[u, u0],[v,v0]])) for i in range(3)]
+    dv_parametrizacion_pt = [sp.N(dv_parametrizacion[i].subs([[u, u0],[v,v0]])) for i in range(3)]
 
 
     ec1 = sp.Eq(sp.simplify(e_pt-k1_pt*E_pt)*a, sp.simplify(f_pt-k1_pt*F_pt)*b)
     ec2 = sp.Eq(sp.simplify(f_pt-k1_pt*F_pt)*a, sp.simplify(g_pt-k1_pt*G_pt)*b)
-    solucion1 = sp.solve((ec1, ec2), (a, b))
+    sol1 = sp.solve((ec1, ec2), (a, b))
+    vec1 = [sol1['a'] * du + sol1['b'] * dv for du, dv in zip(du_parametrizacion_pt, dv_parametrizacion_pt)]
+    
 
     ec1 = sp.Eq(sp.simplify(e_pt-k2_pt*E_pt)*a, sp.simplify(f_pt-k2_pt*F_pt)*b)
     ec2 = sp.Eq(sp.simplify(f_pt-k2_pt*F_pt)*a, sp.simplify(g_pt-k2_pt*G_pt)*b)
-    solucion2 = sp.solve((ec1, ec2), (a, b))
+    sol2 = sp.solve((ec1, ec2), (a, b))
+    vec2 = [sol2['a'] * du + sol2['b'] * dv for du, dv in zip(du_parametrizacion_pt, dv_parametrizacion_pt)]
 
-    return solucion1, solucion2
+    return vec1, vec2
