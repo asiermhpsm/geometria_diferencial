@@ -30,9 +30,9 @@ def grafica(parametrizacion, u, v, limite_inf_u, limite_sup_u, limite_inf_v, lim
         y_aux = []
         z_aux = []
         for v_value in v_values:
-            x_aux.append(float(parametrizacion[0].subs({u: u_value, v: v_value})))
-            y_aux.append(float(parametrizacion[1].subs({u: u_value, v: v_value})))
-            z_aux.append(float(parametrizacion[2].subs({u: u_value, v: v_value})))
+            x_aux.append(float(parametrizacion[0].subs([[u, u_value],[v,v_value]])))
+            y_aux.append(float(parametrizacion[1].subs([[u, u_value],[v,v_value]])))
+            z_aux.append(float(parametrizacion[2].subs([[u, u_value],[v,v_value]])))
         X.append(x_aux)
         Y.append(y_aux)
         Z.append(z_aux)
@@ -41,7 +41,6 @@ def grafica(parametrizacion, u, v, limite_inf_u, limite_sup_u, limite_inf_v, lim
     Y = np.array(Y)
     Z = np.array(Z)
 
-
     #Creo grafica
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
@@ -49,7 +48,6 @@ def grafica(parametrizacion, u, v, limite_inf_u, limite_sup_u, limite_inf_v, lim
     ax.set_aspect('equal')
 
     plt.show()
-    return
 
 def normal(parametrizacion, u, v):
     """

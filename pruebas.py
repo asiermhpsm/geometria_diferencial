@@ -2,9 +2,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import numpy as np
 
+
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator
 
+"""
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 
 # Definir arreglos unidimensionales para coordenadas x e y
@@ -35,9 +37,11 @@ ax.zaxis.set_major_formatter('{x:.02f}')
 # Add a color bar which maps values to colors.
 fig.colorbar(surf, shrink=0.5, aspect=5)
 plt.show()
+"""
 
 import sympy as sp
 
+"""
 # Define las incógnitas
 x, y = sp.symbols('x y')
 
@@ -52,13 +56,8 @@ solucion = sp.solve((ecuacion1, ecuacion2), (x, y))
 # Imprime la solución
 print("Solución:")
 print(solucion)
+"""
 
-import matplotlib.pyplot as plt
-import numpy as np
-import sympy as sp
-
-from matplotlib import cm
-from matplotlib.ticker import LinearLocator
 
 def sup_color():
     fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
@@ -96,14 +95,16 @@ def bola_unidad_3d():
     ax = fig.add_subplot(projection='3d')
 
     # Make data
-    u = np.linspace(0, 2*np.pi, 100)
-    v = np.linspace(0, np.pi, 100)
+    u = np.linspace(-np.pi/2, np.pi/2, 100)
+    v = np.linspace(0, 2*np.pi, 100)
+    """
     x = 10 * np.outer(np.cos(u), np.sin(v))
-    print('X',x)
     y = 10 * np.outer(np.sin(u), np.sin(v))
-    print('Y',y)
     z = 10 * np.outer(np.ones(np.size(u)), np.cos(v))
-    print('Z',z)
+    """
+    x = np.outer(np.cos(u), np.cos(v))
+    y = np.outer(np.cos(u), np.sin(v))
+    z = np.outer(np.sin(u), np.ones(np.size(v)))
 
     # Plot the surface
     ax.plot_surface(x, y, z)
@@ -113,7 +114,7 @@ def bola_unidad_3d():
 
     plt.show()
 
-#bola_unidad_3d()
+bola_unidad_3d()
 
 def grafica_superficie(funciones):
     # Estandarizo funciones
@@ -155,7 +156,45 @@ def grafica_superficie(funciones):
 
     plt.show()
 
-    
-
-
 #grafica_superficie(['cos(u)*cos(v)', 'cos(u)*sin(v)', 'sin(v)'])
+
+
+
+def grafica(parametrizacion, u, v, u_inf, u_sup, v_inf, v_sup, resolucion=100):
+    # Establezco límites
+    u_values = np.linspace(u_inf, u_sup, resolucion)
+    v_values = np.linspace(v_inf, v_sup, resolucion)
+
+    X = []
+    Y = []
+    Z = []
+
+    for u_value in u_values:
+        x_aux = []
+        y_aux = []
+        z_aux = []
+        for v_value in v_values:
+            x_aux.append(float(parametrizacion[0].subs([[u, u_value],[v,v_value]])))
+            y_aux.append(float(parametrizacion[1].subs([[u, u_value],[v,v_value]])))
+            z_aux.append(float(parametrizacion[2].subs([[u, u_value],[v,v_value]])))
+        X.append(x_aux)
+        Y.append(y_aux)
+        Z.append(z_aux)
+    
+    X = np.array(X)
+    Y = np.array(Y)
+    Z = np.array(Z)
+
+    #Creo grafica
+    fig = plt.figure()
+    ax = fig.add_subplot(projection='3d')
+    ax.plot_surface(X, Y, Z)
+    ax.set_aspect('equal')
+
+    plt.show()
+
+u, v = sp.symbols('u v')
+grafica([sp.cos(u)*sp.cos(v), sp.cos(u)*sp.sin(v), sp.sin(u)], u, v, -np.pi/2, np.pi/2, 0, 2*np.pi)
+#grafica([u, v, u+v], u, v, -1, 1, -1, 1, 5)
+
+
