@@ -6,7 +6,7 @@ from matplotlib import cm
 
 def grafica(parametrizacion, u, v, limite_inf_u, limite_sup_u, limite_inf_v, limite_sup_v, nivel_color=False, resolucion=50):
     """
-    Representa una superficie dada su parametrización
+    Devuelve la figura para representar la superficie
     No se hacen comprobaciones de tipo
 
     Argumentos:
@@ -17,6 +17,7 @@ def grafica(parametrizacion, u, v, limite_inf_u, limite_sup_u, limite_inf_v, lim
     limite_sup_u        limite superior de la variable u
     limite_inf_v        limite inferior de la variable v
     limite_sup_v        limite superior de la variable v
+    nivel_color         booleano para representar con mapa de calor
     resolucion          resolucion con la que se grafica la superficie (50 significa 50x50 puntos)
     """
     # Establezco límites
@@ -27,7 +28,6 @@ def grafica(parametrizacion, u, v, limite_inf_u, limite_sup_u, limite_inf_v, lim
     Y = np.array([[float(parametrizacion[1].subs([[u, u_value],[v,v_value]])) for v_value in v_values] for u_value in u_values])
     Z = np.array([[float(parametrizacion[2].subs([[u, u_value],[v,v_value]])) for v_value in v_values] for u_value in u_values])
 
-
     #Creo grafica
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
@@ -37,10 +37,9 @@ def grafica(parametrizacion, u, v, limite_inf_u, limite_sup_u, limite_inf_v, lim
     else:
         ax.plot_surface(X, Y, Z)
     ax.set_aspect('equal')
-    
 
-    plt.show()
     return fig
+
 
 def normal(parametrizacion, u, v):
     """
@@ -78,6 +77,7 @@ def normal_pt(parametrizacion, u, v, u0, v0):
     du_parametrizacion_X_dv_parametrizacion_pt = sp.Matrix(sp.Matrix(du_parametrizacion_pt).cross(sp.Matrix(dv_parametrizacion_pt))).normalized()
 
     return [elem for elem in sp.Matrix(du_parametrizacion_X_dv_parametrizacion_pt)]
+
 
 def primeraFormaFundamental(parametrizacion, u, v):
     """
@@ -121,6 +121,7 @@ def primeraFormaFundamental_pt(parametrizacion, u, v, u0, v0):
     G_pt=sp.Matrix(dv_parametrizacion_pt).dot(sp.Matrix(dv_parametrizacion_pt))
 
     return E_pt, F_pt, G_pt
+
 
 def segundoFormaFundamental(parametrizacion, u, v):
     """
@@ -174,6 +175,7 @@ def segundoFormaFundamental_pt(parametrizacion, u, v, u0, v0):
     
     return e_pt, f_pt, g_pt
 
+
 def curvaturaGauss(parametrizacion, u, v):
     """
     Retorna la curvatura de Gauss
@@ -204,6 +206,7 @@ def curvaturaGauss_pt(parametrizacion, u, v, u0, v0):
     e_pt, f_pt, g_pt = segundoFormaFundamental_pt(parametrizacion, u, v, u0, v0)
     return (e_pt*g_pt - f_pt**2) / (E_pt*G_pt - F_pt**2)
 
+
 def curvaturaMedia(parametrizacion, u, v):
     """
     Retorna la curvatura media
@@ -233,6 +236,7 @@ def curvaturaMedia_pt(parametrizacion, u, v, u0, v0):
     E_pt, F_pt, G_pt = primeraFormaFundamental_pt(parametrizacion, u, v, u0, v0)
     e_pt, f_pt, g_pt = segundoFormaFundamental_pt(parametrizacion, u, v, u0, v0)
     return (e_pt*G_pt + g_pt*E_pt - 2*f_pt*F_pt) / (2*(E_pt*G_pt - F_pt**2))
+
 
 def curvaturasPrincipales(parametrizacion, u, v):
     """
@@ -266,6 +270,7 @@ def curvaturasPrincipales_pt(parametrizacion, u, v, u0, v0):
     raiz = sp.sqrt(H_pt**2 - K_pt)
     return H_pt + raiz, H_pt - raiz
 
+
 def clasicfPt(parametrizacion, u, v, u0, v0):
     """
     Imprime la clasificacion de una superficie en un punto descrito con u y v
@@ -285,6 +290,7 @@ def clasicfPt(parametrizacion, u, v, u0, v0):
         print('Hiperbólitco')
     elif K_pt == 0:
         print('Parabólico o planar')
+
 
 def planoTangentePt(parametrizacion, u, v, u0, v0):
     """
@@ -309,6 +315,7 @@ def planoTangentePt(parametrizacion, u, v, u0, v0):
     dv_parametrizacion_pt = [sp.N(dv_parametrizacion[i].subs([[u, u0],[v,v0]])) for i in range(3)]
 
     return sp.Matrix( sp.Matrix(du_parametrizacion_pt).cross(sp.Matrix(dv_parametrizacion_pt)) ).dot( sp.Matrix( [(xyz[i] - parametrizacion_pt[i]) for i in range(3)]) )
+
 
 def dirPrinc_pt(parametrizacion, u, v, u0, v0):
     """
