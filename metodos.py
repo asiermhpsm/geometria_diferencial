@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
 
-def grafica(parametrizacion, u, v, limite_inf_u, limite_sup_u, limite_inf_v, limite_sup_v, nivel_color=False, resolucion=50):
+def grafica_uv(parametrizacion, u, v, limite_inf_u, limite_sup_u, limite_inf_v, limite_sup_v, nivel_color=False, resolucion=50):
     """
     Devuelve la figura para representar la superficie
     No se hacen comprobaciones de tipo
@@ -37,8 +37,36 @@ def grafica(parametrizacion, u, v, limite_inf_u, limite_sup_u, limite_inf_v, lim
     else:
         ax.plot_surface(X, Y, Z)
     ax.set_aspect('equal')
+    plt.show()
+    return ax
 
-    return fig
+def grafica_xyz(ax, plano, x, y, z, limite_inf_x, limite_sup_x, limite_inf_y, limite_sup_y, nivel_color=False, resolucion=20):
+    """
+    Devuelve la representacion del plano tangente
+    No se hacen comprobaciones de tipo
+
+    Argumentos:
+    ax                  resultado de fig.add_subplot(projection='3d')
+    parametrizacion     ecuacion del plano (de la forma a*x+b*y+c*z)
+    x                   primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    y                   segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    z                   segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    limite_inf_x        limite inferior de la variable x
+    limite_sup_x        limite superior de la variable x
+    limite_inf_y        limite inferior de la variable y
+    limite_sup_y        limite superior de la variable y
+    nivel_color         booleano para representar con mapa de calor
+    resolucion          resolucion con la que se grafica la superficie (20 significa 20x20 puntos)
+    """
+    x_values = np.linspace(limite_inf_x, limite_sup_x, resolucion)
+    y_values = np.linspace(limite_inf_y, limite_sup_y, resolucion)
+    X, Y = np.meshgrid(x_values, y_values)
+
+    Z = np.array([[sp.solve(plano.subs([[x, x_value],[y,y_value]]), z)[0] for y_value in y_values] for x_value in x_values])
+    
+    #Creo grafica
+    ax.plot_surface(X, Y, Z)
+    plt.show()
 
 
 def normal(parametrizacion, u, v):
@@ -292,7 +320,26 @@ def clasicfPt(parametrizacion, u, v, u0, v0):
         print('Parabólico o planar')
 
 
-def planoTangentePt(parametrizacion, u, v, u0, v0):
+def planoTangente(parametrizacion, u, v):
+    """
+    Imprime la clasificacion de una superficie en un punto descrito con u y v
+    No se hacen comprobaciones de tipo
+
+    Argumentos:
+    parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
+    u                   primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    v                   segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    """
+    x, y, z = sp.symbols('x, y, z', real = True)
+    xyz = [x,y,z]
+
+    du_parametrizacion = [sp.diff(parametrizacion[i], u) for i in range(3)]
+    dv_parametrizacion = [sp.diff(parametrizacion[i], v) for i in range(3)]
+
+    return sp.Matrix( sp.Matrix(du_parametrizacion).cross(sp.Matrix(dv_parametrizacion)) ).dot( sp.Matrix( [(xyz[i]) for i in range(3)]) )
+
+
+def planoTangente_pt(parametrizacion, u, v, u0, v0):
     """
     Imprime la clasificacion de una superficie en un punto descrito con u y v
     No se hacen comprobaciones de tipo
