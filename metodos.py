@@ -23,25 +23,10 @@ def grafica(parametrizacion, u, v, limite_inf_u, limite_sup_u, limite_inf_v, lim
     u_values = np.linspace(limite_inf_u, limite_sup_u, resolucion)
     v_values = np.linspace(limite_inf_v, limite_sup_v, resolucion)
 
-    X = []
-    Y = []
-    Z = []
+    X = np.array([[float(parametrizacion[0].subs([[u, u_value],[v,v_value]])) for v_value in v_values] for u_value in u_values])
+    Y = np.array([[float(parametrizacion[1].subs([[u, u_value],[v,v_value]])) for v_value in v_values] for u_value in u_values])
+    Z = np.array([[float(parametrizacion[2].subs([[u, u_value],[v,v_value]])) for v_value in v_values] for u_value in u_values])
 
-    for u_value in u_values:
-        x_aux = []
-        y_aux = []
-        z_aux = []
-        for v_value in v_values:
-            x_aux.append(float(parametrizacion[0].subs([[u, u_value],[v,v_value]])))
-            y_aux.append(float(parametrizacion[1].subs([[u, u_value],[v,v_value]])))
-            z_aux.append(float(parametrizacion[2].subs([[u, u_value],[v,v_value]])))
-        X.append(x_aux)
-        Y.append(y_aux)
-        Z.append(z_aux)
-    
-    X = np.array(X)
-    Y = np.array(Y)
-    Z = np.array(Z)
 
     #Creo grafica
     fig = plt.figure()
