@@ -1,8 +1,10 @@
 import sympy as sp
-import matplotlib.pyplot as plt
 import numpy as np
 
-def grafica(parametrizacion, u, v, limite_inf_u, limite_sup_u, limite_inf_v, limite_sup_v, resolucion=50):
+import matplotlib.pyplot as plt
+from matplotlib import cm
+
+def grafica(parametrizacion, u, v, limite_inf_u, limite_sup_u, limite_inf_v, limite_sup_v, nivel_color=False, resolucion=50):
     """
     Representa una superficie dada su parametrización
     No se hacen comprobaciones de tipo
@@ -44,10 +46,16 @@ def grafica(parametrizacion, u, v, limite_inf_u, limite_sup_u, limite_inf_v, lim
     #Creo grafica
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
-    ax.plot_surface(X, Y, Z)
+    if nivel_color:
+        surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm)
+        fig.colorbar(surf, shrink=0.5, aspect=5)
+    else:
+        ax.plot_surface(X, Y, Z)
     ax.set_aspect('equal')
+    
 
     plt.show()
+    return fig
 
 def normal(parametrizacion, u, v):
     """
