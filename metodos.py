@@ -4,46 +4,114 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
 
+def uv_to_xyz(parametrizacion, u, v, u0, v0):
+    """
+    Sustituye u y v en la superficie parametrizada
+    No se hacen comprobaciones de tipo
+
+    Argumentos:
+    parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
+    u                   primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    v                   segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    u0                  valor u del punto
+    v0                  valor v del punto
+    """
+    x = float(parametrizacion[0].subs([[u, u0],[v,v0]]))
+    y = float(parametrizacion[1].subs([[u, u0],[v,v0]]))
+    z = float(parametrizacion[2].subs([[u, u0],[v,v0]]))
+    return x, y, z
+
+def xy_to_uv(parametrizacion, x0, y0, u, v):
+    """
+    Dado un x y un y consigo su valor u y v de una superficie parametrizada
+    No se hacen comprobaciones de tipo
+
+    Argumentos:
+    parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
+    x0                  valor x del punto
+    y0                  valor y del punto
+    u                   primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    v                   segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    """
+    eq1 = sp.Eq(parametrizacion[0], x0)
+    eq2 = sp.Eq(parametrizacion[1], y0)
+
+    soluciones = sp.solve((eq1, eq2), (u, v))
+    
+    if not soluciones:
+        raise('El punto dado no esta en la superficie.')
+
+    return soluciones
+
+def xyz_to_uv(parametrizacion, x0, y0, z0, u, v):
+    """
+    Dado un x,y,z un y consigo su valor u y v de una superficie parametrizada
+    No se hacen comprobaciones de tipo
+
+    Argumentos:
+    parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
+    x0                  valor x del punto
+    y0                  valor y del punto
+    z0                  valor z del punto
+    u                   primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    v                   segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    """
+    soluciones = xy_to_uv(parametrizacion, x0, y0, u, v)
+
+    for sol in soluciones:
+        if float(parametrizacion[2].subs([[u, sol[0]],[v,sol[1]]])) == z0:
+            return sol
+
+    raise('El punto dado no esta en la superficie.')
+
+
 def representa_3d(*args):
     """
     Representa todas lassuperficies que se pasan como parametros
     No se hacen comprobaciones de tipo
 
     Argumentos:
+    tipo1               tipo de figura (superficie, punto, vector)
     X1                  vector 2D que se debe pasar a ax.plot_surface()
     Y1                  vector 2D que se debe pasar a ax.plot_surface()
     Z1                  vector 2D que se debe pasar a ax.plot_surface()
-    color_map1          booleano para representar con mapa de color
+    opcion1             depende de tipo de representacion: color_map(booleano para representar con mapa de color), marker('o' predeterminado)
     color1              color de la superficie
     ...
+    tipoN               tipo de figura (superficie, punto, vector)
     XN                  vector 2D que se debe pasar a ax.plot_surface()
     YN                  vector 2D que se debe pasar a ax.plot_surface()
     ZN                  vector 2D que se debe pasar a ax.plot_surface()
-    color_mapN          booleano para representar con mapa de color
+    opcionN             depende de tipo de representacion: color_map(booleano para representar con mapa de color), marker('o' predeterminado)
     colorN              color de la superficie
     """
-    if len(args) % 5 != 0:
-        raise ValueError("La cantidad de argumentos no es válida. Deben ser grupos de (X, Y Z, color_map) pero se han encontrado ", len(args), " argumentos.")
+    if len(args) % 6 != 0:
+        raise ValueError("La cantidad de argumentos no es válida. Deben ser grupos de (tipo, X, Y, Z, color_map) pero se han encontrado ", len(args), " argumentos.")
 
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
     
-    for i in range(0, len(args), 5):
-        X, Y, Z, color_map, color = args[i], args[i + 1], args[i + 2], args[i + 3], args[i + 4]
-        if color_map:
-            surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm)
-            fig.colorbar(surf, shrink=0.5, aspect=5)
-        elif color is None:
-            ax.plot_surface(X, Y, Z)
-        else:
-            ax.plot_surface(X, Y, Z, color=color)
-        ax.set_aspect('equal')
+    for i in range(0, len(args), 6):
+        tipo, X, Y, Z, opcion, color = args[i], args[i + 1], args[i + 2], args[i + 3], args[i + 4], args[i + 5]
+        if tipo == 'superficie':
+            if opcion:
+                surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm)
+                fig.colorbar(surf, shrink=0.5, aspect=5)
+            elif color is None:
+                ax.plot_surface(X, Y, Z)
+            else:
+                ax.plot_surface(X, Y, Z, color=color)
+        elif tipo == 'punto':
+            ax.scatter(X, Y, Z, c=color, marker=opcion, s=100)   
+        elif tipo == 'vector':
+            print()  
+    ax.set_aspect('equal')
     plt.show()
 
 
 def procesa_sup_uv(parametrizacion, u, v, limite_inf_u, limite_sup_u, limite_inf_v, limite_sup_v, color_map=False, color=None, resolucion=50):
     """
-    Devuelve los valores X, Y, Z, cmap que se deben pasar a la funcion ax.plot_surface() para representar la superficie
+    Devuelve los valores X, Y, Z, cmap, color que se deben pasar a la funcion ax.plot_surface() para representar la superficie
     No se hacen comprobaciones de tipo
 
     Argumentos:
@@ -54,7 +122,8 @@ def procesa_sup_uv(parametrizacion, u, v, limite_inf_u, limite_sup_u, limite_inf
     limite_sup_u        limite superior de la variable u
     limite_inf_v        limite inferior de la variable v
     limite_sup_v        limite superior de la variable v
-    color_map            booleano para representar con mapa de color
+    color_map           booleano para representar con mapa de calor
+    color               opcional, color de la superficie
     resolucion          resolucion con la que se grafica la superficie (50 significa 50x50 puntos)
     """
     # Establezco límites
@@ -65,15 +134,14 @@ def procesa_sup_uv(parametrizacion, u, v, limite_inf_u, limite_sup_u, limite_inf
     Y = np.array([[float(parametrizacion[1].subs([[u, u_value],[v,v_value]])) for v_value in v_values] for u_value in u_values])
     Z = np.array([[float(parametrizacion[2].subs([[u, u_value],[v,v_value]])) for v_value in v_values] for u_value in u_values])
 
-    return X, Y, Z, color_map, color
+    return 'superficie', X, Y, Z, color_map, color
 
 def procesa_plano_xyz(plano, x, y, z, limite_inf_x, limite_sup_x, limite_inf_y, limite_sup_y, color_map=False, color='grey', resolucion=20):
     """
-    Devuelve los valores X, Y, Z, cmap que se deben pasar a la funcion ax.plot_surface() para representar el plano
+    Devuelve los valores X, Y, Z, cmap que se deben pasar a la funcion ax.plot_surface() para representar el plano tangente
     No se hacen comprobaciones de tipo
 
     Argumentos:
-    ax                  resultado de fig.add_subplot(projection='3d')
     parametrizacion     ecuacion del plano (de la forma a*x+b*y+c*z)
     x                   primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
     y                   segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
@@ -91,7 +159,38 @@ def procesa_plano_xyz(plano, x, y, z, limite_inf_x, limite_sup_x, limite_inf_y, 
 
     Z = np.array([[sp.solve(plano.subs([[x, x_value],[y,y_value]]), z)[0] for y_value in y_values] for x_value in x_values])
 
-    return X, Y, Z, color_map, color
+    return 'superficie',X, Y, Z, color_map, color
+
+def procesa_punto_uv(parametrizacion, u, v, u0, v0, color='black', marker='o'):
+    """
+    Devuelve los valores X, Y, Z, marker, color que se deben pasar a la funcion ax.scatter() para representar el punto
+    No se hacen comprobaciones de tipo
+
+    Argumentos:
+    parametrizacion     ecuacion del plano (de la forma a*x+b*y+c*z)
+    u                   primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    v                   segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    u0                  valor u del punto
+    v0                  valor v del punto
+    color               opcional, color del plano
+    """
+    X, Y, Z = uv_to_xyz(parametrizacion, u, v, u0, v0)
+    return 'punto',X, Y, Z, marker, color
+
+def procesa_punto_xyz(parametrizacion, x0, y0, z0, color='black', marker='o'):
+    """
+    Devuelve los valores X, Y, Z, marker, color que se deben pasar a la funcion ax.scatter() para representar el punto
+    No se hacen comprobaciones de tipo
+
+    Argumentos:
+    parametrizacion     ecuacion del plano (de la forma a*x+b*y+c*z)
+    u                   primera variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    v                   segunda variable de derivacion ( clase sp.Symbol, resultado de sp.symbols() )
+    u0                  valor u del punto
+    v0                  valor v del punto
+    color               opcional, color del plano
+    """
+    return 'punto',x0, y0, z0, marker, color
 
 
 def normal(parametrizacion, u, v):
@@ -426,3 +525,13 @@ def dirPrinc_pt(parametrizacion, u, v, u0, v0):
     vec2 = [sol2['a'] * du + sol2['b'] * dv for du, dv in zip(du_parametrizacion_pt, dv_parametrizacion_pt)]
 
     return vec1, vec2
+
+
+u, v = sp.symbols('u, v', real = True)
+x, y, z = sp.symbols('x, y z', real = True)
+ecuaciones1 = [u*sp.cos(v), u*sp.sin(v), 2*u]
+u0 = 1
+v0 = 2*np.pi
+representa_3d(*procesa_sup_uv(ecuaciones1, u, v, 0, 5, 0, 2*np.pi, color_map=True), 
+              *procesa_plano_xyz(planoTangente_pt(ecuaciones1, u, v, u0, v0), x, y, z, 0, 5, 0, 5), 
+              *procesa_punto_uv(ecuaciones1, u, v, u0, v0))
