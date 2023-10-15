@@ -4,9 +4,46 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
 
-def grafica_uv(parametrizacion, u, v, limite_inf_u, limite_sup_u, limite_inf_v, limite_sup_v, nivel_color=False, resolucion=50):
+def representa_3d(*args):
     """
-    Devuelve la figura para representar la superficie
+    Representa todas lassuperficies que se pasan como parametros
+    No se hacen comprobaciones de tipo
+
+    Argumentos:
+    X1                  vector 2D que se debe pasar a ax.plot_surface()
+    Y1                  vector 2D que se debe pasar a ax.plot_surface()
+    Z1                  vector 2D que se debe pasar a ax.plot_surface()
+    color_map1          booleano para representar con mapa de color
+    color1              color de la superficie
+    ...
+    XN                  vector 2D que se debe pasar a ax.plot_surface()
+    YN                  vector 2D que se debe pasar a ax.plot_surface()
+    ZN                  vector 2D que se debe pasar a ax.plot_surface()
+    color_mapN          booleano para representar con mapa de color
+    colorN              color de la superficie
+    """
+    if len(args) % 5 != 0:
+        raise ValueError("La cantidad de argumentos no es válida. Deben ser grupos de (X, Y Z, color_map) pero se han encontrado ", len(args), " argumentos.")
+
+    fig = plt.figure()
+    ax = fig.add_subplot(projection='3d')
+    
+    for i in range(0, len(args), 5):
+        X, Y, Z, color_map, color = args[i], args[i + 1], args[i + 2], args[i + 3], args[i + 4]
+        if color_map:
+            surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm)
+            fig.colorbar(surf, shrink=0.5, aspect=5)
+        elif color is None:
+            ax.plot_surface(X, Y, Z)
+        else:
+            ax.plot_surface(X, Y, Z, color=color)
+        ax.set_aspect('equal')
+    plt.show()
+
+
+def procesa_sup_uv(parametrizacion, u, v, limite_inf_u, limite_sup_u, limite_inf_v, limite_sup_v, color_map=False, color=None, resolucion=50):
+    """
+    Devuelve los valores X, Y, Z, cmap que se deben pasar a la funcion ax.plot_surface() para representar la superficie
     No se hacen comprobaciones de tipo
 
     Argumentos:
@@ -17,7 +54,7 @@ def grafica_uv(parametrizacion, u, v, limite_inf_u, limite_sup_u, limite_inf_v, 
     limite_sup_u        limite superior de la variable u
     limite_inf_v        limite inferior de la variable v
     limite_sup_v        limite superior de la variable v
-    nivel_color         booleano para representar con mapa de calor
+    color_map            booleano para representar con mapa de color
     resolucion          resolucion con la que se grafica la superficie (50 significa 50x50 puntos)
     """
     # Establezco límites
@@ -28,21 +65,11 @@ def grafica_uv(parametrizacion, u, v, limite_inf_u, limite_sup_u, limite_inf_v, 
     Y = np.array([[float(parametrizacion[1].subs([[u, u_value],[v,v_value]])) for v_value in v_values] for u_value in u_values])
     Z = np.array([[float(parametrizacion[2].subs([[u, u_value],[v,v_value]])) for v_value in v_values] for u_value in u_values])
 
-    #Creo grafica
-    fig = plt.figure()
-    ax = fig.add_subplot(projection='3d')
-    if nivel_color:
-        surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm)
-        fig.colorbar(surf, shrink=0.5, aspect=5)
-    else:
-        ax.plot_surface(X, Y, Z)
-    ax.set_aspect('equal')
-    plt.show()
-    return ax
+    return X, Y, Z, color_map, color
 
-def grafica_xyz(ax, plano, x, y, z, limite_inf_x, limite_sup_x, limite_inf_y, limite_sup_y, nivel_color=False, resolucion=20):
+def procesa_plano_xyz(plano, x, y, z, limite_inf_x, limite_sup_x, limite_inf_y, limite_sup_y, color_map=False, color='grey', resolucion=20):
     """
-    Devuelve la representacion del plano tangente
+    Devuelve los valores X, Y, Z, cmap que se deben pasar a la funcion ax.plot_surface() para representar el plano
     No se hacen comprobaciones de tipo
 
     Argumentos:
@@ -63,10 +90,8 @@ def grafica_xyz(ax, plano, x, y, z, limite_inf_x, limite_sup_x, limite_inf_y, li
     X, Y = np.meshgrid(x_values, y_values)
 
     Z = np.array([[sp.solve(plano.subs([[x, x_value],[y,y_value]]), z)[0] for y_value in y_values] for x_value in x_values])
-    
-    #Creo grafica
-    ax.plot_surface(X, Y, Z)
-    plt.show()
+
+    return X, Y, Z, color_map, color
 
 
 def normal(parametrizacion, u, v):
