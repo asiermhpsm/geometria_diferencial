@@ -525,13 +525,3 @@ def dirPrinc_pt(parametrizacion, u, v, u0, v0):
     vec2 = [sol2['a'] * du + sol2['b'] * dv for du, dv in zip(du_parametrizacion_pt, dv_parametrizacion_pt)]
 
     return vec1, vec2
-
-
-u, v = sp.symbols('u, v', real = True)
-x, y, z = sp.symbols('x, y z', real = True)
-ecuaciones1 = [u*sp.cos(v), u*sp.sin(v), 2*u]
-u0 = 1
-v0 = 2*np.pi
-representa_3d(*procesa_sup_uv(ecuaciones1, u, v, 0, 5, 0, 2*np.pi, color_map=True), 
-              *procesa_plano_xyz(planoTangente_pt(ecuaciones1, u, v, u0, v0), x, y, z, 0, 5, 0, 5), 
-              *procesa_punto_uv(ecuaciones1, u, v, u0, v0))
