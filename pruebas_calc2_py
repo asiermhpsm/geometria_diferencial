@@ -1,15 +1,25 @@
 import tkinter as tk
-from ttkwidgets.autocomplete import AutocompleteCombobox
+
+# Función para actualizar la etiqueta con el valor seleccionado
+def actualizar_valor():
+    valor = spinbox.get()
+    etiqueta.config(text=f"Valor seleccionado: {valor}")
 
 # Crear la ventana principal
 root = tk.Tk()
-root.title("Ejemplo de AutocompleteCombobox")
+root.title("Ejemplo de tk.Spinbox")
 
-# Crear un AutocompleteCombobox
-elementos = ["Manzana", "Banana", "Cereza", "Damasco", "Uva", "Kiwi"]
-combo = AutocompleteCombobox(root, completevalues=elementos)
-combo.pack()
+# Crear un Spinbox para seleccionar valores
+spinbox = tk.Spinbox(root, from_=0, to=100, increment=1)
+spinbox.pack(padx=10, pady=10)
 
+# Botón para actualizar el valor
+boton_actualizar = tk.Button(root, text="Actualizar Valor", command=actualizar_valor)
+boton_actualizar.pack(pady=10)
 
-# Iniciar la aplicación
+# Etiqueta para mostrar el valor seleccionado
+etiqueta = tk.Label(root, text="Valor seleccionado:")
+etiqueta.pack()
+
+# Ejecutar la aplicación
 root.mainloop()

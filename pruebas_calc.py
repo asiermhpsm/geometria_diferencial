@@ -25,3 +25,5 @@ entrada_label.pack()
 entrada.pack()
 
 ventana.mainloop()
+
+
