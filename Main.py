@@ -6,6 +6,13 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import metodos
 
 class Aplicacion():
+    #Atributos para el calculo matemático
+    colores = ["blue", "green", "red", "cyan", "magenta", "yellow", "black",
+        "dodgerblue", "darkorange", "limegreen", "purple", "gold", "pink"]
+    mapa_calor = False
+    resolucion = 50
+    abecedario = [chr(i) for i in range(97, 123)]
+
     #Habilita e inhabilita superficie parametrizada o por ecuacion
     def seleccionar_tipo_superficie(self):
         opcion = self.tipo_superficie.get()
@@ -40,11 +47,7 @@ class Aplicacion():
     def __init__(self):
         self.root = tk.Tk()
 
-        #Atributos para el calculo matemático
-        self.colores = ["Predeterminado", "Rojo", "Amarillo", "Azul", "Negro"]
-        self.mapa_calor = False
-        self.resolucion = 50
-        self.abecedario = [chr(i) for i in range(97, 123)]
+        
         
         #Atributos de control
         self.tipo_superficie = tk.IntVar()     #1 indica superficie parametrizada, 2 ecuacion
