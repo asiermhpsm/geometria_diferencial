@@ -346,7 +346,7 @@ def curvaturaMedia_pt_xyz(parametrizacion, u, v, x0, y0, z0, curv=None, EFG=None
 CURVATURAS PRINCIPALES
 -------------------------------------------------------------------------------
 """
-def curvaturasPrincipales(parametrizacion, u, v, K=None, H=None):
+def curvaturasPrincipales(parametrizacion, u, v, K=None, H=None, EFG=None, efg=None):
     """
     Retorna las curvaturas principales como tupla
     No se hacen comprobaciones de tipo
@@ -358,10 +358,15 @@ def curvaturasPrincipales(parametrizacion, u, v, K=None, H=None):
     K                   parametro opcional por si se tiene ya calculada cruvatura Gauss
     H                   parametro opcional por si se tiene ya calculada curvatura Media
     """
-    E, F, G = primeraFormaFundamental(parametrizacion, u, v)
-    e, f, g = segundaFormaFundamental(parametrizacion, u, v)
-    K = curvaturaGauss(parametrizacion, u, v, EFG=(E, F, G), efg=(e,f,g))
-    H = curvaturaMedia(parametrizacion, u, v, EFG=(E, F, G), efg=(e,f,g))
+    if not K and not H:
+        E, F, G = primeraFormaFundamental(parametrizacion, u, v)
+        e, f, g = segundaFormaFundamental(parametrizacion, u, v)
+        K = curvaturaGauss(parametrizacion, u, v, EFG=(E, F, G), efg=(e,f,g))
+        H = curvaturaMedia(parametrizacion, u, v, EFG=(E, F, G), efg=(e,f,g))
+    elif not K:
+        K = curvaturaGauss(parametrizacion, u, v)
+    elif not H:
+        H = curvaturaMedia(parametrizacion, u, v)
     raiz = sp.sqrt(H**2 - K)
     return sp.simplify(H + raiz), sp.simplify(H - raiz)
 
