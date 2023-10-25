@@ -12,9 +12,9 @@ def uv_to_xyz(parametrizacion, u, v, u0, v0):
     u0                  valor u del punto
     v0                  valor v del punto
     """
-    x = sp.N(parametrizacion[0].subs([[u, u0],[v,v0]]))
-    y = sp.N(parametrizacion[1].subs([[u, u0],[v,v0]]))
-    z = sp.N(parametrizacion[2].subs([[u, u0],[v,v0]]))
+    x = float(sp.N(parametrizacion[0].subs([[u, u0],[v,v0]])))
+    y = float(sp.N(parametrizacion[1].subs([[u, u0],[v,v0]])))
+    z = float(sp.N(parametrizacion[2].subs([[u, u0],[v,v0]])))
     return x, y, z
 
 def xy_to_uv(parametrizacion, u, v, x0, y0):
