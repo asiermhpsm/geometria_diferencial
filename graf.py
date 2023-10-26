@@ -1,29 +1,74 @@
 import numpy as np
 import sympy as sp
 import matplotlib.pyplot as plt
+from matplotlib.colors import Normalize
 from matplotlib import cm
+from abc import ABC, abstractmethod
 
 from points import uv_to_xyz
 
-class Figura:
+
+class Figura(ABC):
+    """
+    Clase abstracta que representa una figura
+    """
+    @abstractmethod
     def __init__(self):
         pass
 
+    @abstractmethod
     def grafica(self):
         pass
 
-class Superficie_Parametrizada(Figura):
+class Superficie(Figura):
+    """
+    Clase abstracta que representa una superficie
+    """
+    @abstractmethod
+    def __init__(self, color=None, color_map=False, cmap_option=cm.coolwarm):
+        """
+        Constructor de superficie, guarda las opciones de representacion
+        Argumentos:
+        color               opcional, color de la superficie
+        color_map           opcional, booleano para representar con mapa de calor
+        cmap_option         opcional, colores del mapa de calor
+        """
+        super().__init__()
+        self.color_map = color_map
+        self.cmap_option = cmap_option
+        self.color = color
+        
+    @abstractmethod
+    def grafica(self, ax, norm=None, alpha=0.7):
+        """
+        Graficador de la superficie
+        No se hacen comprobaciones de tipo
+
+        Argumentos:
+        ax                   resultado de fig.add_subplot(projection='3d')
+        norm                 opcional, resultado de Normalize()
+        alpha                
+        """
+        super().grafica()
+        if self.color_map:
+            if not norm:
+                raise ValueError("Si se quiere mapa de calor se debe pasar norm como parametro")
+            elif self.color:
+                surf = ax.plot_surface(self.X, self.Y, self.Z, color=self.color, cmap=self.cmap_option, norm=norm, alpha=alpha)
+            else:
+                surf = ax.plot_surface(self.X, self.Y, self.Z, cmap=self.cmap_option, norm=norm, alpha=alpha)
+        else:
+            if self.color:
+                surf = ax.plot_surface(self.X, self.Y, self.Z, color=self.color)
+            else:
+                surf = ax.plot_surface(self.X, self.Y, self.Z)
+        return surf
+
+class Superficie_Parametrizada(Superficie):
     """
     Clase que representa superficie parametrizada, solo se guardan los puntos (x, y, z) ya procesados y las opciones de representacion
     """
-    X = None
-    Y = None
-    Z = None
-
-    color_map = False
-    color = None
-
-    def __init__(self, parametrizacion, u, v,limite_inf_u, limite_sup_u, limite_inf_v, limite_sup_v, color_map=False, color=None, resolucion=50):
+    def __init__(self, parametrizacion, u, v,limite_inf_u, limite_sup_u, limite_inf_v, limite_sup_v, resolucion=50, color=None, color_map=False, cmap_option=cm.coolwarm):
         """
         Constructor de superficie parametrizada
         No se hacen comprobaciones de tipo
@@ -36,12 +81,12 @@ class Superficie_Parametrizada(Figura):
         limite_sup_u        limite superior de la variable u
         limite_inf_v        limite inferior de la variable v
         limite_sup_v        limite superior de la variable v
-        color_map           opcional, booleano para representar con mapa de calor
-        color               opcional, color de la superficie
         resolucion          opcional, resolucion con la que se grafica la superficie (50 significa 50x50 puntos)
+        color               opcional, color de la superficie
+        color_map           opcional, booleano para representar con mapa de calor
+        cmap_option         opcional, colores del mapa de calor
         """
-        self.color_map = color_map
-        self.color = color
+        super().__init__(color=color,color_map=color_map,  cmap_option=cmap_option)
 
         # Establezco límites
         u_values = np.linspace(limite_inf_u, limite_sup_u, resolucion)
@@ -51,40 +96,22 @@ class Superficie_Parametrizada(Figura):
         self.Y = np.array([[float(parametrizacion[1].subs([[u, u_value],[v,v_value]])) for v_value in v_values] for u_value in u_values])
         self.Z = np.array([[float(parametrizacion[2].subs([[u, u_value],[v,v_value]])) for v_value in v_values] for u_value in u_values])
 
-    def grafica(self, fig, ax):
+    def grafica(self, ax, norm=None, alpha=0.7):
         """
         Graficador de la superficie
         No se hacen comprobaciones de tipo
 
         Argumentos:
-        fig                  resultado de plt.figure()
         ax                   resultado de fig.add_subplot(projection='3d')
+        norm                 opcional, resultado de Normalize()
         """
-        if self.color_map:
-            if self.color:
-                surf = ax.plot_surface(self.X, self.Y, self.Z, cmap=cm.coolwarm, color=self.color)
-                fig.colorbar(surf, shrink=0.5, aspect=5)
-            else:
-                surf = ax.plot_surface(self.X, self.Y, self.Z, cmap=cm.coolwarm)
-                fig.colorbar(surf, shrink=0.5, aspect=5)
-        else:
-            if self.color:
-                surf = ax.plot_surface(self.X, self.Y, self.Z, color=self.color)
-            else:
-                surf = ax.plot_surface(self.X, self.Y, self.Z)
+        super().grafica(ax, norm=norm, alpha=alpha)
         
-class Superficie_XYZ(Figura):
+class Superficie_XYZ(Superficie):
     """
     Clase que representa superficie representada mediante una ecuacion con x,y,z, solo se guardan los puntos (x, y, z) ya procesados y las opciones de representacion
     """
-    X = None
-    Y = None
-    Z = None
-
-    color_map = False
-    color = None
-        
-    def __init__(self, superficie, x, y, z, limite_inf_x, limite_sup_x, limite_inf_y, limite_sup_y, color_map=False, color=None, resolucion=20):
+    def __init__(self, superficie, x, y, z, limite_inf_x, limite_sup_x, limite_inf_y, limite_sup_y, resolucion=20, color=None, color_map=False, cmap_option=cm.coolwarm):
         """
         Constructor de superficie representada mediante una ecuacion con x,y,z
         No se hacen comprobaciones de tipo
@@ -98,11 +125,12 @@ class Superficie_XYZ(Figura):
         limite_sup_x        limite superior de la variable x
         limite_inf_y        limite inferior de la variable y
         limite_sup_y        limite superior de la variable y
-        nivel_color         booleano para representar con mapa de calor
-        resolucion          resolucion con la que se grafica la superficie (20 significa 20x20 puntos)
+        resolucion          opcional, resolucion con la que se grafica la superficie (20 significa 20x20 puntos)
+        color               opcional, color de la superficie
+        color_map           opcional, booleano para representar con mapa de calor
+        cmap_option         opcional, colores del mapa de calor
         """
-        self.color_map = color_map
-        self.color = color
+        super().__init__(color=color,color_map=color_map,  cmap_option=cmap_option)
 
         x_values = np.linspace(limite_inf_x, limite_sup_x, resolucion)
         y_values = np.linspace(limite_inf_y, limite_sup_y, resolucion)
@@ -110,27 +138,19 @@ class Superficie_XYZ(Figura):
 
         self.Z = np.array([[sp.solve(superficie.subs([[x, x_value],[y,y_value]]), z)[0] for y_value in y_values] for x_value in x_values])
 
-    def grafica(self, fig, ax):
+    def grafica(self, ax, norm=None, alpha=0.7):
         """
         Graficador de la superficie
         No se hacen comprobaciones de tipo
 
         Argumentos:
-        fig                  resultado de plt.figure()
         ax                   resultado de fig.add_subplot(projection='3d')
+        color_map            opcional, booleano para representar con mapa de calor
+        color                opcional, color de la superficie      
+        cmap_option          opcional, colores del mapa de calor
+        norm                 opcional, resultado de Normalize()
         """
-        if self.color_map:
-            if self.color:
-                surf = ax.plot_surface(self.X, self.Y, self.Z, cmap=cm.coolwarm, color=self.color)
-                fig.colorbar(surf, shrink=0.5, aspect=5)
-            else:
-                surf = ax.plot_surface(self.X, self.Y, self.Z, cmap=cm.coolwarm)
-                fig.colorbar(surf, shrink=0.5, aspect=5)
-        else:
-            if self.color:
-                surf = ax.plot_surface(self.X, self.Y, self.Z, color=self.color)
-            else:
-                surf = ax.plot_surface(self.X, self.Y, self.Z)
+        super().grafica(ax, norm=norm, alpha=alpha)
 
 class Punto_UV(Figura):
     """
@@ -165,13 +185,12 @@ class Punto_UV(Figura):
 
         self.X, self.Y, self.Z = uv_to_xyz(parametrizacion, u, v, u0, v0)
 
-    def grafica(self, fig, ax):
+    def grafica(self, ax):
         """
         Graficador del punto
         No se hacen comprobaciones de tipo
 
         Argumentos:
-        fig                  resultado de plt.figure()
         ax                   resultado de fig.add_subplot(projection='3d')
         """
         ax.scatter(self.X, self.Y, self.Z, c=self.color, marker=self.marker, s=self.tam) 
@@ -208,13 +227,12 @@ class Punto_XYZ(Figura):
         self.marker = marker
         self.tam = tam
 
-    def grafica(self, fig, ax):
+    def grafica(self, ax):
         """
         Graficador del punto
         No se hacen comprobaciones de tipo
 
         Argumentos:
-        fig                  resultado de plt.figure()
         ax                   resultado de fig.add_subplot(projection='3d')
         """
         ax.scatter(self.X, self.Y, self.Z, c=self.color, marker=self.marker, s=self.tam) 
@@ -246,13 +264,12 @@ class Vector(Figura):
         self.vector = (vx, vy, vz)
         self.color = color
 
-    def grafica(self, fig, ax):
+    def grafica(self, ax):
         """
         Graficador del vector
         No se hacen comprobaciones de tipo
 
         Argumentos:
-        fig                  resultado de plt.figure()
         ax                   resultado de fig.add_subplot(projection='3d')
         """
         ax.quiver(self.inicio[0],self.inicio[1],self.inicio[2], self.vector[0],self.vector[1],self.vector[2], color=self.color)
@@ -269,13 +286,30 @@ def grafica(figuras):
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
 
+    min_z = []
+    max_z = []
+    for figura in figuras:
+        if isinstance(figura, Superficie) and figura.color_map:
+            min_z.append(np.min(figura.Z))
+            max_z.append(np.max(figura.Z))
+
+    if min_z and max_z:
+        norm = Normalize(vmin=min(min_z), vmax=max(max_z))
+        cbar_puesta = False
+    
     for figura in figuras:
         if isinstance(figura, Figura):
-            figura.grafica(fig, ax)
+            if isinstance(figura, Superficie):
+                surf = figura.grafica(ax, norm)
+                if not cbar_puesta:
+                    fig.colorbar(surf, ax=ax, shrink=0.5, aspect=10)
+                    cbar_puesta = True
+            else:
+                figura.grafica(ax)
     ax.set_aspect('equal')
 
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
     plt.show()
-    
+    return fig

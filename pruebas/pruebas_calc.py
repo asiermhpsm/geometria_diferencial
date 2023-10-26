@@ -1,29 +1,39 @@
 import tkinter as tk
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from mpl_toolkits.mplot3d import Axes3D
 
-def actualizar_entrada():
-    opcion = var.get()
-    if opcion == 1:
-        entrada.config(state=tk.NORMAL)
-    else:
-        entrada.config(state=tk.DISABLED)
+# Función para dibujar el gráfico 3D
+def draw_3d_graph():
+    ax.clear()  # Limpia cualquier gráfico previo
+    # Aquí puedes agregar la lógica para trazar tus datos en 3D
 
-ventana = tk.Tk()
-ventana.title("Radiobutton con Label y Entry")
+    # Por ejemplo, para dibujar una superficie de ejemplo:
+    import numpy as np
+    X = np.linspace(-5, 5, 100)
+    Y = np.linspace(-5, 5, 100)
+    X, Y = np.meshgrid(X, Y)
+    Z = np.sin(np.sqrt(X**2 + Y**2))
+    ax.plot_surface(X, Y, Z, cmap='viridis')
 
-var = tk.IntVar()  # Variable de control para Radiobutton
+    canvas.draw()
 
-radio1 = tk.Radiobutton(ventana, text="Habilitar Entrada", variable=var, value=1, command=actualizar_entrada)
-radio2 = tk.Radiobutton(ventana, text="Deshabilitar Entrada", variable=var, value=2, command=actualizar_entrada)
+# Crear una ventana de tkinter
+root = tk.Tk()
+root.title("Gráfico 3D interactivo")
 
-entrada_label = tk.Label(ventana, text="Entrada:")
-entrada = tk.Entry(ventana, state=tk.DISABLED)  # Inicialmente deshabilitado
+# Crear una figura de matplotlib en 3D
+fig = Figure(figsize=(5, 4), dpi=100)
+ax = fig.add_subplot(111, projection='3d')
 
-radio1.pack()
-radio2.pack()
+# Crear una instancia de FigureCanvasTkAgg y pasar la figura
+canvas = FigureCanvasTkAgg(fig, master=root)
+canvas_widget = canvas.get_tk_widget()
+canvas_widget.pack()
 
-entrada_label.pack()
-entrada.pack()
+# Crear un botón para actualizar el gráfico
+update_button = tk.Button(root, text="Actualizar Gráfico", command=draw_3d_graph)
+update_button.pack()
 
-ventana.mainloop()
-
-
+# Iniciar el bucle principal de tkinter
+root.mainloop()
