@@ -4,25 +4,20 @@ from ttkwidgets.autocomplete import AutocompleteCombobox
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
+from matplotlib import cm
 
 import graf
 import geoDiff
 
 
 class Aplicacion():
-    colores = ["blue", "green", "red", "cyan", "magenta", "yellow", "black",
+    colores = ["Predeterminado", "blue", "green", "red", "cyan", "magenta", "yellow", "black",
         "dodgerblue", "darkorange", "limegreen", "purple", "gold", "pink"]
-    cmap_options = ['viridis', 'plasma', 'inferno', 'magma', 'cividis', 'jet', 'cool', 'hot', 
+    cmap_options = ["Predeterminado", 'viridis', 'plasma', 'inferno', 'magma', 'cividis', 'jet', 'cool', 'hot', 
                     'spring', 'summer', 'autumn', 'winter', 'gray', 'bone', 'copper', 'YlGnBu', 
                     'YlOrRd', 'Blues', 'Greens', 'Oranges', 'Reds', 'PuRd', 'RdPu', 'BuPu', 'GnBu', 
                     'PuBu', 'YlGn', 'YlOrBr', 'YlOrRd', 'OrRd']
-
-    mapa_calor = False
-    resolucion = 50
     abecedario = [chr(i) for i in range(97, 123)]
-
-    widgets_si_sup_param = []
-    widgets_si_sup_form = []
 
     #Habilita e inhabilita superficie parametrizada o por ecuacion
     def seleccionar_tipo_superficie(self):
@@ -55,6 +50,14 @@ class Aplicacion():
         self.variable_y = tk.StringVar(value="y")
         self.variable_z = tk.StringVar(value="z")
         self.color_superficie = tk.StringVar(value="Predeterminado")
+        self.mapa_calor = tk.BooleanVar(value=False)
+        self.mapa_calor_opc = tk.StringVar(value="Predeterminado")
+        self.resolucion = tk.IntVar(value=50)
+        self.tang_punto = tk.BooleanVar(value=False)
+        self.tang_punto_uv = tk.IntVar()
+
+        self.widgets_si_sup_param = []
+        self.widgets_si_sup_form = []
 
         #Configuracion del root
         self.ancho = 1500
@@ -262,56 +265,73 @@ class Aplicacion():
         #self.init_marco_graficar(marco_calculos)
 
     def init_marco_graficar(self, marco):
-        marco_graficar_usuario = tk.Frame(marco)
-        marco_graficar_usuario.pack(side="top")
-        #self.init_marco_graficar_usuario(marco_graficar_usuario)
-
         marco_graficar_imagen = tk.Frame(marco)
         marco_graficar_imagen.pack(side="top")
         self.init_marco_graficar_imagen(marco_graficar_imagen)
 
+        marco_graficar_usuario = tk.Frame(marco)
+        marco_graficar_usuario.pack(side="top")
+        self.init_marco_graficar_usuario(marco_graficar_usuario)
 
-    
+    #Inicializa el marco con la superficie graficada
     def init_marco_graficar_imagen(self, marco):
         fig = plt.figure()
         fig.add_subplot(projection='3d')
-        canvas = FigureCanvasTkAgg(fig, master=marco)
-        canvas.get_tk_widget().pack()
+        self.canvas = FigureCanvasTkAgg(fig, master=marco)
+        self.canvas.get_tk_widget().pack()
+
+    def init_marco_graficar_usuario(self, marco):
+        marco_graficar_usuario_opciones = tk.Frame(marco)
+        marco_graficar_usuario_opciones.pack(side="left")
+        self.init_marco_graficar_usuario_opciones(marco_graficar_usuario_opciones)
+
+        marco_graficar_usuario_puntos = tk.Frame(marco)
+        marco_graficar_usuario_puntos.pack(side="left")
+        self.init_marco_graficar_usuario_puntos(marco_graficar_usuario_puntos)
+
+        tk.Button(marco, text="Calcular").pack(side="bottom")  #TODO- botton?
+
+    def init_marco_graficar_usuario_opciones(self, marco):
+        marco_seleccionar_color = tk.Frame(marco)
+        marco_seleccionar_color.pack(side="top", pady=5)
+        self.init_marco_seleccionar_color(marco_seleccionar_color)
+
+        marco_seleccionar_mapa_color = tk.Frame(marco)
+        marco_seleccionar_mapa_color.pack(side="top", pady=5)
+        self.init_marco_seleccionar_mapa_color(marco_seleccionar_mapa_color)  
+
+        marco_seleccionar_resolucion = tk.Frame(marco)
+        marco_seleccionar_resolucion.pack(side="top", pady=5)
+        self.init_marco_seleccionar_resolucion(marco_seleccionar_resolucion)
+
+    def init_marco_seleccionar_color(self, marco):
+        ttk.Label(marco, text="Color").pack(side="left")
+        AutocompleteCombobox(marco, textvariable=self.color_superficie, completevalues=self.colores).pack(side="left")
+
+    def init_marco_seleccionar_mapa_color(self, marco):
+        ttk.Checkbutton(marco, text='Mapa de calor', variable=self.mapa_calor,  onvalue=True, offvalue=False).pack(side="left")
+        AutocompleteCombobox(marco, textvariable=self.mapa_calor_opc, completevalues=self.cmap_options).pack(side="left")
+
+    def init_marco_seleccionar_resolucion(self, marco):
+        ttk.Label(marco, text="Resolucion:").pack(side="left")
+        ttk.Entry(marco, textvariable=self.resolucion).pack(side="left")
+
+    def init_marco_graficar_usuario_puntos(self, marco):
+        marco_tangente_Punto = tk.Frame(marco)
+        marco_tangente_Punto.pack(side="left")
+        self.init_marco_tangente_Punto(marco_tangente_Punto)
+
         
 
+    def init_marco_tangente_Punto(self, marco):
+        ttk.Checkbutton(marco, text='Plano tangente', variable=self.tang_punto,  onvalue=True, offvalue=False).pack(side="top")
+
+        marco_punto_uv = tk.Frame(marco)
+        marco_punto_uv.pack(side="top")
+        tk.Radiobutton(marco_punto_uv, text='(u, v) = (', variable=self.tang_punto_uv, value=1, command=self.seleccionar_tipo_superficie).pack(side="left")
+        tk.Entry(marco, state=tk.DISABLED, width=5)
 
 
-    """   
-    #Inicializa el marco con el boton para calcular
-    def init_marco_calcular(self, marco):
-        marco_opciones = tk.Frame(marco)
-        marco_opciones.pack(side="left")
-
-        #Color
-        self.init_marco_color(marco_opciones)
-        #Mapa calor
-        ttk.Checkbutton(marco_opciones, text='Mapa de calor', variable=self.mapa_calor,  onvalue=True, offvalue=False).pack(side="top")
-        #Resolucion
-        self.init_marco_resolucion(marco_opciones)
-        #Boton calcular
-        tk.Button(marco, text="Calcular").pack(side="left")
-
-    #Inicializa el marco con la opcion de elegir color de la superficie
-    def init_marco_color(self, marco):
-        marco_calc_marco_opciones_color = tk.Frame(marco)
-        marco_calc_marco_opciones_color.pack(side="top")
-
-        ttk.Label(marco_calc_marco_opciones_color, text="Color:").pack(side="left")
-        AutocompleteCombobox(marco_calc_marco_opciones_color, textvariable=self.color_superficie, completevalues=self.colores, text='Mapa de calor').pack(side="left")
-    
-    #Inicializa el marco con la resolucion de la representacion de la superficie
-    def init_marco_resolucion(self, marco):
-        marco_calc_marco_opciones_resoluciones = tk.Frame(marco)
-        marco_calc_marco_opciones_resoluciones.pack(side="top")
-
-        ttk.Label(marco_calc_marco_opciones_resoluciones, text="Resolucion:").pack(side="left")
-        ttk.Entry(marco_calc_marco_opciones_resoluciones, textvariable=self.resolucion).pack(side="left")
-    """
 
 def main():
     mi_app = Aplicacion()
