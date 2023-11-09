@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 
 import graf
-import geoDiff
 
 
 class Aplicacion():
