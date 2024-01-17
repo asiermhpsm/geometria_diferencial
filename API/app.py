@@ -1,9 +1,16 @@
 from flask import Flask
-#from calc... import auth_bp
+from blueprints.curvaturas import curvaturas_bp
+from blueprints.formas_fundamentales import formas_fundamentales_bp
+from blueprints.representacion import representacion_bp
+from blueprints.caracteristicas import caracteristicas_bp 
 
 app = Flask(__name__)
 
-#app.register_blueprint(auth_bp, url_prefix='/auth')
+# Registrar blueprints
+app.register_blueprint(curvaturas_bp, url_prefix='/curvaturas')
+app.register_blueprint(formas_fundamentales_bp, url_prefix='/formas-fundamentales')
+app.register_blueprint(representacion_bp, url_prefix='/representacion')
+app.register_blueprint(caracteristicas_bp, url_prefix='/caracteristicas')
 
 if __name__ == '__main__':
     app.run(debug=True)
