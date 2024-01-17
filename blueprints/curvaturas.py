@@ -1,32 +1,9 @@
 from flask import Blueprint, request
-import sympy as sp
+from .utils import normaliza_parametrizacion
 
 curvaturas_bp = Blueprint('curvaturas', __name__)
 
-def normaliza_parametrizacion(var1, var2, sup):
-    if var1:
-        u = sp.symbols(var1, real = True)
-    else:
-        u = sp.symbols('u', real = True)
-        var1='u'
-
-    if var2:
-        v = sp.symbols(var2, real = True)
-    else:
-        v = sp.symbols('v', real = True)
-        var2='v'
-
-    elementos_str = sup.strip('[]').split(',')
-    try:
-        superficie = [sp.sympify(elem, locals={var1: u, var2: v}) for elem in elementos_str]
-    except Exception as e:
-        raise Exception(f"Error al procesar la superficie: {e}")
-    if len(superficie) != 3:
-        raise Exception(f"La parametrización de la superficie debe tener 3 elementos pero se han encontrado {len(superficie)}")
-    
-    return superficie, u, v
-
-@curvaturas_bp.route('/curvatura_Gauss', methods=['GET'])
+@curvaturas_bp.route('/curvatura_Gauss')
 def curvatura_Gauss():
     var1 = request.args.get('var1', None)
     var2 = request.args.get('var2', None)
@@ -56,8 +33,6 @@ def curvatura_Gauss():
     
     #return str(curvaturaGauss(superficie, u, v))
     return str(superficie)
-
-
 
 @curvaturas_bp.route('/curvatura_media')
 def curvatura_media():
