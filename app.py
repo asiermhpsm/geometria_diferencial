@@ -1,5 +1,5 @@
 from flask import Flask, request
-
+import sympy as sp
 from utils import *
 
 """
@@ -269,7 +269,7 @@ def plano_tangente():
     z0 = request.args.get('z0', None)
     if x0 and y0 and z0:
         return str(planoTangente_pt_xyz(superficie, u, v, x0, y0, z0))
-    
+    print(planoTangente(superficie, u, v))
     return str(planoTangente(superficie, u, v))
 
 @app.route('/direcciones_principales')

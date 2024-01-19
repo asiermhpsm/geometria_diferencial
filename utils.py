@@ -89,7 +89,7 @@ def normal(parametrizacion, u, v):
     du_parametrizacion = [sp.diff(parametrizacion[i], u) for i in range(3)]
     dv_parametrizacion = [sp.diff(parametrizacion[i], v) for i in range(3)]
     res = sp.simplify( sp.Matrix(sp.Matrix(du_parametrizacion).cross(sp.Matrix(dv_parametrizacion))).normalized() )
-    return sp.Matrix([elem for elem in res]).T
+    return tuple(sp.Matrix([elem for elem in res]).T)
 
 def normal_pt_uv(parametrizacion, u, v, u0, v0, normal=None):
     """
@@ -115,7 +115,7 @@ def normal_pt_uv(parametrizacion, u, v, u0, v0, normal=None):
 
     du_parametrizacion_X_dv_parametrizacion_pt = sp.Matrix(sp.Matrix(du_parametrizacion_pt).cross(sp.Matrix(dv_parametrizacion_pt))).normalized()
 
-    return sp.Matrix([elem for elem in sp.Matrix(du_parametrizacion_X_dv_parametrizacion_pt)]).T
+    return tuple(sp.Matrix([elem for elem in sp.Matrix(du_parametrizacion_X_dv_parametrizacion_pt)]).T)
 
 def normal_pt_xyz(parametrizacion, u, v, x0, y0, z0, normal=None):
     """
@@ -226,7 +226,7 @@ def primeraFormaFundamental(parametrizacion, u, v):
     F=sp.simplify(du_parametrizacion.dot(dv_parametrizacion))
     G=sp.simplify(dv_parametrizacion.dot(dv_parametrizacion))
 
-    return sp.Matrix([E, F, G]).T
+    return tuple(sp.Matrix([E, F, G]).T)
 
 def primeraFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0):
     """
@@ -251,7 +251,7 @@ def primeraFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0):
     F_pt=sp.simplify(du_parametrizacion_pt.dot(dv_parametrizacion_pt))
     G_pt=sp.simplify(dv_parametrizacion_pt.dot(dv_parametrizacion_pt))
 
-    return sp.Matrix([E_pt, F_pt, G_pt]).T
+    return tuple(sp.Matrix([E_pt, F_pt, G_pt]).T)
 
 def primeraFormaFundamental_pt_xyz(parametrizacion, u, v, x0, y0, z0):
     """
@@ -296,7 +296,7 @@ def segundaFormaFundamental(parametrizacion, u, v):
     f = sp.simplify(n.dot(duv_parametrizacion))
     g = sp.simplify(n.dot(dvv_parametrizacion))
     
-    return sp.Matrix([e, f, g]).T
+    return tuple(sp.Matrix([e, f, g]).T)
 
 def segundaFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0):
     """
@@ -329,7 +329,7 @@ def segundaFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0):
     f_pt = sp.det(sp.Matrix([du_parametrizacion_pt, dv_parametrizacion_pt, duv_parametrizacion_pt]).T) / denominador
     g_pt = sp.det(sp.Matrix([du_parametrizacion_pt, dv_parametrizacion_pt, dvv_parametrizacion_pt]).T) / denominador
     
-    return sp.Matrix([e_pt, f_pt, g_pt]).T
+    return tuple(sp.Matrix([e_pt, f_pt, g_pt]).T)
 
 def segundaFormaFundamental_pt_xyz(parametrizacion, u, v, x0, y0, z0):
     """
@@ -501,7 +501,7 @@ def curvaturasPrincipales(parametrizacion, u, v, K=None, H=None, EFG=None, efg=N
     elif not H:
         H = curvaturaMedia(parametrizacion, u, v)
     raiz = sp.sqrt(H**2 - K)
-    return sp.Matrix([sp.simplify(H + raiz), sp.simplify(H - raiz)]).T
+    return tuple(sp.Matrix([sp.simplify(H + raiz), sp.simplify(H - raiz)]).T)
 
 def curvaturasPrincipales_pt_uv(parametrizacion, u, v, u0, v0, curv=None, K=None, H=None):
     """
@@ -526,7 +526,7 @@ def curvaturasPrincipales_pt_uv(parametrizacion, u, v, u0, v0, curv=None, K=None
     K_pt = curvaturaGauss_pt_uv(parametrizacion, u, v, u0, v0, EFG=(E_pt,F_pt, G_pt), efg=(e_pt,f_pt,g_pt))
     H_pt = curvaturaMedia_pt_uv(parametrizacion, u, v, u0, v0, EFG=(E_pt,F_pt, G_pt), efg=(e_pt,f_pt,g_pt))
     raiz = sp.sqrt(H_pt**2 - K_pt)
-    return sp.Matrix([H_pt + raiz, H_pt - raiz]).T
+    return tuple(sp.Matrix([H_pt + raiz, H_pt - raiz]).T)
 
 def curvaturasPrincipales_pt_xyz(parametrizacion, u, v, x0, y0, z0, curv=None, K=None, H=None):
     """
@@ -569,11 +569,11 @@ def clasicPt_uv(parametrizacion, u, v, u0, v0, curv=None, EFG=None, efg=None):
     """
     K_pt = curvaturaGauss_pt_uv(parametrizacion, u, v, u0, v0, curv, EFG, efg)
     if K_pt > 0:
-        print('Eliptico')
+        return('Eliptico')
     elif K_pt < 0:
-        print('Hiperbólitco')
+        return('Hiperbólitco')
     elif K_pt == 0:
-        print('Parabólico o planar')
+        return('Parabólico o planar')
 
 def clasicPt_xyz(parametrizacion, u, v, x0, y0, z0, curv=None, EFG=None, efg=None):
     """
