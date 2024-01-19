@@ -8,7 +8,7 @@ FUNCIONES AUXILIARES
 -------------------------------------------------------------------------------
 """
 
-def normaliza_parametrizacion(var1, var2, sup):
+def normaliza_parametrizacion(var1, var2, sup, consts):
     """
     Transforma la parametrización de una superficie a una expresion sympy con sus variable correspondientes
     No se hacen comprobaciones de tipo
@@ -18,21 +18,31 @@ def normaliza_parametrizacion(var1, var2, sup):
     var2                string con la segunda variable de la parametrización
     sup                 string con la parametrización de la superficie
     """
-    if var1:
-        u = sp.symbols(var1, real = True)
-    else:
-        u = sp.symbols('u', real = True)
-        var1='u'
+    variables = {}
 
-    if var2:
-        v = sp.symbols(var2, real = True)
-    else:
-        v = sp.symbols('v', real = True)
+    if not var1:
+        var1='u'
+    u = sp.symbols(var1)
+    variables[var1] = u
+
+    if not var2:
         var2='v'
+    v = sp.symbols(var2)
+    variables[var2] = v
+
+    if consts:
+        for elem in consts:
+            partes  = elem.strip('[]').split(',')
+            nombre_variable = partes[0].strip()
+            opciones = partes[1:]
+            opciones_dict = {}
+            for opcion in opciones:
+                opciones_dict[opcion.strip()] = True
+            variables[nombre_variable] = sp.symbols(nombre_variable, **opciones_dict)
 
     elementos_str = sup.strip('[]').split(',')
     try:
-        superficie = [sp.sympify(elem, locals={var1: u, var2: v}) for elem in elementos_str]
+        superficie = [sp.sympify(elem, locals=variables) for elem in elementos_str]
     except Exception as e:
         raise Exception(f"Error al procesar la superficie: {e}")
     if len(superficie) != 3:
@@ -52,12 +62,13 @@ def primera_forma_fundamental():
     var1 = request.args.get('var1', None)
     var2 = request.args.get('var2', None)
     superficie_str  = request.args.get('superficie')
+    const_str = request.args.getlist('const')
     
     if not superficie_str:
         raise Exception("No se ha encontrado la parametrización de la superficie")
 
     try:
-        superficie, u, v = normaliza_parametrizacion(var1, var2, superficie_str)
+        superficie, u, v = normaliza_parametrizacion(var1, var2, superficie_str, const_str)
     except Exception as e:
         #TODO-que hacer si hay error?
         raise e
@@ -80,12 +91,13 @@ def segunda_forma_fundamental():
     var1 = request.args.get('var1', None)
     var2 = request.args.get('var2', None)
     superficie_str  = request.args.get('superficie')
+    const_str = request.args.getlist('const')
     
     if not superficie_str:
         raise Exception("No se ha encontrado la parametrización de la superficie")
 
     try:
-        superficie, u, v = normaliza_parametrizacion(var1, var2, superficie_str)
+        superficie, u, v = normaliza_parametrizacion(var1, var2, superficie_str, const_str)
     except Exception as e:
         #TODO-que hacer si hay error?
         raise e
@@ -108,12 +120,13 @@ def curvatura_Gauss():
     var1 = request.args.get('var1', None)
     var2 = request.args.get('var2', None)
     superficie_str  = request.args.get('superficie')
+    const_str = request.args.getlist('const')
     
     if not superficie_str:
         raise Exception("No se ha encontrado la parametrización de la superficie")
 
     try:
-        superficie, u, v = normaliza_parametrizacion(var1, var2, superficie_str)
+        superficie, u, v = normaliza_parametrizacion(var1, var2, superficie_str, const_str)
     except Exception as e:
         #TODO-que hacer si hay error?
         raise e
@@ -136,12 +149,13 @@ def curvatura_media():
     var1 = request.args.get('var1', None)
     var2 = request.args.get('var2', None)
     superficie_str  = request.args.get('superficie')
+    const_str = request.args.getlist('const')
 
     if not superficie_str:
         raise Exception("No se ha encontrado la parametrización de la superficie")
 
     try:
-        superficie, u, v = normaliza_parametrizacion(var1, var2, superficie_str)
+        superficie, u, v = normaliza_parametrizacion(var1, var2, superficie_str, const_str)
     except Exception as e:
         #TODO-que hacer si hay error?
         raise e
@@ -164,12 +178,13 @@ def curvaturas_principales():
     var1 = request.args.get('var1', None)
     var2 = request.args.get('var2', None)
     superficie_str  = request.args.get('superficie')
+    const_str = request.args.getlist('const')
 
     if not superficie_str:
         raise Exception("No se ha encontrado la parametrización de la superficie")
 
     try:
-        superficie, u, v = normaliza_parametrizacion(var1, var2, superficie_str)
+        superficie, u, v = normaliza_parametrizacion(var1, var2, superficie_str, const_str)
     except Exception as e:
         #TODO-que hacer si hay error?
         raise e
@@ -193,12 +208,13 @@ def vector_normal():
     var1 = request.args.get('var1', None)
     var2 = request.args.get('var2', None)
     superficie_str  = request.args.get('superficie')
+    const_str = request.args.getlist('const')
     
     if not superficie_str:
         raise Exception("No se ha encontrado la parametrización de la superficie")
 
     try:
-        superficie, u, v = normaliza_parametrizacion(var1, var2, superficie_str)
+        superficie, u, v = normaliza_parametrizacion(var1, var2, superficie_str, const_str)
     except Exception as e:
         #TODO-que hacer si hay error?
         raise e
@@ -221,12 +237,13 @@ def clasificacion_punto():
     var1 = request.args.get('var1', None)
     var2 = request.args.get('var2', None)
     superficie_str  = request.args.get('superficie')
+    const_str = request.args.getlist('const')
     
     if not superficie_str:
         raise Exception("No se ha encontrado la parametrización de la superficie")
 
     try:
-        superficie, u, v = normaliza_parametrizacion(var1, var2, superficie_str)
+        superficie, u, v = normaliza_parametrizacion(var1, var2, superficie_str, const_str)
     except Exception as e:
         #TODO-que hacer si hay error?
         raise e
@@ -249,12 +266,13 @@ def plano_tangente():
     var1 = request.args.get('var1', None)
     var2 = request.args.get('var2', None)
     superficie_str  = request.args.get('superficie')
+    const_str = request.args.getlist('const')
     
     if not superficie_str:
         raise Exception("No se ha encontrado la parametrización de la superficie")
 
     try:
-        superficie, u, v = normaliza_parametrizacion(var1, var2, superficie_str)
+        superficie, u, v = normaliza_parametrizacion(var1, var2, superficie_str, const_str)
     except Exception as e:
         #TODO-que hacer si hay error?
         raise e
