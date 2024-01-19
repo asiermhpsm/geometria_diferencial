@@ -76,15 +76,15 @@ def primera_forma_fundamental():
     u0 = request.args.get('u0', None)
     v0 = request.args.get('v0', None)
     if u0 and v0:
-        return str(primeraFormaFundamental_pt_uv(superficie, u, v, u0, v0))
+        return str(tuple(primeraFormaFundamental_pt_uv(superficie, u, v, u0, v0)))
 
     x0 = request.args.get('x0', None)
     y0 = request.args.get('y0', None)
     z0 = request.args.get('z0', None)
     if x0 and y0 and z0:
-        return str(primeraFormaFundamental_pt_xyz(superficie, u, v, x0, y0, z0))
+        return str(tuple(primeraFormaFundamental_pt_xyz(superficie, u, v, x0, y0, z0)))
     
-    return str(primeraFormaFundamental(superficie, u, v))
+    return str(tuple(primeraFormaFundamental(superficie, u, v)))
 
 @app.route('/segunda_forma_fundamental')
 def segunda_forma_fundamental():
@@ -105,15 +105,15 @@ def segunda_forma_fundamental():
     u0 = request.args.get('u0', None)
     v0 = request.args.get('v0', None)
     if u0 and v0:
-        return str(segundaFormaFundamental_pt_uv(superficie, u, v, u0, v0))
+        return str(tuple(segundaFormaFundamental_pt_uv(superficie, u, v, u0, v0)))
 
     x0 = request.args.get('x0', None)
     y0 = request.args.get('y0', None)
     z0 = request.args.get('z0', None)
     if x0 and y0 and z0:
-        return str(segundaFormaFundamental_pt_xyz(superficie, u, v, x0, y0, z0))
+        return str(tuple(segundaFormaFundamental_pt_xyz(superficie, u, v, x0, y0, z0)))
     
-    return str(segundaFormaFundamental(superficie, u, v))
+    return str(tuple(segundaFormaFundamental(superficie, u, v)))
 
 @app.route('/curvatura_Gauss')
 def curvatura_Gauss():
@@ -134,15 +134,15 @@ def curvatura_Gauss():
     u0 = request.args.get('u0', None)
     v0 = request.args.get('v0', None)
     if u0 and v0:
-        return str(curvaturaGauss_pt_uv(superficie, u, v, u0, v0))
+        return str(tuple(curvaturaGauss_pt_uv(superficie, u, v, u0, v0)))
 
     x0 = request.args.get('x0', None)
     y0 = request.args.get('y0', None)
     z0 = request.args.get('z0', None)
     if x0 and y0 and z0:
-        return str(curvaturaGauss_pt_xyz(superficie, u, v, x0, y0, z0))
+        return str(tuple(curvaturaGauss_pt_xyz(superficie, u, v, x0, y0, z0)))
     
-    return str(curvaturaGauss(superficie, u, v))
+    return str(tuple(curvaturaGauss(superficie, u, v)))
 
 @app.route('/curvatura_media')
 def curvatura_media():
@@ -163,15 +163,15 @@ def curvatura_media():
     u0 = request.args.get('u0', None)
     v0 = request.args.get('v0', None)
     if u0 and v0:
-        return str(curvaturaMedia_pt_uv(superficie, u, v, u0, v0))
+        return str(tuple(curvaturaMedia_pt_uv(superficie, u, v, u0, v0)))
 
     x0 = request.args.get('x0', None)
     y0 = request.args.get('y0', None)
     z0 = request.args.get('z0', None)
     if x0 and y0 and z0:
-        return str(curvaturaMedia_pt_xyz(superficie, u, v, x0, y0, z0))
+        return str(tuple(curvaturaMedia_pt_xyz(superficie, u, v, x0, y0, z0)))
     
-    return str(curvaturaMedia(superficie, u, v))
+    return str(tuple(curvaturaMedia(superficie, u, v)))
 
 @app.route('/curvaturas_principales')
 def curvaturas_principales():
@@ -192,16 +192,16 @@ def curvaturas_principales():
     u0 = request.args.get('u0', None)
     v0 = request.args.get('v0', None)
     if u0 and v0:
-        return str(curvaturasPrincipales_pt_uv(superficie, u, v, u0, v0))
+        return str(tuple(curvaturasPrincipales_pt_uv(superficie, u, v, u0, v0)))
 
     x0 = request.args.get('x0', None)
     y0 = request.args.get('y0', None)
     z0 = request.args.get('z0', None)
     if x0 and y0 and z0:
-        return str(curvaturasPrincipales_pt_xyz(superficie, u, v, x0, y0, z0))
+        return str(tuple(curvaturasPrincipales_pt_xyz(superficie, u, v, x0, y0, z0)))
 
     
-    return str(curvaturasPrincipales(superficie, u, v))
+    return str(tuple(curvaturasPrincipales(superficie, u, v)))
 
 @app.route('/vector_normal')
 def vector_normal():
@@ -222,15 +222,15 @@ def vector_normal():
     u0 = request.args.get('u0', None)
     v0 = request.args.get('v0', None)
     if u0 and v0:
-        return str(normal_pt_uv(superficie, u, v, u0, v0))
+        return str(tuple(normal_pt_uv(superficie, u, v, u0, v0)))
 
     x0 = request.args.get('x0', None)
     y0 = request.args.get('y0', None)
     z0 = request.args.get('z0', None)
     if x0 and y0 and z0:
-        return str(normal_pt_xyz(superficie, u, v, x0, y0, z0))
+        return str(tuple(normal_pt_xyz(superficie, u, v, x0, y0, z0)))
     
-    return str(normal(superficie, u, v))
+    return str(tuple(normal(superficie, u, v)))
 
 @app.route('/clasificacion_punto')
 def clasificacion_punto():
@@ -251,13 +251,13 @@ def clasificacion_punto():
     u0 = request.args.get('u0', None)
     v0 = request.args.get('v0', None)
     if u0 and v0:
-        return str(clasicPt_uv(superficie, u, v, u0, v0))
+        return str(tuple(clasicPt_uv(superficie, u, v, u0, v0)))
 
     x0 = request.args.get('x0', None)
     y0 = request.args.get('y0', None)
     z0 = request.args.get('z0', None)
     if x0 and y0 and z0:
-        return str(clasicPt_xyz(superficie, u, v, x0, y0, z0))
+        return str(tuple(clasicPt_xyz(superficie, u, v, x0, y0, z0)))
     
     raise Exception("No se ha definido correctamente el punto a clasificar")
 
