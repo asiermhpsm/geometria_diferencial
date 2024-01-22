@@ -1,5 +1,10 @@
-from flask import Flask, request
+from flask import Flask, request, send_file
+from io import BytesIO
+import base64
 import sympy as sp
+from sympy.plotting import plot3d_parametric_surface
+import matplotlib.pyplot as plt
+
 from utils import *
 
 """
@@ -134,15 +139,15 @@ def curvatura_Gauss():
     u0 = request.args.get('u0', None)
     v0 = request.args.get('v0', None)
     if u0 and v0:
-        return str(tuple(curvaturaGauss_pt_uv(superficie, u, v, u0, v0)))
+        return str(curvaturaGauss_pt_uv(superficie, u, v, u0, v0))
 
     x0 = request.args.get('x0', None)
     y0 = request.args.get('y0', None)
     z0 = request.args.get('z0', None)
     if x0 and y0 and z0:
-        return str(tuple(curvaturaGauss_pt_xyz(superficie, u, v, x0, y0, z0)))
+        return str(curvaturaGauss_pt_xyz(superficie, u, v, x0, y0, z0))
     
-    return str(tuple(curvaturaGauss(superficie, u, v)))
+    return str(curvaturaGauss(superficie, u, v))
 
 @app.route('/curvatura_media')
 def curvatura_media():
@@ -163,15 +168,15 @@ def curvatura_media():
     u0 = request.args.get('u0', None)
     v0 = request.args.get('v0', None)
     if u0 and v0:
-        return str(tuple(curvaturaMedia_pt_uv(superficie, u, v, u0, v0)))
+        return str(curvaturaMedia_pt_uv(superficie, u, v, u0, v0))
 
     x0 = request.args.get('x0', None)
     y0 = request.args.get('y0', None)
     z0 = request.args.get('z0', None)
     if x0 and y0 and z0:
-        return str(tuple(curvaturaMedia_pt_xyz(superficie, u, v, x0, y0, z0)))
+        return str(curvaturaMedia_pt_xyz(superficie, u, v, x0, y0, z0))
     
-    return str(tuple(curvaturaMedia(superficie, u, v)))
+    return str(curvaturaMedia(superficie, u, v))
 
 @app.route('/curvaturas_principales')
 def curvaturas_principales():
@@ -251,13 +256,13 @@ def clasificacion_punto():
     u0 = request.args.get('u0', None)
     v0 = request.args.get('v0', None)
     if u0 and v0:
-        return str(tuple(clasicPt_uv(superficie, u, v, u0, v0)))
+        return str(clasicPt_uv(superficie, u, v, u0, v0))
 
     x0 = request.args.get('x0', None)
     y0 = request.args.get('y0', None)
     z0 = request.args.get('z0', None)
     if x0 and y0 and z0:
-        return str(tuple(clasicPt_xyz(superficie, u, v, x0, y0, z0)))
+        return str(clasicPt_xyz(superficie, u, v, x0, y0, z0))
     
     raise Exception("No se ha definido correctamente el punto a clasificar")
 
@@ -287,18 +292,57 @@ def plano_tangente():
     z0 = request.args.get('z0', None)
     if x0 and y0 and z0:
         return str(planoTangente_pt_xyz(superficie, u, v, x0, y0, z0))
-    print(planoTangente(superficie, u, v))
     return str(planoTangente(superficie, u, v))
 
 @app.route('/direcciones_principales')
 def direcciones_principales():
-    # TODO
-    return ''
+    var1 = request.args.get('var1', None)
+    var2 = request.args.get('var2', None)
+    superficie_str  = request.args.get('superficie')
+    const_str = request.args.getlist('const')
 
-@app.route('/representacion')
-def representar():
-    # TODO
-    return ''
+    if not superficie_str:
+        raise Exception("No se ha encontrado la parametrización de la superficie")
+
+    try:
+        superficie, u, v = normaliza_parametrizacion(var1, var2, superficie_str, const_str)
+    except Exception as e:
+        #TODO-que hacer si hay error?
+        raise e
+    
+    u0 = request.args.get('u0', None)
+    v0 = request.args.get('v0', None)
+    if u0 and v0:
+        return str(tuple(dirPrinc_pt_xyz(superficie, u, v, u0, v0)))
+
+    x0 = request.args.get('x0', None)
+    y0 = request.args.get('y0', None)
+    z0 = request.args.get('z0', None)
+    if x0 and y0 and z0:
+        return str(tuple(dirPrinc_pt_uv(superficie, u, v, x0, y0, z0)))
+
+    return str(tuple(dirPrinc_pt(superficie, u, v)))
+
+@app.route('/grafica')
+def grafica():
+    var1 = request.args.get('var1', None)
+    var2 = request.args.get('var2', None)
+    superficie_str  = request.args.get('superficie')
+
+    if not superficie_str:
+        raise Exception("No se ha encontrado la parametrización de la superficie")
+
+    try:
+        superficie, u, v = normaliza_parametrizacion(var1, var2, superficie_str, None)
+    except Exception as e:
+        #TODO-que hacer si hay error?
+        raise e
+
+    plot = plot3d_parametric_surface(superficie[0], superficie[1], superficie[2], show=False, aspect="equal")
+    buf = BytesIO()
+    plot.save(buf)
+    data = base64.b64encode(buf.getbuffer()).decode("ascii")
+    return f"<img src='data:image/png;base64,{data}'/>"
 
 
 if __name__ == '__main__':

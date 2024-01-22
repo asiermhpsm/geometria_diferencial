@@ -2,6 +2,35 @@ import sympy as sp
 
 """
 -------------------------------------------------------------------------------
+METODOS AUXILIARES
+-------------------------------------------------------------------------------
+"""
+def norm(vector):
+    """
+    Retorna la norma de un vector
+    No se hacen comprobaciones de tipo
+
+    Argumentos:
+    vector     lista con el vector en cuestion
+    """
+    sum = 0
+    for elem in vector:
+        sum = sum + elem**2
+    return sp.simplify(sp.sqrt(sum))
+
+def normaliza(vector):
+    """
+    Retorna el vector normalizado
+    No se hacen comprobaciones de tipo
+
+    Argumentos:
+    vector     lista con el vector en cuestion
+    """
+    return sp.simplify(vector/norm(vector))
+
+
+"""
+-------------------------------------------------------------------------------
 TRANSFORMACIONES DE PUNTOS
 -------------------------------------------------------------------------------
 """
@@ -22,53 +51,31 @@ def uv_to_xyz(parametrizacion, u, v, u0, v0):
     z = float(sp.N(parametrizacion[2].subs([[u, u0],[v,v0]])))
     return x, y, z
 
-def xy_to_uv(parametrizacion, u, v, x0, y0):
-    """
-    Dado un 'x', 'y' consigo su valor u y v de una superficie parametrizada
-    No se hacen comprobaciones de tipo
-
-    Argumentos:
-    parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
-    x0                  valor x del punto
-    y0                  valor y del punto
-    u                   primera variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
-    v                   segunda variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
-    """
-    eq1 = sp.Eq(parametrizacion[0], x0)
-    eq2 = sp.Eq(parametrizacion[1], y0)
-
-    soluciones = sp.solve((eq1, eq2), (u, v))
-    #TODO-revisar como son estas soluciones
-    
-    if not soluciones:
-        raise('El punto dado no esta en la superficie.')
-
-    return soluciones
 
 def xyz_to_uv(parametrizacion, u, v, x0, y0, z0):
     """
-    Dado un x,y,z consigo un valor u y v de una superficie parametrizada
+    Dado un x,y,z devuelve su valor u y v de una superficie parametrizada. Se devuelve la primera solucion que se encuentre
     No se hacen comprobaciones de tipo
 
     Argumentos:
     parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
+    u                   primera variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
+    v                   segunda variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
     x0                  valor x del punto
     y0                  valor y del punto
     z0                  valor z del punto
-    u                   primera variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
-    v                   segunda variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
     """
-    soluciones = xy_to_uv(parametrizacion, u, v, x0, y0)
-    if isinstance(soluciones, list):
-        for sol in soluciones:
-            if float(parametrizacion[2].subs([[u, sol[0]],[v,sol[1]]])) == z0:
-                return sol
-    elif isinstance(soluciones, dict):
-        sol = tuple(valor for clave, valor in soluciones.items())
-        if float(parametrizacion[2].subs([[u, sol[0]],[v,sol[1]]])) == z0:
-            return sol
-
-    raise('El punto dado no esta en la superficie.')
+    punto = (x0, y0, z0)
+    ecuaciones = [sp.Eq(s, p) for s, p in zip(parametrizacion, punto)]
+    soluciones = sp.solve(ecuaciones, (u, v))
+    if not soluciones:
+        raise('El punto dado no esta en la superficie.')
+    
+    #TODO- devuelvo todas las soluciones o solo una?
+    if isinstance(soluciones, dict):
+        return soluciones[u] ,soluciones[v]
+    else:
+        return soluciones[0]
 
 
 """
@@ -86,12 +93,13 @@ def normal(parametrizacion, u, v):
     u                   primera variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
     v                   segunda variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
     """
-    du_parametrizacion = [sp.diff(parametrizacion[i], u) for i in range(3)]
-    dv_parametrizacion = [sp.diff(parametrizacion[i], v) for i in range(3)]
-    res = sp.simplify( sp.Matrix(sp.Matrix(du_parametrizacion).cross(sp.Matrix(dv_parametrizacion))).normalized() )
+    du_parametrizacion = [sp.diff(comp, u) for comp in parametrizacion]
+    dv_parametrizacion = [sp.diff(comp, v) for comp in parametrizacion]
+
+    res = normaliza(sp.Matrix(du_parametrizacion).cross(sp.Matrix(dv_parametrizacion)))
     return sp.Matrix([elem for elem in res]).T
 
-def normal_pt_uv(parametrizacion, u, v, u0, v0, normal=None):
+def normal_pt_uv(parametrizacion, u, v, u0, v0):
     """
     Retorna el vector normal de una superficie en un punto descrito por u,v
     No se hacen comprobaciones de tipo
@@ -104,20 +112,16 @@ def normal_pt_uv(parametrizacion, u, v, u0, v0, normal=None):
     v0                  valor v del punto
     normal              parametro opcional por si se tiene ya calculado el vector normal
     """
-    if normal:
-        return sp.Matrix([sp.N(normal[i].subs([[u, u0],[v,v0]])) for i in range(3)]).T
-    
-    du_parametrizacion = [sp.diff(parametrizacion[i], u) for i in range(3)]
-    dv_parametrizacion = [sp.diff(parametrizacion[i], v) for i in range(3)]
+    du_parametrizacion = [sp.diff(comp, u) for comp in parametrizacion]
+    dv_parametrizacion = [sp.diff(comp, v) for comp in parametrizacion]
 
-    du_parametrizacion_pt = [sp.N(du_parametrizacion[i].subs([[u, u0],[v,v0]])) for i in range(3)]
-    dv_parametrizacion_pt = [sp.N(dv_parametrizacion[i].subs([[u, u0],[v,v0]])) for i in range(3)]
+    du_parametrizacion_pt = [sp.N(comp.subs([[u, u0],[v,v0]])) for comp in du_parametrizacion]
+    dv_parametrizacion_pt = [sp.N(comp.subs([[u, u0],[v,v0]])) for comp in dv_parametrizacion]
 
-    du_parametrizacion_X_dv_parametrizacion_pt = sp.Matrix(sp.Matrix(du_parametrizacion_pt).cross(sp.Matrix(dv_parametrizacion_pt))).normalized()
+    res = normaliza(sp.Matrix(sp.Matrix(du_parametrizacion_pt).cross(sp.Matrix(dv_parametrizacion_pt))))
+    return sp.Matrix([elem for elem in res]).T
 
-    return sp.Matrix([elem for elem in sp.Matrix(du_parametrizacion_X_dv_parametrizacion_pt)]).T
-
-def normal_pt_xyz(parametrizacion, u, v, x0, y0, z0, normal=None):
+def normal_pt_xyz(parametrizacion, u, v, x0, y0, z0):
     """
     Retorna el vector normal de una superficie en un punto descrito por x, y, z
     No se hacen comprobaciones de tipo
@@ -132,7 +136,7 @@ def normal_pt_xyz(parametrizacion, u, v, x0, y0, z0, normal=None):
     normal              parametro opcional por si se tiene ya calculado el vector normal
     """
     u0, v0 = xyz_to_uv(parametrizacion, u, v, x0, y0, z0)
-    return normal_pt_uv(parametrizacion, u, v, u0, v0, normal)
+    return normal_pt_uv(parametrizacion, u, v, u0, v0)
 
 
 """
@@ -150,15 +154,14 @@ def planoTangente(parametrizacion, u, v):
     u                   primera variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
     v                   segunda variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
     """
+    du_parametrizacion = [sp.diff(comp, u) for comp in parametrizacion]
+    dv_parametrizacion = [sp.diff(comp, v) for comp in parametrizacion]
+
     x, y, z = sp.symbols('x, y, z', real = True)
-    xyz = [x,y,z]
+    #TODO-¿igualo a 0?
+    return sp.Matrix(du_parametrizacion).cross(sp.Matrix(dv_parametrizacion)).dot(sp.Matrix([x,y,z]))
 
-    du_parametrizacion = [sp.diff(parametrizacion[i], u) for i in range(3)]
-    dv_parametrizacion = [sp.diff(parametrizacion[i], v) for i in range(3)]
-
-    return sp.Matrix( sp.Matrix(du_parametrizacion).cross(sp.Matrix(dv_parametrizacion)) ).dot( sp.Matrix( [(xyz[i]) for i in range(3)]) )
-
-def planoTangente_pt_uv(parametrizacion, u, v, u0, v0, tang=None):
+def planoTangente_pt_uv(parametrizacion, u, v, u0, v0):
     """
     Retorna el plano tangente (sin igualar a cero) de una superficie parametrizada en un punto descrito con u, v
     No se hacen comprobaciones de tipo
@@ -169,24 +172,19 @@ def planoTangente_pt_uv(parametrizacion, u, v, u0, v0, tang=None):
     v                   segunda variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
     u0                  valor u del punto
     v0                  valor v del punto
-    tang                parametro opcional por si ya se tiene calculado la formula general plano tangente en funcion de u,v
     """
-    if tang:
-        return sp.N(tang.subs([[u, u0],[v,v0]]))
-    
+    du_parametrizacion = [sp.diff(comp, u) for comp in parametrizacion]
+    dv_parametrizacion = [sp.diff(comp, v) for comp in parametrizacion]
+
+    parametrizacion_pt = [sp.N(comp.subs([[u, u0],[v,v0]])) for comp in parametrizacion]
+    du_parametrizacion_pt = [sp.N(comp.subs([[u, u0],[v,v0]])) for comp in du_parametrizacion]
+    dv_parametrizacion_pt = [sp.N(comp.subs([[u, u0],[v,v0]])) for comp in dv_parametrizacion]
+
     x, y, z = sp.symbols('x, y, z', real = True)
     xyz = [x,y,z]
-    parametrizacion_pt = [sp.N(parametrizacion[i].subs([[u, u0],[v,v0]])) for i in range(3)]
-
-    du_parametrizacion = [sp.diff(parametrizacion[i], u) for i in range(3)]
-    dv_parametrizacion = [sp.diff(parametrizacion[i], v) for i in range(3)]
-
-    du_parametrizacion_pt = [sp.N(du_parametrizacion[i].subs([[u, u0],[v,v0]])) for i in range(3)]
-    dv_parametrizacion_pt = [sp.N(dv_parametrizacion[i].subs([[u, u0],[v,v0]])) for i in range(3)]
-
     return sp.Matrix( sp.Matrix(du_parametrizacion_pt).cross(sp.Matrix(dv_parametrizacion_pt)) ).dot( sp.Matrix( [(xyz[i] - parametrizacion_pt[i]) for i in range(3)]) )
 
-def planoTangente_pt_xyz(parametrizacion, u, v, x0, y0,z0, tang=None):
+def planoTangente_pt_xyz(parametrizacion, u, v, x0, y0,z0):
     """
     Retorna el plano tangente (sin igualar a cero) de una superficie parametrizada en un punto descrito con u, v
     No se hacen comprobaciones de tipo
@@ -198,10 +196,9 @@ def planoTangente_pt_xyz(parametrizacion, u, v, x0, y0,z0, tang=None):
     x0                  valor x del punto
     y0                  valor y del punto
     z0                  valor z del punto
-    tang                parametro opcional por si ya se tiene calculado la formula general plano tangente en funcion de u,v
     """
     u0, v0 = xyz_to_uv(parametrizacion, u, v, x0, y0, z0)
-    return planoTangente_pt_uv(parametrizacion, u, v, u0, v0, tang)
+    return planoTangente_pt_uv(parametrizacion, u, v, u0, v0)
 
 
 """
@@ -211,7 +208,7 @@ PRIMERA FORMA FUNDAMENTAL
 """
 def primeraFormaFundamental(parametrizacion, u, v):
     """
-    Retorna la primera forma fundamental en forma de (E, F, G)
+    Retorna la primera forma fundamental en forma de Matrix(E, F, G)
     No se hacen comprobaciones de tipo
 
     Argumentos:
@@ -219,8 +216,8 @@ def primeraFormaFundamental(parametrizacion, u, v):
     u                   primera variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
     v                   segunda variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
     """
-    du_parametrizacion = sp.simplify(sp.Matrix([sp.diff(parametrizacion[i], u) for i in range(3)]))
-    dv_parametrizacion = sp.simplify(sp.Matrix([sp.diff(parametrizacion[i], v) for i in range(3)]))
+    du_parametrizacion = sp.simplify(sp.Matrix([sp.diff(comp, u) for comp in parametrizacion]))
+    dv_parametrizacion = sp.simplify(sp.Matrix([sp.diff(comp, v) for comp in parametrizacion]))
 
     E=sp.simplify(du_parametrizacion.dot(du_parametrizacion))
     F=sp.simplify(du_parametrizacion.dot(dv_parametrizacion))
@@ -230,7 +227,7 @@ def primeraFormaFundamental(parametrizacion, u, v):
 
 def primeraFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0):
     """
-    Retorna en forma de tupla la primera forma fundamental en un punto  descrito por u,v
+    Retorna en forma de Matrix(E, F, G) la primera forma fundamental en un punto  descrito por u,v
     No se hacen comprobaciones de tipo
 
     Argumentos:
@@ -240,12 +237,11 @@ def primeraFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0):
     u0                  valor u del punto
     v0                  valor v del punto
     """
-    
-    du_parametrizacion = sp.simplify(sp.Matrix([sp.diff(parametrizacion[i], u) for i in range(3)]))
-    dv_parametrizacion = sp.simplify(sp.Matrix([sp.diff(parametrizacion[i], v) for i in range(3)]))
+    du_parametrizacion = [sp.diff(comp, u) for comp in parametrizacion]
+    dv_parametrizacion = [sp.diff(comp, v) for comp in parametrizacion]
 
-    du_parametrizacion_pt = sp.simplify(sp.Matrix([sp.N(du_parametrizacion[i].subs([[u, u0],[v,v0]])) for i in range(3)]))
-    dv_parametrizacion_pt = sp.simplify(sp.Matrix([sp.N(dv_parametrizacion[i].subs([[u, u0],[v,v0]])) for i in range(3)]))
+    du_parametrizacion_pt = sp.simplify(sp.Matrix([sp.N(comp.subs([[u, u0],[v,v0]])) for comp in du_parametrizacion]))
+    dv_parametrizacion_pt = sp.simplify(sp.Matrix([sp.N(comp.subs([[u, u0],[v,v0]])) for comp in dv_parametrizacion]))
 
     E_pt=sp.simplify(du_parametrizacion_pt.dot(du_parametrizacion_pt))
     F_pt=sp.simplify(du_parametrizacion_pt.dot(dv_parametrizacion_pt))
@@ -255,7 +251,7 @@ def primeraFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0):
 
 def primeraFormaFundamental_pt_xyz(parametrizacion, u, v, x0, y0, z0):
     """
-    Retorna en forma de tupla la primera forma fundamental en un punto  descrito por x, y, z
+    Retorna en forma de Matrix(E, F, G) la primera forma fundamental en un punto  descrito por x, y, z
     No se hacen comprobaciones de tipo
 
     Argumentos:
@@ -277,7 +273,7 @@ SEGUNDA FORMA FUNDAMENTAL
 """
 def segundaFormaFundamental(parametrizacion, u, v):
     """
-    Retorna la segunda forma fundamental en forma de tupla
+    Retorna la segunda forma fundamental en forma de Matrix(e, f, g)
     No se hacen comprobaciones de tipo
 
     Argumentos:
@@ -285,13 +281,14 @@ def segundaFormaFundamental(parametrizacion, u, v):
     u                   primera variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
     v                   segunda variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
     """
-    du_parametrizacion = sp.simplify(sp.Matrix([sp.simplify(sp.diff(parametrizacion[i], u)) for i in range(3)]))
-    dv_parametrizacion = sp.simplify(sp.Matrix([sp.simplify(sp.diff(parametrizacion[i], v)) for i in range(3)]))
-    duu_parametrizacion = sp.simplify(sp.Matrix([sp.simplify(sp.diff(du_parametrizacion[i], u)) for i in range(3)]))
-    duv_parametrizacion = sp.simplify(sp.Matrix([sp.simplify(sp.diff(du_parametrizacion[i], v)) for i in range(3)]))
-    dvv_parametrizacion = sp.simplify(sp.Matrix([sp.simplify(sp.diff(dv_parametrizacion[i], v)) for i in range(3)]))
+    du_parametrizacion = sp.simplify(sp.Matrix([sp.diff(comp, u) for comp in parametrizacion]))
+    dv_parametrizacion = sp.simplify(sp.Matrix([sp.diff(comp, v) for comp in parametrizacion]))
+    duu_parametrizacion = sp.simplify(sp.Matrix([sp.diff(comp, u) for comp in du_parametrizacion]))
+    duv_parametrizacion = sp.simplify(sp.Matrix([sp.diff(comp, v) for comp in du_parametrizacion]))
+    dvv_parametrizacion = sp.simplify(sp.Matrix([sp.diff(comp, v) for comp in dv_parametrizacion]))
 
     n = normal(parametrizacion, u, v)
+
     e = sp.simplify(n.dot(duu_parametrizacion))
     f = sp.simplify(n.dot(duv_parametrizacion))
     g = sp.simplify(n.dot(dvv_parametrizacion))
@@ -300,7 +297,7 @@ def segundaFormaFundamental(parametrizacion, u, v):
 
 def segundaFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0):
     """
-    Retorna en forma de tupla la segunda forma fundamental en un punto  descrito por u, v
+    Retorna en forma de Matrix(e, f, g) la segunda forma fundamental en un punto  descrito por u, v
     No se hacen comprobaciones de tipo
 
     Argumentos:
@@ -310,30 +307,27 @@ def segundaFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0):
     u0                  valor u del punto
     v0                  valor v del punto
     """
-    
-    du_parametrizacion = [sp.simplify(sp.diff(parametrizacion[i], u)) for i in range(3)]
-    dv_parametrizacion = [sp.simplify(sp.diff(parametrizacion[i], v)) for i in range(3)]
-    duu_parametrizacion = [sp.simplify(sp.diff(du_parametrizacion[i], u)) for i in range(3)]
-    duv_parametrizacion = [sp.simplify(sp.diff(du_parametrizacion[i], v)) for i in range(3)]
-    dvv_parametrizacion = [sp.simplify(sp.diff(dv_parametrizacion[i], v)) for i in range(3)]
+    du_parametrizacion = [sp.simplify(sp.diff(comp, u)) for comp in parametrizacion]
+    dv_parametrizacion = [sp.simplify(sp.diff(comp, v)) for comp in parametrizacion]
+    duu_parametrizacion = [sp.simplify(sp.diff(comp, u)) for comp in du_parametrizacion]
+    duv_parametrizacion = [sp.simplify(sp.diff(comp, v)) for comp in du_parametrizacion]
+    dvv_parametrizacion = [sp.simplify(sp.diff(comp, v)) for comp in dv_parametrizacion]
 
-    du_parametrizacion_pt = [sp.N(du_parametrizacion[i].subs([[u, u0],[v,v0]])) for i in range(3)]
-    dv_parametrizacion_pt = [sp.N(dv_parametrizacion[i].subs([[u, u0],[v,v0]])) for i in range(3)]
-    duu_parametrizacion_pt = [sp.N(duu_parametrizacion[i].subs([[u, u0],[v,v0]])) for i in range(3)]
-    duv_parametrizacion_pt = [sp.N(duv_parametrizacion[i].subs([[u, u0],[v,v0]])) for i in range(3)]
-    dvv_parametrizacion_pt = [sp.N(dvv_parametrizacion[i].subs([[u, u0],[v,v0]])) for i in range(3)]
+    duu_parametrizacion_pt = sp.simplify(sp.Matrix([sp.N(comp.subs([[u, u0],[v,v0]])) for comp in duu_parametrizacion]))
+    duv_parametrizacion_pt = sp.simplify(sp.Matrix([sp.N(comp.subs([[u, u0],[v,v0]])) for comp in duv_parametrizacion]))
+    dvv_parametrizacion_pt = sp.simplify(sp.Matrix([sp.N(comp.subs([[u, u0],[v,v0]])) for comp in dvv_parametrizacion]))
 
-    denominador = sp.simplify((sp.Matrix(du_parametrizacion_pt).cross(sp.Matrix(dv_parametrizacion_pt))).norm())
+    n_pt = normal_pt_uv(parametrizacion, u, v, u0, v0)
 
-    e_pt = sp.det(sp.Matrix([du_parametrizacion_pt, dv_parametrizacion_pt, duu_parametrizacion_pt]).T) / denominador
-    f_pt = sp.det(sp.Matrix([du_parametrizacion_pt, dv_parametrizacion_pt, duv_parametrizacion_pt]).T) / denominador
-    g_pt = sp.det(sp.Matrix([du_parametrizacion_pt, dv_parametrizacion_pt, dvv_parametrizacion_pt]).T) / denominador
-    
+    e_pt = sp.simplify(n_pt.dot(duu_parametrizacion_pt))
+    f_pt = sp.simplify(n_pt.dot(duv_parametrizacion_pt))
+    g_pt = sp.simplify(n_pt.dot(dvv_parametrizacion_pt))
+
     return sp.Matrix([e_pt, f_pt, g_pt]).T
 
 def segundaFormaFundamental_pt_xyz(parametrizacion, u, v, x0, y0, z0):
     """
-    Retorna en forma de tupla la segunda forma fundamental en un punto  descrito por x, y, z
+    Retorna en forma de Matrix(e, f, g) la segunda forma fundamental en un punto  descrito por x, y, z
     No se hacen comprobaciones de tipo
 
     Argumentos:
@@ -537,8 +531,9 @@ def curvaturasPrincipales_pt_xyz(parametrizacion, u, v, x0, y0, z0, curv=None, K
     parametrizacio      parametrizacion de superficie (lista de longitud 3 con funciones)
     u                   primera variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
     v                   segunda variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
-    u0                  valor u del punto
-    v0                  valor v del punto
+    x0                  valor x del punto
+    y0                  valor y del punto
+    z0                  valor z del punto
     curv                parametro opcional por si ya se tienen calculadas las curvaturas principales
     K                   parametro opcional por si se tiene ya calculada cruvatura Gauss en el punto deseado
     H                   parametro opcional por si se tiene ya calculada curvatura Media en el punto deseado
@@ -552,7 +547,7 @@ def curvaturasPrincipales_pt_xyz(parametrizacion, u, v, x0, y0, z0, curv=None, K
 CLASIFICACION DE UN PUNTO
 -------------------------------------------------------------------------------
 """
-def clasicPt_uv(parametrizacion, u, v, u0, v0, curv=None, EFG=None, efg=None):
+def clasicPt_uv(parametrizacion, u, v, u0, v0):
     """
     Imprime la clasificacion de una superficie en un punto descrito con x, y, z
     No se hacen comprobaciones de tipo
@@ -563,19 +558,19 @@ def clasicPt_uv(parametrizacion, u, v, u0, v0, curv=None, EFG=None, efg=None):
     v                   segunda variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
     u0                  valor u del punto
     v0                  valor v del punto
-    curv                parametro opcional por si ya se tiene calculada la curvatura de Gauss
-    EFG                 parametro opcional (tupla de longitud 3) por si se tienen ya calculados E, F, G en el punto deseado
-    efg                 parametro opcional (tupla de longitud 3) por si se tienen ya calculados e, f, g en el punto deseado
     """
-    K_pt = curvaturaGauss_pt_uv(parametrizacion, u, v, u0, v0, curv, EFG, efg)
-    if K_pt > 0:
-        return('Eliptico')
-    elif K_pt < 0:
-        return('Hiperbólitco')
-    elif K_pt == 0:
-        return('Parabólico o planar')
+    k1, k2 = curvaturasPrincipales_pt_uv(parametrizacion, u, v, u0, v0)
+    if k1*k2 > 0:
+        return 'Eliptico'
+    elif k1*k2 < 0:
+        return 'Hiperbólitco'
+    elif k1*k2 == 0:
+        if sp.simplify(k1-k2) == 0:
+            return 'Planar'
+        else:
+            return 'Parabólico'
 
-def clasicPt_xyz(parametrizacion, u, v, x0, y0, z0, curv=None, EFG=None, efg=None):
+def clasicPt_xyz(parametrizacion, u, v, x0, y0, z0):
     """
     Imprime la clasificacion de una superficie en un punto descrito con x, y, z
     No se hacen comprobaciones de tipo
@@ -589,7 +584,7 @@ def clasicPt_xyz(parametrizacion, u, v, x0, y0, z0, curv=None, EFG=None, efg=Non
     z0                  valor z del punto
     """
     u0, v0 = xyz_to_uv(parametrizacion, u, v, x0, y0, z0)
-    return clasicPt_uv(parametrizacion, u, v, u0, v0, curv, EFG, efg)
+    return clasicPt_uv(parametrizacion, u, v, u0, v0)
 
 
 """
@@ -597,7 +592,31 @@ def clasicPt_xyz(parametrizacion, u, v, x0, y0, z0, curv=None, EFG=None, efg=Non
 DIRECCIONES PRINCIPALES
 -------------------------------------------------------------------------------
 """
-#TODO-NO ESTA BIEN HECHA
+def dirPrinc_pt(parametrizacion, u, v):
+    """
+    Calcula las direcciones principales en un punto
+    No se hacen comprobaciones de tipo
+
+    Argumentos:
+    parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
+    u                   primera variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
+    v                   segunda variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
+    """
+    E, F, G = primeraFormaFundamental(parametrizacion, u, v)
+    e, f, g = segundaFormaFundamental(parametrizacion, u, v)
+
+    denom = E*G - F**2
+    W = sp.Matrix([[e*G-f*F, f*G-g*F], [f*E-e*F, g*E-f*F]])/denom
+    autovalores = W.eigenvects(simplify=True)
+
+    if autovalores[0][1] == 2:
+        return tuple(autovalores[0][-1][0]), tuple(autovalores[0][-1][1])
+    elif autovalores[0][1] == 1:
+        return tuple(autovalores[0][-1][0]), tuple(autovalores[1][-1][0])
+    else:
+        raise Exception("No se ha podido calcular los autovectores")
+    
+
 def dirPrinc_pt_uv(parametrizacion, u, v, u0, v0):
     """
     Calcula las direcciones principales en un punto
@@ -610,29 +629,32 @@ def dirPrinc_pt_uv(parametrizacion, u, v, u0, v0):
     u0                  valor u del punto
     v0                  valor v del punto
     """
-    a, b = sp.symbols('u, v', real = True)
-
-    k1_pt, k2_pt = curvaturasPrincipales_pt_uv(parametrizacion, u, v, u0, v0)
     E_pt, F_pt, G_pt = primeraFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0)
     e_pt, f_pt, g_pt = segundaFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0)
 
-    du_parametrizacion = [sp.diff(parametrizacion[i], u) for i in range(3)]
-    dv_parametrizacion = [sp.diff(parametrizacion[i], v) for i in range(3)]
+    denom = E_pt*G_pt - F_pt**2
+    W = sp.Matrix([[e_pt*G_pt-f_pt*F_pt, f_pt*G_pt-g_pt*F_pt], [f_pt*E_pt-e_pt*F_pt, g_pt*E_pt-f_pt*F_pt]])/denom
+    autovalores = W.eigenvects(simplify=True)
 
-    du_parametrizacion_pt = [sp.N(du_parametrizacion[i].subs([[u, u0],[v,v0]])) for i in range(3)]
-    dv_parametrizacion_pt = [sp.N(dv_parametrizacion[i].subs([[u, u0],[v,v0]])) for i in range(3)]
+    if autovalores[0][1] == 2:
+        return tuple(autovalores[0][-1][0]), tuple(autovalores[0][-1][1])
+    elif autovalores[0][1] == 1:
+        return tuple(autovalores[0][-1][0]), tuple(autovalores[1][-1][0])
+    else:
+        raise Exception("No se ha podido calcular los autovectores")
 
+def dirPrinc_pt_xyz(parametrizacion, u, v, x0, y0, z0):
+    """
+    Calcula las direcciones principales en un punto
+    No se hacen comprobaciones de tipo
 
-    ec1 = sp.Eq(sp.simplify(e_pt-k1_pt*E_pt)*a, sp.simplify(f_pt-k1_pt*F_pt)*b)
-    ec2 = sp.Eq(sp.simplify(f_pt-k1_pt*F_pt)*a, sp.simplify(g_pt-k1_pt*G_pt)*b)
-    sol1 = sp.solve((ec1, ec2), (a, b))
-    vec1 = [sol1['a'] * du + sol1['b'] * dv for du, dv in zip(du_parametrizacion_pt, dv_parametrizacion_pt)]
-    
-
-    ec1 = sp.Eq(sp.simplify(e_pt-k2_pt*E_pt)*a, sp.simplify(f_pt-k2_pt*F_pt)*b)
-    ec2 = sp.Eq(sp.simplify(f_pt-k2_pt*F_pt)*a, sp.simplify(g_pt-k2_pt*G_pt)*b)
-    sol2 = sp.solve((ec1, ec2), (a, b))
-    vec2 = [sol2['a'] * du + sol2['b'] * dv for du, dv in zip(du_parametrizacion_pt, dv_parametrizacion_pt)]
-
-    return vec1, vec2
-
+    Argumentos:
+    parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
+    u                   primera variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
+    v                   segunda variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
+    x0                  valor x del punto
+    y0                  valor y del punto
+    z0                  valor z del punto
+    """
+    u0, v0 = xyz_to_uv(parametrizacion, u, v, x0, y0, z0)
+    return dirPrinc_pt_uv(parametrizacion, u, v, u0, v0)
