@@ -17,6 +17,13 @@ import sympy as sp
 from sympy.plotting import plot3d_parametric_surface
 import matplotlib.pyplot as plt
 
+u, v = sp.symbols('u v')
+
+
+expr = (sp.cos(u)*sp.cos(v), sp.cos(u)*sp.sin(v) , sp.sin(u))
+plot3d_parametric_surface(*expr)
+
+
 app = Flask(__name__)
 
 
@@ -34,5 +41,5 @@ def hello():
     data = base64.b64encode(buf.getbuffer()).decode("ascii")
     return f"<img src='data:image/png;base64,{data}'/>"
 
-if __name__ == '__main__':
-    app.run(debug=True)
+"""if __name__ == '__main__':
+    app.run(debug=True)"""

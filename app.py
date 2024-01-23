@@ -1,17 +1,23 @@
 from flask import Flask, request, send_file
-from io import BytesIO
+import io
 import base64
 import sympy as sp
-from sympy.plotting import plot3d_parametric_surface
 import matplotlib.pyplot as plt
+from matplotlib import colormaps
+import matplotlib.colors as mcolors
 
 from utils import *
+from utils_graph import *
 
 """
 -------------------------------------------------------------------------------
-FUNCIONES AUXILIARES
+FUNCIONES AUXILIARES Y ATRIBUTOS GENERALES
 -------------------------------------------------------------------------------
 """
+
+colormapas = list(colormaps)
+colores = list(mcolors.BASE_COLORS.keys())+list(mcolors.TABLEAU_COLORS.keys()) + list(mcolors.CSS4_COLORS.keys()) + list(mcolors.XKCD_COLORS.keys())
+
 
 def normaliza_parametrizacion(var1, var2, sup, consts):
     """
@@ -54,6 +60,7 @@ def normaliza_parametrizacion(var1, var2, sup, consts):
         raise Exception(f"La parametrización de la superficie debe tener 3 elementos pero se han encontrado {len(superficie)}")
     
     return superficie, u, v
+
 
 """
 -------------------------------------------------------------------------------
@@ -338,11 +345,20 @@ def grafica():
         #TODO-que hacer si hay error?
         raise e
 
-    plot = plot3d_parametric_surface(superficie[0], superficie[1], superficie[2], show=False, aspect="equal")
-    buf = BytesIO()
-    plot.save(buf)
-    data = base64.b64encode(buf.getbuffer()).decode("ascii")
-    return f"<img src='data:image/png;base64,{data}'/>"
+    fig = plt.figure()
+    ax = fig.add_subplot(projection='3d')
+    grafica_sup_param(ax,superficie,u,v,-sp.pi/2,sp.pi/2,0,2*sp.pi,{})
+    ax.set_aspect('equal')
+    ax.set_xlabel('Eje X')
+    ax.set_ylabel('Eje Y')
+    ax.set_zlabel('Eje Z')
+
+    buf = io.BytesIO()
+    fig.savefig(buf, format='png')
+    buf.seek(0)
+    #data = base64.b64encode(buf.getbuffer()).decode("ascii")
+    #return f"<img src='data:image/png;base64,{data}'/>"
+    return send_file(io.BytesIO(buf.read()), mimetype='image/png')
 
 
 if __name__ == '__main__':
