@@ -12,16 +12,14 @@ def grafica_superficie(ax, X, Y, Z, opc):
     if 'color' in opc and 'cmap' in opc:
         del opc['color']
     surf = ax.plot_surface(X, Y, Z, **opc)
-    ax.figure.colorbar(surf, ax=ax, shrink=0.5, aspect=10)
+    #ax.figure.colorbar(surf, ax=ax, shrink=0.5, aspect=10)
 
 def grafica_sup_param(ax, sup, u, v, limite_inf_u, limite_sup_u, limite_inf_v, limite_sup_v, opc):
+    parametric_surface = sp.lambdify((u, v), sup, 'numpy')
     u_values = np.linspace(float(limite_inf_u), float(limite_sup_u), 100)
     v_values = np.linspace(float(limite_inf_v), float(limite_sup_v), 100)
-
-    X = np.array([[float(sup[0].subs([[u, u_value], [v, v_value]])) for v_value in v_values] for u_value in u_values])
-    Y = np.array([[float(sup[1].subs([[u, u_value], [v, v_value]])) for v_value in v_values] for u_value in u_values])
-    Z = np.array([[float(sup[2].subs([[u, u_value], [v, v_value]])) for v_value in v_values] for u_value in u_values])
-
+    u_values, v_values = np.meshgrid(u_values, v_values)
+    X, Y, Z = parametric_surface(u_values, v_values)
     grafica_superficie(ax, X, Y, Z, opc)
 
 def grafica_sup_ec(ax, sup, x, y, z, opc, limite_inf_x=-10, limite_sup_x=10, limite_inf_y=-10, limite_sup_y=10):
@@ -64,11 +62,11 @@ arg_opc = {}
 #arg_opc['edgecolors'] = 'k'
 #arg_opc['linestyles'] = 'solid'
 #arg_opc['shade'] = False
-#grafica_sup_param(ax,parametrizacion,u,v,limite_inf_u,limite_sup_u,limite_inf_v,limite_sup_v,arg_opc)
+grafica_sup_param(ax,parametrizacion,u,v,limite_inf_u,limite_sup_u,limite_inf_v,limite_sup_v,arg_opc)
 
 
-plano = x**2 + y**2 +z**2 - 1
-#plano = z - 1
+#plano = x**2 + y**2 +z**2 - 1
+plano = z - 1
 arg_opc2 = {}
 #arg_opc2['cmap'] = 'Blues'
 arg_opc2['color'] = 'grey'
@@ -78,7 +76,7 @@ arg_opc2['alpha'] = 0.8
 #arg_opc2['edgecolors'] = 'k'
 #arg_opc2['linestyles'] = 'solid'
 #arg_opc2['shade'] = False
-grafica_sup_ec(ax,plano,x,y,z,arg_opc2)
+#grafica_sup_ec(ax,plano,x,y,z,arg_opc2)
 
 
 arg_opc3 = {}
