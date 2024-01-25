@@ -1,27 +1,26 @@
-import matplotlib.pyplot as plt
 import numpy as np
+from mayavi import mlab
 
-from matplotlib import cm
-import matplotlib.cbook as cbook
-import matplotlib.colors as colors
+mlab.clf()
+x, y, z = np.mgrid[-3:3:50j, -3:3:50j, -3:3:50j]
 
-N = 100
-X, Y = np.mgrid[-3:3:complex(0, N), -2:2:complex(0, N)]
+# Plot a sphere of radius 1
+values = x*x + y*y + z*z - 1
+mlab.contour3d(x, y, z, values, contours=[0])
+mlab.axes()
 
-# A low hump with a spike coming out of the top right.  Needs to have
-# z/colour axis on a log scale, so we see both hump and spike. A linear
-# scale only shows the spike.
-Z1 = np.exp(-X**2 - Y**2)
-Z2 = np.exp(-(X * 10)**2 - (Y * 10)**2)
-Z = Z1 + 50 * Z2
+# Plot a torus
+R = 2
+r = 1
+values = (R - np.sqrt(x**2 + y**2))**2 + z**2 - r**2
+mlab.figure()
+mlab.contour3d(x, y, z, values, contours=[0])
+mlab.axes()
 
-fig, ax = plt.subplots(2, 1)
-
-pcm = ax[0].pcolor(X, Y, Z,
-                   norm=colors.LogNorm(vmin=Z.min(), vmax=Z.max()),
-                   cmap='PuBu_r', shading='auto')
-fig.colorbar(pcm, ax=ax[0], extend='max')
-
-pcm = ax[1].pcolor(X, Y, Z, cmap='PuBu_r', shading='auto')
-fig.colorbar(pcm, ax=ax[1], extend='max')
-plt.show()
+# Plot a Scherk's second surface
+x, y, z = np.mgrid[-4:4:100j, -4:4:100j, -8:8:100j]
+values = np.sin(z) - np.sinh(x)*np.sinh(y)
+mlab.figure()
+mlab.contour3d(x, y, z, values, contours=[0])
+mlab.axes()
+mlab.show()

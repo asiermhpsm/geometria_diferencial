@@ -24,18 +24,18 @@ def grafica_sup_param(ax, sup, u, v, limite_inf_u, limite_sup_u, limite_inf_v, l
 
     grafica_superficie(ax, X, Y, Z, opc)
 
-def grafica_sup_ec(ax, sup, x, y, z, limite_inf_x, limite_sup_x, limite_inf_y, limite_sup_y, opc):
-    x_values = np.linspace(limite_inf_x, limite_sup_x, 100)
-    y_values = np.linspace(limite_inf_y, limite_sup_y, 100)
-    X, Y = np.meshgrid(x_values, y_values)
+def grafica_sup_ec(ax, sup, x, y, z, opc, limite_inf_x=-10, limite_sup_x=10, limite_inf_y=-10, limite_sup_y=10):
+    eq_sin_z = sup.subs(z,0)
+    #pli = sp.plot_implicit(sp.Eq(eq_sin_z, 0), show=False)
+    pli = sp.plot_implicit(eq_sin_z<=0, show=False)
+    series = pli[0]
+    data, action = series.get_points()
+    data = np.array([(x_int.mid, y_int.mid) for x_int, y_int in data])
+    print(data)
+    
 
-    ecuacion_resulta = sp.solve( sp.Eq(sup,0), z)
-    for sol in ecuacion_resulta:
-        funcion_z = sp.lambdify((x, y), sol, 'numpy')
-        Z = funcion_z(X, Y)
-        if np.isscalar(Z):
-            Z = np.full_like(X, Z)
-        grafica_superficie(ax, X, Y, Z, opc)
+    #grafica_superficie(ax, X, Y, Z, opc)
+    
 
 def grafica_punto(ax, punto, opc):
     ax.scatter(punto[0],punto[1],punto[2],**opc)
@@ -64,11 +64,11 @@ arg_opc = {}
 #arg_opc['edgecolors'] = 'k'
 #arg_opc['linestyles'] = 'solid'
 #arg_opc['shade'] = False
-grafica_sup_param(ax,parametrizacion,u,v,limite_inf_u,limite_sup_u,limite_inf_v,limite_sup_v,arg_opc)
+#grafica_sup_param(ax,parametrizacion,u,v,limite_inf_u,limite_sup_u,limite_inf_v,limite_sup_v,arg_opc)
 
 
-#plano = x**2 + y**2 +z**2 - 1
-plano = z - 1
+plano = x**2 + y**2 +z**2 - 1
+#plano = z - 1
 arg_opc2 = {}
 #arg_opc2['cmap'] = 'Blues'
 arg_opc2['color'] = 'grey'
@@ -78,7 +78,7 @@ arg_opc2['alpha'] = 0.8
 #arg_opc2['edgecolors'] = 'k'
 #arg_opc2['linestyles'] = 'solid'
 #arg_opc2['shade'] = False
-grafica_sup_ec(ax,plano,x,y,z,-1,1,-1,1,arg_opc2)
+grafica_sup_ec(ax,plano,x,y,z,arg_opc2)
 
 
 arg_opc3 = {}
@@ -87,7 +87,7 @@ arg_opc3['color'] = 'black'
 arg_opc3['alpha'] = 1
 #arg_opc3['marker'] = '*'
 #arg_opc3['edgecolors'] = 'yellow'
-grafica_punto(ax,(0,0,1),arg_opc3)
+#grafica_punto(ax,(0,0,1),arg_opc3)
 
 
 arg_opc4 = {}
@@ -95,7 +95,7 @@ arg_opc4['color'] = 'red'
 arg_opc4['linewidth'] = 2
 #arg_opc3['marker'] = '*'
 #arg_opc3['edgecolors'] = 'yellow'
-grafica_vector(ax,(0,0,1), (0,0,1), arg_opc4)
+#grafica_vector(ax,(0,0,1), (0,0,1), arg_opc4)
 
 
 ax.set_aspect('equal')
