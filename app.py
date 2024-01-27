@@ -1,13 +1,19 @@
 from flask import Flask, request, send_file
 import io
-import base64
+from PIL import Image
 import sympy as sp
-import matplotlib.pyplot as plt
-from matplotlib import colormaps
-import matplotlib.colors as mcolors
+import numpy as np
+
+from mayavi import mlab
+
+from matplotlib.image import imsave
+#from matplotlib import colormaps
+#import matplotlib.colors as mcolors
 
 from utils import *
-from utils_graph import *
+#from utils_graph import *
+
+mlab.options.offscreen = True
 
 """
 -------------------------------------------------------------------------------
@@ -15,8 +21,8 @@ FUNCIONES AUXILIARES Y ATRIBUTOS GENERALES
 -------------------------------------------------------------------------------
 """
 
-colormapas = list(colormaps)
-colores = list(mcolors.BASE_COLORS.keys())+list(mcolors.TABLEAU_COLORS.keys()) + list(mcolors.CSS4_COLORS.keys()) + list(mcolors.XKCD_COLORS.keys())
+#colormapas = list(colormaps)
+#colores = list(mcolors.BASE_COLORS.keys())+list(mcolors.TABLEAU_COLORS.keys()) + list(mcolors.CSS4_COLORS.keys()) + list(mcolors.XKCD_COLORS.keys())
 
 
 def normaliza_parametrizacion(var1, var2, sup, consts):
@@ -60,6 +66,28 @@ def normaliza_parametrizacion(var1, var2, sup, consts):
         raise Exception(f"La parametrización de la superficie debe tener 3 elementos pero se han encontrado {len(superficie)}")
     
     return superficie, u, v
+
+
+def grafica_sup_param(sup, u, v, limite_inf_u, limite_sup_u, limite_inf_v, limite_sup_v):
+    parametric_surface = sp.lambdify((u, v), sup, 'numpy')
+    u_values = np.linspace(float(limite_inf_u), float(limite_sup_u), 100)
+    v_values = np.linspace(float(limite_inf_v), float(limite_sup_v), 100)
+    u_values, v_values = np.meshgrid(u_values, v_values)
+    x, y, z = parametric_surface(u_values, v_values)
+    mlab.mesh(x, y, z, color=(0.2980392156862745, 0.4470588235294118, 0.6901960784313725))
+    return max(float(np.max(x)), float(np.max(y)), float(np.max(z)))
+
+def grafica_sup_ec(sup, x, y, z, limite_inf_x, limite_sup_x, limite_inf_y, limite_sup_y):
+    parametric_surface = sp.lambdify((x, y, z), sup, 'numpy')
+    x_vals, y_vals, z_vals = np.mgrid[limite_inf_x:limite_sup_x:100j, limite_inf_y:limite_sup_y:100j, -10:10:100j]
+    values = parametric_surface(x_vals, y_vals, z_vals)
+    mlab.contour3d(x_vals, y_vals, z_vals, values, contours=[0])
+
+def grafica_punto(punto):
+    mlab.points3d(*punto, color=(1, 0, 0), scale_factor=0.1, mode='sphere')
+
+def grafica_vector(inicio, vector):
+    mlab.quiver3d(*inicio, *vector, color=(0, 0, 1), scale_factor=1)
 
 
 """
@@ -330,7 +358,7 @@ def direcciones_principales():
 
     return str(tuple(dirPrinc_pt(superficie, u, v)))
 
-@app.route('/grafica')
+"""@app.route('/grafica')
 def grafica():
     var1 = request.args.get('var1', None)
     var2 = request.args.get('var2', None)
@@ -358,7 +386,70 @@ def grafica():
     buf.seek(0)
     #data = base64.b64encode(buf.getbuffer()).decode("ascii")
     #return f"<img src='data:image/png;base64,{data}'/>"
-    return send_file(io.BytesIO(buf.read()), mimetype='image/png')
+    return send_file(io.BytesIO(buf.read()), mimetype='image/png')"""
+
+@app.route('/grafica')
+def grafica():
+    var1 = request.args.get('var1', None)
+    var2 = request.args.get('var2', None)
+    superficie_str  = request.args.get('superficie')
+
+    if not superficie_str:
+        raise Exception("No se ha encontrado la parametrización de la superficie")
+
+    try:
+        superficie, u, v = normaliza_parametrizacion(var1, var2, superficie_str, None)
+    except Exception as e:
+        #TODO-que hacer si hay error?
+        raise e
+    
+    
+    maximo = grafica_sup_param(superficie,u,v,-sp.pi/2,sp.pi/2,0,2*sp.pi)
+    print(maximo)
+
+    mlab.plot3d([0, maximo], [0, 0], [0, 0], color=(1, 0, 0), tube_radius=None)
+    mlab.plot3d([0, 0], [0, maximo], [0, 0], color=(0, 1, 0), tube_radius=None)
+    mlab.plot3d([0, 0], [0, 0], [0, maximo], color=(0, 0, 1), tube_radius=None)
+    
+    buf1 = io.BytesIO()
+    imsave(buf1, mlab.screenshot(antialiased=True), format='png')
+    buf1.seek(0)
+
+    mlab.view(azimuth=0, elevation=90, distance='auto')
+    buf2 = io.BytesIO()
+    imsave(buf2, mlab.screenshot(antialiased=True), format='png')
+    buf2.seek(0)
+
+    mlab.view(azimuth=90, elevation=0, distance='auto')
+    buf3 = io.BytesIO()
+    imsave(buf3, mlab.screenshot(antialiased=True), format='png')
+    buf3.seek(0)
+
+    mlab.view(azimuth=0, elevation=0, distance='auto')
+    buf4 = io.BytesIO()
+    imsave(buf4, mlab.screenshot(antialiased=True), format='png')
+    buf4.seek(0)
+    
+    mlab.clf()
+    mlab.close()
+
+    image1 = Image.open(buf1)
+    image2 = Image.open(buf2)
+    image3 = Image.open(buf3)
+    image4 = Image.open(buf4)
+
+    width, height = image1.size
+    combined_image = Image.new('RGB', (width * 2, height * 2))
+    combined_image.paste(image1, (0, 0))
+    combined_image.paste(image2, (width, 0))
+    combined_image.paste(image3, (0, height))
+    combined_image.paste(image4, (width, height))
+
+    combined_buf = io.BytesIO()
+    combined_image.save(combined_buf, format='PNG')
+    combined_buf.seek(0)
+
+    return send_file(combined_buf, mimetype='image/png')
 
 
 if __name__ == '__main__':
