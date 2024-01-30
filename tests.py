@@ -291,7 +291,7 @@ class TestAPI(unittest.TestCase):
 
     @unittest.skip("Hay que comprobar como hace las simplificaciones")
     def test14(self):
-        sup = '[a %2B b*cos(u))*cos(v), (a %2B b*cos(u))*sin(v), b*sin(u)]'
+        sup = '[(a %2B b*cos(u))*cos(v), (a %2B b*cos(u))*sin(v), b*sin(u)]'
 
         response = self.app.get(f"/primera_forma_fundamental?superficie={sup}")
         self.assertEqual(response.status_code, 200)

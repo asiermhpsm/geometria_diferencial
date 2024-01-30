@@ -20,14 +20,36 @@ def grafica_sup_param(ax, sup, u, v, limite_inf_u, limite_sup_u, limite_inf_v, l
     v_values = np.linspace(float(limite_inf_v), float(limite_sup_v), 100)
     u_values, v_values = np.meshgrid(u_values, v_values)
     X, Y, Z = parametric_surface(u_values, v_values)
-    grafica_superficie(ax, X, Y, Z, opc)
 
 def grafica_sup_ec(ax, sup, x, y, z, opc, limite_inf_x=-1, limite_sup_x=1, limite_inf_y=-1, limite_sup_y=1):
-    parametric_surface = sp.lambdify((x, y, z), sup, 'numpy')
-    X, Y, Z = np.mgrid[limite_inf_x:limite_sup_x:100j, limite_inf_y:limite_sup_y:100j, -10:10:100j]
-    values = parametric_surface(X, Y, Z)
+    soluciones = sp.solve(sp.Eq(sup, 0), z)
+    x_values = np.linspace(limite_inf_x, limite_sup_x, 100)
+    y_values = np.linspace(limite_inf_y, limite_sup_y, 100)
+    x_values, y_values = np.meshgrid(x_values, y_values)
+    X = np.array([])
+    Y = np.array([])
+    Z = np.array([])
+    for sol in soluciones:
+        parametric_surface = sp.lambdify((x, y), sol, 'numpy')
+        z_values = parametric_surface(x_values, y_values)
+        if not X.size:
+            X = x_values.copy()
+            Y = y_values.copy()
+            Z = z_values.copy()
+        else:
+            X = np.vstack((X, x_values))
+            Y = np.vstack((Y, y_values))
+            Z = np.vstack((Z, z_values))
+    union = sp.solve(sp.Eq(soluciones[0], soluciones[1]), y)
+    f_union = sp.lambdify(x, union[0], 'numpy')
+    y_valores_union = f_union(x_values)
+    z_values = parametric_surface(x_values, y_valores_union)
+    X = np.vstack((X, x_values))
+    Y = np.vstack((Y, y_valores_union))
+    Z = np.vstack((Z, z_values))
 
     grafica_superficie(ax, X, Y, Z, opc)
+        
     
 
 def grafica_punto(ax, punto, opc):
@@ -64,8 +86,8 @@ plano = x**2 + y**2 +z**2 - 1
 #plano = z - 1
 arg_opc2 = {}
 #arg_opc2['cmap'] = 'Blues'
-arg_opc2['color'] = 'grey'
-arg_opc2['alpha'] = 1
+#arg_opc2['color'] = 'grey'
+#arg_opc2['alpha'] = 1
 #arg_opc2['norm'] = mcolors.Normalize(vmin=-1, vmax=1)
 #arg_opc2['linewidth'] = 0.5
 #arg_opc2['edgecolors'] = 'k'
