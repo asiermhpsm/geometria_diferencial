@@ -47,6 +47,8 @@ def normaliza_parametrizacion(var1, var2, sup, consts):
     v = sp.symbols(var2)
     variables[var2] = v
 
+    #https://docs.sympy.org/latest/guides/assumptions.html#predicates
+    #https://docs.sympy.org/latest/modules/core.html#module-sympy.core.assumptions
     if consts:
         for elem in consts:
             partes  = elem.strip('[]').split(',')
@@ -56,6 +58,7 @@ def normaliza_parametrizacion(var1, var2, sup, consts):
             for opcion in opciones:
                 opciones_dict[opcion.strip()] = True
             variables[nombre_variable] = sp.symbols(nombre_variable, **opciones_dict)
+            print(variables[nombre_variable], variables[nombre_variable].assumptions0)
 
     elementos_str = sup.strip('[]').split(',')
     try:
@@ -258,7 +261,6 @@ def vector_normal():
     except Exception as e:
         #TODO-que hacer si hay error?
         raise e
-    
     u0 = request.args.get('u0', None)
     v0 = request.args.get('v0', None)
     if u0 and v0:
@@ -348,13 +350,13 @@ def direcciones_principales():
     u0 = request.args.get('u0', None)
     v0 = request.args.get('v0', None)
     if u0 and v0:
-        return str(tuple(dirPrinc_pt_xyz(superficie, u, v, u0, v0)))
+        return str(tuple(dirPrinc_pt_uv(superficie, u, v, u0, v0)))
 
     x0 = request.args.get('x0', None)
     y0 = request.args.get('y0', None)
     z0 = request.args.get('z0', None)
     if x0 and y0 and z0:
-        return str(tuple(dirPrinc_pt_uv(superficie, u, v, x0, y0, z0)))
+        return str(tuple(dirPrinc_pt_xyz(superficie, u, v, x0, y0, z0)))
 
     return str(tuple(dirPrinc_pt(superficie, u, v)))
 
