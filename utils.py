@@ -84,10 +84,9 @@ def uv_to_xyz(parametrizacion, u, v, u0, v0):
     u0                  valor u del punto
     v0                  valor v del punto
     """
-    x = float(sp.N(parametrizacion[0].subs([[u, u0],[v,v0]])))
-    y = float(sp.N(parametrizacion[1].subs([[u, u0],[v,v0]])))
-    z = float(sp.N(parametrizacion[2].subs([[u, u0],[v,v0]])))
-    return x, y, z
+    if not isinstance(parametrizacion, sp.Matrix):
+        parametrizacion = sp.Matrix(parametrizacion)
+    return tuple(parametrizacion.subs({u:u0, v:v0}))
 
 def xyz_to_uv(parametrizacion, u, v, x0, y0, z0):
     """
@@ -155,26 +154,18 @@ def normal_pt_uv(parametrizacion, u, v, u0, v0, resultados={}):
     v0                  valor v del punto
     resultados          diccionario con todos los resultados calculados hasta el momento
     """
-    if 'normal' in resultados:
-        resultados['normal_pt'] = resultados['normal'].subs({u:u0, v:v0})
-        return resultados['normal_pt']
-    
-    if 'duXdv' in resultados:
-        resultados['duXdv_pt'] = resultados['duXdv'].subs({u:u0, v:v0})
-        resultados['normal_pt'] = normaliza(resultados['duXdv_pt'])
-        return resultados['normal_pt']
-
-    if not 'du_pt' in resultados:
-        if not 'du' in resultados:
-            resultados['du'] = sp.Matrix([sp.diff(comp, u) for comp in parametrizacion])
-        resultados['du_pt'] = resultados['du'].subs({u:u0, v:v0})
-    
-    if not 'dv_pt' in resultados:
-        if not 'dv' in resultados:
-            resultados['dv'] = sp.Matrix([sp.diff(comp, v) for comp in parametrizacion])
-        resultados['dv_pt'] = resultados['dv'].subs({u:u0, v:v0})
-        
-    resultados['duXdv_pt'] = resultados['du_pt'].cross(resultados['dv_pt'])
+    if not isinstance(parametrizacion, sp.Matrix):
+        parametrizacion = sp.Matrix(parametrizacion)
+    if 'duXdv_pt' not in resultados:
+        if not 'du_pt' in resultados:
+            if not 'du' in resultados:
+                resultados['du'] = sp.diff(parametrizacion, u)
+            resultados['du_pt'] = resultados['du'].subs({u:u0, v:v0}) 
+        if not 'dv_pt' in resultados:
+            if not 'dv' in resultados:
+                resultados['dv'] = sp.diff(parametrizacion, v)
+            resultados['dv_pt'] = resultados['dv'].subs({u:u0, v:v0})
+        resultados['duXdv_pt'] = resultados['du_pt'].cross(resultados['dv_pt'])
     resultados['normal_pt'] = normaliza(resultados['duXdv_pt'])
     return resultados['normal_pt']
 
@@ -223,9 +214,33 @@ def planoTangente(parametrizacion, u, v, resultados={}):
     x, y, z = sp.symbols('x, y, z', real = True)
     #TODO-¿igualo a 0?
     resultados['tangente'] = resultados['duXdv'].dot(sp.Matrix([x,y,z]))
-    return resultados['tangente'] 
+    return resultados['tangente']
 
-def planoTangente_pt_uv(parametrizacion, u, v, u0, v0):
+def planoTangenteAfin(parametrizacion, u, v, resultados={}):
+    """
+    Retorna el plano tangente (sin igualar a cero) de una superficie parametrizada
+    No se hacen comprobaciones de tipo
+
+    Argumentos:
+    parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
+    u                   primera variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
+    v                   segunda variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
+    resultados          diccionario con todos los resultados calculados hasta el momento
+    """
+    if not isinstance(parametrizacion, sp.Matrix):
+        parametrizacion = sp.Matrix(parametrizacion)
+    if 'duXdv' not in resultados:
+        if 'du' not in resultados:
+            resultados['du'] = sp.diff(parametrizacion, u)
+        if 'dv' not in resultados:
+            resultados['dv'] = sp.diff(parametrizacion, v)
+        resultados['duXdv'] = resultados['du'].cross(resultados['dv'])
+    x, y, z = sp.symbols('x, y, z', real = True)
+    #TODO-¿igualo a 0?
+    resultados['tangente_afin'] = resultados['duXdv'].dot(sp.Matrix([x,y,z])) - sp.simplify(resultados['duXdv'].dot(parametrizacion))
+    return resultados['tangente_afin'] 
+
+def planoTangente_pt_uv(parametrizacion, u, v, u0, v0, resultados={}):
     """
     Retorna el plano tangente (sin igualar a cero) de una superficie parametrizada en un punto descrito con u, v
     No se hacen comprobaciones de tipo
@@ -236,17 +251,24 @@ def planoTangente_pt_uv(parametrizacion, u, v, u0, v0):
     v                   segunda variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
     u0                  valor u del punto
     v0                  valor v del punto
+    resultados          diccionario con todos los resultados calculados hasta el momento
     """
-    du_parametrizacion = [sp.diff(comp, u) for comp in parametrizacion]
-    dv_parametrizacion = [sp.diff(comp, v) for comp in parametrizacion]
-
-    parametrizacion_pt = [sp.N(comp.subs([[u, u0],[v,v0]])) for comp in parametrizacion]
-    du_parametrizacion_pt = [sp.N(comp.subs([[u, u0],[v,v0]])) for comp in du_parametrizacion]
-    dv_parametrizacion_pt = [sp.N(comp.subs([[u, u0],[v,v0]])) for comp in dv_parametrizacion]
+    if not isinstance(parametrizacion, sp.Matrix):
+        parametrizacion = sp.Matrix(parametrizacion)
+    if 'duXdv_pt' not in resultados:
+        if not 'du_pt' in resultados:
+            if not 'du' in resultados:
+                resultados['du'] = sp.diff(parametrizacion, u)
+            resultados['du_pt'] = resultados['du'].subs({u:u0, v:v0}) 
+        if not 'dv_pt' in resultados:
+            if not 'dv' in resultados:
+                resultados['dv'] = sp.diff(parametrizacion, v)
+            resultados['dv_pt'] = resultados['dv'].subs({u:u0, v:v0})
+        resultados['duXdv_pt'] = resultados['du_pt'].cross(resultados['dv_pt'])
 
     x, y, z = sp.symbols('x, y, z', real = True)
-    xyz = [x,y,z]
-    return sp.Matrix( sp.Matrix(du_parametrizacion_pt).cross(sp.Matrix(dv_parametrizacion_pt)) ).dot( sp.Matrix( [(xyz[i] - parametrizacion_pt[i]) for i in range(3)]) )
+    resultados['tangente_afin_pt'] = resultados['duXdv_pt'].dot(sp.Matrix([x,y,z])) - sp.simplify(resultados['duXdv_pt'].dot(parametrizacion))
+    return resultados['tangente_afin_pt']
 
 def planoTangente_pt_xyz(parametrizacion, u, v, x0, y0,z0):
     """
@@ -294,7 +316,7 @@ def primeraFormaFundamental(parametrizacion, u, v, resultados={}):
 
     return sp.Matrix([resultados['E'], resultados['F'], resultados['G']])
 
-def primeraFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0):
+def primeraFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0, resultados={}):
     """
     Retorna en forma de Matrix(E, F, G) la primera forma fundamental en un punto  descrito por u,v
     No se hacen comprobaciones de tipo
@@ -305,18 +327,24 @@ def primeraFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0):
     v                   segunda variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
     u0                  valor u del punto
     v0                  valor v del punto
+    resultados          diccionario con todos los resultados calculados hasta el momento
     """
-    du_parametrizacion = [sp.diff(comp, u) for comp in parametrizacion]
-    dv_parametrizacion = [sp.diff(comp, v) for comp in parametrizacion]
+    if not isinstance(parametrizacion, sp.Matrix):
+        parametrizacion = sp.Matrix(parametrizacion)
+    if not 'du_pt' in resultados:
+        if not 'du' in resultados:
+            resultados['du'] = sp.diff(parametrizacion, u)
+        resultados['du_pt'] = resultados['du'].subs({u:u0, v:v0}) 
+    if not 'dv_pt' in resultados:
+        if not 'dv' in resultados:
+            resultados['dv'] = sp.diff(parametrizacion, v)
+        resultados['dv_pt'] = resultados['dv'].subs({u:u0, v:v0})
 
-    du_parametrizacion_pt = sp.simplify(sp.Matrix([sp.N(comp.subs([[u, u0],[v,v0]])) for comp in du_parametrizacion]))
-    dv_parametrizacion_pt = sp.simplify(sp.Matrix([sp.N(comp.subs([[u, u0],[v,v0]])) for comp in dv_parametrizacion]))
+    resultados['E_pt'] = sp.simplify(resultados['du'].dot(resultados['du']))
+    resultados['F_pt'] = sp.simplify(resultados['du'].dot(resultados['dv']))
+    resultados['G_pt'] = sp.simplify(resultados['dv'].dot(resultados['dv']))
 
-    E_pt=sp.simplify(du_parametrizacion_pt.dot(du_parametrizacion_pt))
-    F_pt=sp.simplify(du_parametrizacion_pt.dot(dv_parametrizacion_pt))
-    G_pt=sp.simplify(dv_parametrizacion_pt.dot(dv_parametrizacion_pt))
-
-    return sp.Matrix([E_pt, F_pt, G_pt]).T
+    return sp.Matrix([resultados['E_pt'], resultados['F_pt'], resultados['G_pt']])
 
 def primeraFormaFundamental_pt_xyz(parametrizacion, u, v, x0, y0, z0):
     """
@@ -372,7 +400,7 @@ def segundaFormaFundamental(parametrizacion, u, v, resultados={}):
     
     return sp.Matrix([resultados['e'], resultados['f'], resultados['g']])
 
-def segundaFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0):
+def segundaFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0, resultados={}):
     """
     Retorna en forma de Matrix(e, f, g) la segunda forma fundamental en un punto  descrito por u, v
     No se hacen comprobaciones de tipo
@@ -383,24 +411,34 @@ def segundaFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0):
     v                   segunda variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
     u0                  valor u del punto
     v0                  valor v del punto
+    resultados          diccionario con todos los resultados calculados hasta el momento
     """
-    du_parametrizacion = [sp.simplify(sp.diff(comp, u)) for comp in parametrizacion]
-    dv_parametrizacion = [sp.simplify(sp.diff(comp, v)) for comp in parametrizacion]
-    duu_parametrizacion = [sp.simplify(sp.diff(comp, u)) for comp in du_parametrizacion]
-    duv_parametrizacion = [sp.simplify(sp.diff(comp, v)) for comp in du_parametrizacion]
-    dvv_parametrizacion = [sp.simplify(sp.diff(comp, v)) for comp in dv_parametrizacion]
+    if not isinstance(parametrizacion, sp.Matrix):
+        parametrizacion = sp.Matrix(parametrizacion)
+    if 'du' not in resultados:
+        resultados['du'] = sp.diff(parametrizacion, u)
+    if 'dv' not in resultados:
+        resultados['dv'] = sp.diff(parametrizacion, v)
+    if 'duu_pt' not in resultados:
+        if 'duu' not in resultados:
+            resultados['duu'] = sp.diff(resultados['du'], u)
+        resultados['duu_pt'] = resultados['duu'].subs({u:u0, v:v0})
+    if 'duv_pt' not in resultados:
+        if 'duv' not in resultados:
+            resultados['duv'] = sp.diff(resultados['du'], v)
+        resultados['duv_pt'] = resultados['duv'].subs({u:u0, v:v0})
+    if 'dvv_pt' not in resultados:
+        if 'dvv' not in resultados:
+            resultados['dvv'] = sp.diff(resultados['dv'], v)
+        resultados['dvv_pt'] = resultados['dvv'].subs({u:u0, v:v0})
+    if 'normal_pt' not in resultados:
+        normal_pt_uv(parametrizacion, u, v, u0, v0, resultados)
 
-    duu_parametrizacion_pt = sp.simplify(sp.Matrix([sp.N(comp.subs([[u, u0],[v,v0]])) for comp in duu_parametrizacion]))
-    duv_parametrizacion_pt = sp.simplify(sp.Matrix([sp.N(comp.subs([[u, u0],[v,v0]])) for comp in duv_parametrizacion]))
-    dvv_parametrizacion_pt = sp.simplify(sp.Matrix([sp.N(comp.subs([[u, u0],[v,v0]])) for comp in dvv_parametrizacion]))
-
-    n_pt = normal_pt_uv(parametrizacion, u, v, u0, v0)
-
-    e_pt = sp.simplify(n_pt.dot(duu_parametrizacion_pt))
-    f_pt = sp.simplify(n_pt.dot(duv_parametrizacion_pt))
-    g_pt = sp.simplify(n_pt.dot(dvv_parametrizacion_pt))
-
-    return sp.Matrix([e_pt, f_pt, g_pt]).T
+    resultados['e_pt'] = sp.simplify( resultados['normal_pt'].dot(resultados['duu_pt']))
+    resultados['f_pt'] = sp.simplify( resultados['normal_pt'].dot(resultados['duv_pt']))
+    resultados['g_pt'] = sp.simplify( resultados['normal_pt'].dot(resultados['dvv_pt']))
+    
+    return sp.Matrix([resultados['e_pt'], resultados['f_pt'], resultados['g_pt']])
 
 def segundaFormaFundamental_pt_xyz(parametrizacion, u, v, x0, y0, z0):
     """
@@ -442,7 +480,7 @@ def curvaturaGauss(parametrizacion, u, v, resultados={}):
     resultados['K'] = sp.simplify((resultados['e']*resultados['g'] - resultados['f']**2)/(resultados['E']*resultados['G'] - resultados['F']**2))
     return resultados['K']
 
-def curvaturaGauss_pt_uv(parametrizacion, u, v, u0, v0, curv=None, EFG=None, efg=None):
+def curvaturaGauss_pt_uv(parametrizacion, u, v, u0, v0, resultados={}):
     """
     Retorna la curvatura de Gauss en un punto descrito por u, v
     No se hacen comprobaciones de tipo
@@ -453,16 +491,15 @@ def curvaturaGauss_pt_uv(parametrizacion, u, v, u0, v0, curv=None, EFG=None, efg
     v                   segunda variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
     u0                  valor u del punto
     v0                  valor v del punto
-    curv                parametro opcional por si ya se tiene calculada la curvatura de Gauss
-    EFG                 parametro opcional (tupla de longitud 3) por si se tienen ya calculados E, F, G en el punto deseado
-    efg                 parametro opcional (tupla de longitud 3) por si se tienen ya calculados e, f, g en el punto deseado
+    resultados          diccionario con todos los resultados calculados hasta el momento
     """
-    if curv:
-        return sp.N(curv.subs([[u, u0],[v,v0]]))
-    
-    E_pt, F_pt, G_pt = EFG if EFG else primeraFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0)
-    e_pt, f_pt, g_pt = efg if efg else segundaFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0)
-    return (e_pt*g_pt - f_pt**2) / (E_pt*G_pt - F_pt**2)
+    if 'E_pt' not in resultados:
+        primeraFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0, resultados)
+    if 'e_pt' not in resultados:
+        segundaFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0, resultados)
+
+    resultados['K_pt'] = sp.simplify((resultados['e_pt']*resultados['g_pt'] - resultados['f_pt']**2)/(resultados['E_pt']*resultados['G_pt'] - resultados['F_pt']**2))
+    return resultados['K_pt']
 
 def curvaturaGauss_pt_xyz(parametrizacion, u, v, x0, y0, z0, curv=None, EFG=None, efg=None):
     """
@@ -504,10 +541,11 @@ def curvaturaMedia(parametrizacion, u, v, resultados={}):
         primeraFormaFundamental(parametrizacion, u, v, resultados)
     if 'e' not in resultados:
         segundaFormaFundamental(parametrizacion, u, v, resultados)
-    resultados['H'] = sp.simplify((resultados['e']*resultados['G'] + resultados['g']*resultados['E'] - 2*resultados['f']*resultados['F'])/(2*(resultados['E']*resultados['G'] - resultados['F']**2)))
+    resultados['H'] = sp.simplify((resultados['e']*resultados['G'] + resultados['g']*resultados['E'] - 2*resultados['f']*resultados['F'])
+                                  /(2*(resultados['E']*resultados['G'] - resultados['F']**2)))
     return resultados['H']
 
-def curvaturaMedia_pt_uv(parametrizacion, u, v, u0, v0, curv=None, EFG=None, efg=None):
+def curvaturaMedia_pt_uv(parametrizacion, u, v, u0, v0, resultados={}):
     """
     Retorna la curvatura media en un punto descrito por u, v
     No se hacen comprobaciones de tipo
@@ -518,16 +556,16 @@ def curvaturaMedia_pt_uv(parametrizacion, u, v, u0, v0, curv=None, EFG=None, efg
     v                   segunda variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
     u0                  valor u del punto
     v0                  valor v del punto
-    curv                parametro opcional por si ya se tiene calculada la curvatura de media
-    EFG                 parametro opcional (tupla de longitud 3) por si se tienen ya calculados E, F, G en el punto deseado
-    efg                 parametro opcional (tupla de longitud 3) por si se tienen ya calculados e, f, g en el punto deseado
+    resultados          diccionario con todos los resultados calculados hasta el momento
     """
-    if curv:
-        return sp.N(curv.subs([[u, u0],[v,v0]]))
+    if 'E_pt' not in resultados:
+        primeraFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0, resultados)
+    if 'e_pt' not in resultados:
+        segundaFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0, resultados)
     
-    E_pt, F_pt, G_pt = EFG if EFG else primeraFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0)
-    e_pt, f_pt, g_pt = efg if efg else segundaFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0)
-    return (e_pt*G_pt + g_pt*E_pt - 2*f_pt*F_pt) / (2*(E_pt*G_pt - F_pt**2))
+    resultados['H_pt'] = sp.simplify((resultados['e_pt']*resultados['G_pt'] + resultados['g_pt']*resultados['E_pt'] - 2*resultados['f_pt']*resultados['F_pt'])
+                                     /(2*(resultados['E_pt']*resultados['G_pt'] - resultados['F_pt']**2)))
+    return resultados['H_pt']
 
 def curvaturaMedia_pt_xyz(parametrizacion, u, v, x0, y0, z0, curv=None, EFG=None, efg=None):
     """
@@ -573,7 +611,7 @@ def curvaturasPrincipales(parametrizacion, u, v, resultados={}):
     resultados['curv_princ'] = sp.Matrix([sp.simplify(resultados['H'] + raiz), sp.simplify(resultados['H'] - raiz)])
     return resultados['curv_princ']
 
-def curvaturasPrincipales_pt_uv(parametrizacion, u, v, u0, v0, curv=None, K=None, H=None):
+def curvaturasPrincipales_pt_uv(parametrizacion, u, v, u0, v0, resultados={}):
     """
     Retorna como tupla las curvaturas principales en un punto descrito como u,v
     No se hacen comprobaciones de tipo
@@ -584,19 +622,15 @@ def curvaturasPrincipales_pt_uv(parametrizacion, u, v, u0, v0, curv=None, K=None
     v                   segunda variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
     u0                  valor u del punto
     v0                  valor v del punto
-    curv                parametro opcional por si ya se tienen calculadas las curvaturas principales
-    K                   parametro opcional por si se tiene ya calculada cruvatura Gauss en el punto deseado
-    H                   parametro opcional por si se tiene ya calculada curvatura Media en el punto deseado
+    resultados          diccionario con todos los resultados calculados hasta el momento
     """
-    if curv:
-        return sp.Matrix([sp.N(curv[0].subs([[u, u0],[v,v0]])), sp.N(curv[1].subs([[u, u0],[v,v0]]))]).T
-    
-    E_pt, F_pt, G_pt = primeraFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0)
-    e_pt, f_pt, g_pt = segundaFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0)
-    K_pt = curvaturaGauss_pt_uv(parametrizacion, u, v, u0, v0, EFG=(E_pt,F_pt, G_pt), efg=(e_pt,f_pt,g_pt))
-    H_pt = curvaturaMedia_pt_uv(parametrizacion, u, v, u0, v0, EFG=(E_pt,F_pt, G_pt), efg=(e_pt,f_pt,g_pt))
-    raiz = sp.sqrt(H_pt**2 - K_pt)
-    return sp.Matrix([H_pt + raiz, H_pt - raiz]).T
+    if 'K_pt' not in resultados:
+        curvaturaGauss_pt_uv(parametrizacion, u, v, u0, v0, resultados)
+    if 'H_pt' not in resultados:
+        curvaturaMedia_pt_uv(parametrizacion, u, v, u0, v0, resultados)
+    raiz = sp.simplify(sp.sqrt(resultados['H_pt']**2 - resultados['K_pt']))
+    resultados['curv_princ_pt'] = sp.Matrix([sp.simplify(resultados['H_pt'] + raiz), sp.simplify(resultados['H_pt'] - raiz)])
+    return resultados['curv_princ_pt']
 
 def curvaturasPrincipales_pt_xyz(parametrizacion, u, v, x0, y0, z0, curv=None, K=None, H=None):
     """
@@ -623,7 +657,7 @@ def curvaturasPrincipales_pt_xyz(parametrizacion, u, v, x0, y0, z0, curv=None, K
 CLASIFICACION DE UN PUNTO
 -------------------------------------------------------------------------------
 """
-def clasicPt_uv(parametrizacion, u, v, u0, v0):
+def clasicPt_uv(parametrizacion, u, v, u0, v0, resultados={}):
     """
     Imprime la clasificacion de una superficie en un punto descrito con x, y, z
     No se hacen comprobaciones de tipo
@@ -634,7 +668,9 @@ def clasicPt_uv(parametrizacion, u, v, u0, v0):
     v                   segunda variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
     u0                  valor u del punto
     v0                  valor v del punto
+    resultados          diccionario con todos los resultados calculados hasta el momento
     """
+    #TODO-Hacerlo con diccionario
     #Se usa el hecho de que k1*k2=K
     K = curvaturaGauss_pt_uv(parametrizacion, u, v, u0, v0)
     if K > 0:
@@ -700,7 +736,7 @@ def dirPrinc_pt(parametrizacion, u, v, resultados={}):
     else:
         raise Exception("No se ha podido calcular los autovectores")
     
-def dirPrinc_pt_uv(parametrizacion, u, v, u0, v0):
+def dirPrinc_pt_uv(parametrizacion, u, v, u0, v0, resultados={}):
     """
     Calcula las direcciones principales en un punto
     No se hacen comprobaciones de tipo
@@ -711,12 +747,18 @@ def dirPrinc_pt_uv(parametrizacion, u, v, u0, v0):
     v                   segunda variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
     u0                  valor u del punto
     v0                  valor v del punto
+    resultados          diccionario con todos los resultados calculados hasta el momento
     """
-    E_pt, F_pt, G_pt = primeraFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0)
-    e_pt, f_pt, g_pt = segundaFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0)
+    if 'E_pt' not in resultados:
+        primeraFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0, resultados)
+    if 'e_pt' not in resultados:
+        segundaFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0, resultados)
 
-    denom = E_pt*G_pt - F_pt**2
-    W = sp.Matrix([[e_pt*G_pt-f_pt*F_pt, f_pt*G_pt-g_pt*F_pt], [f_pt*E_pt-e_pt*F_pt, g_pt*E_pt-f_pt*F_pt]])/denom
+    denom = resultados['E_pt']*resultados['G_pt'] - resultados['F_pt']**2
+    W = sp.Matrix([[resultados['e_pt']*resultados['G_pt']-resultados['f_pt']*resultados['F_pt'], 
+                    resultados['f_pt']*resultados['G_pt']-resultados['g_pt']*resultados['F_pt']], 
+                    [resultados['f_pt']*resultados['E_pt']-resultados['e_pt']*resultados['F_pt'], 
+                    resultados['g_pt']*resultados['E_pt']-resultados['f_pt']*resultados['F_pt']]])/denom
     autovalores = W.eigenvects(simplify=True)
 
     if autovalores[0][1] == 2:
