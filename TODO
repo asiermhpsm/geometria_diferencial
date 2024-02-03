@@ -1,0 +1,24 @@
+-Revisar toda la representación
+-Dar opción de representar superficie con varios vectores normales
+-Dar opción de representar superficie junto con direcciones principales.
+-Revisar que opciones hay para describir tanto constante como función general.
+-Dar opción de dar valores para u y para v.
+-Comprobar que una superficie es regular y diferenciable. Pag 49
+-Hacer lo que se pueda con superficies de nivel (o implicitas).
+-Comprobar que superficies de nivel es diferenciable. Pag 53
+-Poner el ejemplo de parametrizacion de Monge. Pag 62. http://127.0.0.1:5000/plano_tangente?superficie=[u, u, f]&func=[f(u,v)]
+-Poner ejemplos superficies de revolución. Pag 63
+-Poner ejemplo toro
+-Poner ejemplo helicoide. Pag 70
+-Hacer los ejemplos que puso Juan en el correo
+-¿Área de una superficie? Pag 74
+-Vector unitario normal a siperficie de nivel. Pag 81
+-¿Aplicación de Weingarten?. Pag 97
+-¿Paraboloide osculador?. Pag 102
+-Revisar como calcular curvatura y direcciones principales. Pag 107
+-¿Curvatura normal?. Pag 109
+-¿Expresión canónica del paraboloide osculador?. Pag 111
+-¿Direcciones asintóticas?. Pag 113
+-¿Símbolos de Christoffel?. Pag 118
+-¿Superficies regladas?. Pag 125
+-¿Curva de estricción de superficies regladas?. Pag 133

@@ -109,7 +109,7 @@ def xyz_to_uv(parametrizacion, u, v, x0, y0, z0):
     if not soluciones:
         raise('El punto dado no esta en la superficie.')
     
-    #TODO- devuelvo todas las soluciones o solo una?
+    #TODO: devuelvo todas las soluciones o solo una
     if isinstance(soluciones, dict):
         return soluciones[u] ,soluciones[v]
     else:
@@ -214,10 +214,8 @@ def planoTangente(parametrizacion, u, v, resultados={}):
             resultados['dv'] = sp.diff(parametrizacion, v)
         resultados['duXdv'] = resultados['du'].cross(resultados['dv'])
     x, y, z = sp.symbols('x, y, z', real = True)
-    #TODO-¿igualo a 0?
-    resultados['tangente'] = resultados['duXdv'].dot(sp.Matrix([x,y,z])) - sp.simplify(resultados['duXdv'].dot(parametrizacion))
+    resultados['tangente'] = sp.Eq(resultados['duXdv'].dot(sp.Matrix([x,y,z])), sp.simplify(resultados['duXdv'].dot(parametrizacion)))
     return resultados
-
 
 def planoTangente_pt_uv(parametrizacion, u, v, u0, v0, resultados={}):
     """
@@ -246,7 +244,7 @@ def planoTangente_pt_uv(parametrizacion, u, v, u0, v0, resultados={}):
         resultados['duXdv_pt'] = resultados['du_pt'].cross(resultados['dv_pt'])
 
     x, y, z = sp.symbols('x, y, z', real = True)
-    resultados['tangente_afin_pt'] = resultados['duXdv_pt'].dot(sp.Matrix([x,y,z])) - sp.simplify(resultados['duXdv_pt'].dot(parametrizacion))
+    resultados['tangente_afin_pt'] = sp.Eq(resultados['duXdv_pt'].dot(sp.Matrix([x,y,z])), sp.simplify(resultados['duXdv_pt'].dot(parametrizacion)))
     return resultados
 
 def planoTangente_pt_xyz(parametrizacion, u, v, x0, y0,z0):

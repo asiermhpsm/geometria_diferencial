@@ -123,6 +123,8 @@ def convertir_a_string(diccionario):
     def convertir_valor(valor):
         if isinstance(valor, (sp.Matrix, sp.MutableDenseMatrix, sp.ImmutableDenseMatrix)):
             return sustituir_derivadas(str(tuple(valor)))
+        elif isinstance(valor, sp.Eq):
+            return sustituir_derivadas(str(valor.lhs)) + ' = ' + sustituir_derivadas(str(valor.rhs))
         else:
             return sustituir_derivadas(str(valor))
 
