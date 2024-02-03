@@ -103,7 +103,7 @@ def xyz_to_uv(parametrizacion, u, v, x0, y0, z0):
     y0                  valor y del punto
     z0                  valor z del punto
     """
-    punto = (x0, y0, z0)
+    punto = (float(x0), float(y0), float(z0))
     ecuaciones = [sp.Eq(s, p) for s, p in zip(parametrizacion, punto)]
     soluciones = sp.solve(ecuaciones, (u, v))
     if not soluciones:
