@@ -18,8 +18,10 @@ import sympy as sp
     'tangente_afin' : ...  #Plano tangente general
     'curv_Gauss' : ...     #Curvatura de Gauss
     'curv_media' : ...     #Curvatura media
-    'curv_princ' : ...     #Curvaturas principales
-    'dir_princ' : ...      #Direcciones principales
+    'k1'                   #curvatura principal 1
+    'k2'                   #curvatura principal 2
+    'd1'                   #direccion principal 1
+    'd2'                   #direccion principal 2
 
     'du_pt' : ...             #derivada de u
     'dv_pt' : ...             #derivada de v
@@ -38,10 +40,10 @@ import sympy as sp
     'tangente_afin_pt' : ...  #Plano tangente general
     'curv_Gauss_pt' : ...     #Curvatura de Gauss
     'curv_media_pt' : ...     #Curvatura media
-    'curv_princ_pt' : ...     #Curvaturas principales
-    'dir_princ_pt' : ...      #Direcciones principales
-
-    'resultado' : ...         #Resultado de final de lo que se este calculando
+    'k1_pt'                   #curvatura principal 1
+    'k2_pt'                   #curvatura principal 2
+    'd1_pt'                   #direccion principal 1
+    'd2_pt'                   #direccion principal 2
 }"""
 
 """
@@ -139,7 +141,7 @@ def normal(parametrizacion, u, v, resultados={}):
             resultados['dv'] = sp.diff(parametrizacion, v)
         resultados['duXdv'] = resultados['du'].cross(resultados['dv'])
     resultados['normal'] = normaliza(resultados['duXdv'])
-    return resultados['normal']
+    return resultados
 
 def normal_pt_uv(parametrizacion, u, v, u0, v0, resultados={}):
     """
@@ -167,7 +169,7 @@ def normal_pt_uv(parametrizacion, u, v, u0, v0, resultados={}):
             resultados['dv_pt'] = resultados['dv'].subs({u:u0, v:v0})
         resultados['duXdv_pt'] = resultados['du_pt'].cross(resultados['dv_pt'])
     resultados['normal_pt'] = normaliza(resultados['duXdv_pt'])
-    return resultados['normal_pt']
+    return resultados
 
 def normal_pt_xyz(parametrizacion, u, v, x0, y0, z0, resultados={}):
     """
@@ -213,32 +215,9 @@ def planoTangente(parametrizacion, u, v, resultados={}):
         resultados['duXdv'] = resultados['du'].cross(resultados['dv'])
     x, y, z = sp.symbols('x, y, z', real = True)
     #TODO-¿igualo a 0?
-    resultados['tangente'] = resultados['duXdv'].dot(sp.Matrix([x,y,z]))
-    return resultados['tangente']
+    resultados['tangente'] = resultados['duXdv'].dot(sp.Matrix([x,y,z])) - sp.simplify(resultados['duXdv'].dot(parametrizacion))
+    return resultados
 
-def planoTangenteAfin(parametrizacion, u, v, resultados={}):
-    """
-    Retorna el plano tangente (sin igualar a cero) de una superficie parametrizada
-    No se hacen comprobaciones de tipo
-
-    Argumentos:
-    parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
-    u                   primera variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
-    v                   segunda variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
-    resultados          diccionario con todos los resultados calculados hasta el momento
-    """
-    if not isinstance(parametrizacion, sp.Matrix):
-        parametrizacion = sp.Matrix(parametrizacion)
-    if 'duXdv' not in resultados:
-        if 'du' not in resultados:
-            resultados['du'] = sp.diff(parametrizacion, u)
-        if 'dv' not in resultados:
-            resultados['dv'] = sp.diff(parametrizacion, v)
-        resultados['duXdv'] = resultados['du'].cross(resultados['dv'])
-    x, y, z = sp.symbols('x, y, z', real = True)
-    #TODO-¿igualo a 0?
-    resultados['tangente_afin'] = resultados['duXdv'].dot(sp.Matrix([x,y,z])) - sp.simplify(resultados['duXdv'].dot(parametrizacion))
-    return resultados['tangente_afin'] 
 
 def planoTangente_pt_uv(parametrizacion, u, v, u0, v0, resultados={}):
     """
@@ -268,7 +247,7 @@ def planoTangente_pt_uv(parametrizacion, u, v, u0, v0, resultados={}):
 
     x, y, z = sp.symbols('x, y, z', real = True)
     resultados['tangente_afin_pt'] = resultados['duXdv_pt'].dot(sp.Matrix([x,y,z])) - sp.simplify(resultados['duXdv_pt'].dot(parametrizacion))
-    return resultados['tangente_afin_pt']
+    return resultados
 
 def planoTangente_pt_xyz(parametrizacion, u, v, x0, y0,z0):
     """
@@ -314,7 +293,7 @@ def primeraFormaFundamental(parametrizacion, u, v, resultados={}):
     resultados['F'] = sp.simplify(resultados['du'].dot(resultados['dv']))
     resultados['G'] = sp.simplify(resultados['dv'].dot(resultados['dv']))
 
-    return sp.Matrix([resultados['E'], resultados['F'], resultados['G']])
+    return resultados
 
 def primeraFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0, resultados={}):
     """
@@ -344,7 +323,7 @@ def primeraFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0, resultados={}):
     resultados['F_pt'] = sp.simplify(resultados['du'].dot(resultados['dv']))
     resultados['G_pt'] = sp.simplify(resultados['dv'].dot(resultados['dv']))
 
-    return sp.Matrix([resultados['E_pt'], resultados['F_pt'], resultados['G_pt']])
+    return resultados
 
 def primeraFormaFundamental_pt_xyz(parametrizacion, u, v, x0, y0, z0):
     """
@@ -398,7 +377,7 @@ def segundaFormaFundamental(parametrizacion, u, v, resultados={}):
     resultados['f'] = sp.simplify( resultados['normal'].dot(resultados['duv']))
     resultados['g'] = sp.simplify( resultados['normal'].dot(resultados['dvv']))
     
-    return sp.Matrix([resultados['e'], resultados['f'], resultados['g']])
+    return resultados
 
 def segundaFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0, resultados={}):
     """
@@ -438,7 +417,7 @@ def segundaFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0, resultados={}):
     resultados['f_pt'] = sp.simplify( resultados['normal_pt'].dot(resultados['duv_pt']))
     resultados['g_pt'] = sp.simplify( resultados['normal_pt'].dot(resultados['dvv_pt']))
     
-    return sp.Matrix([resultados['e_pt'], resultados['f_pt'], resultados['g_pt']])
+    return resultados
 
 def segundaFormaFundamental_pt_xyz(parametrizacion, u, v, x0, y0, z0):
     """
@@ -478,7 +457,7 @@ def curvaturaGauss(parametrizacion, u, v, resultados={}):
     if 'e' not in resultados:
         segundaFormaFundamental(parametrizacion, u, v, resultados)
     resultados['K'] = sp.simplify((resultados['e']*resultados['g'] - resultados['f']**2)/(resultados['E']*resultados['G'] - resultados['F']**2))
-    return resultados['K']
+    return resultados
 
 def curvaturaGauss_pt_uv(parametrizacion, u, v, u0, v0, resultados={}):
     """
@@ -499,7 +478,7 @@ def curvaturaGauss_pt_uv(parametrizacion, u, v, u0, v0, resultados={}):
         segundaFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0, resultados)
 
     resultados['K_pt'] = sp.simplify((resultados['e_pt']*resultados['g_pt'] - resultados['f_pt']**2)/(resultados['E_pt']*resultados['G_pt'] - resultados['F_pt']**2))
-    return resultados['K_pt']
+    return resultados
 
 def curvaturaGauss_pt_xyz(parametrizacion, u, v, x0, y0, z0, curv=None, EFG=None, efg=None):
     """
@@ -543,7 +522,7 @@ def curvaturaMedia(parametrizacion, u, v, resultados={}):
         segundaFormaFundamental(parametrizacion, u, v, resultados)
     resultados['H'] = sp.simplify((resultados['e']*resultados['G'] + resultados['g']*resultados['E'] - 2*resultados['f']*resultados['F'])
                                   /(2*(resultados['E']*resultados['G'] - resultados['F']**2)))
-    return resultados['H']
+    return resultados
 
 def curvaturaMedia_pt_uv(parametrizacion, u, v, u0, v0, resultados={}):
     """
@@ -565,7 +544,7 @@ def curvaturaMedia_pt_uv(parametrizacion, u, v, u0, v0, resultados={}):
     
     resultados['H_pt'] = sp.simplify((resultados['e_pt']*resultados['G_pt'] + resultados['g_pt']*resultados['E_pt'] - 2*resultados['f_pt']*resultados['F_pt'])
                                      /(2*(resultados['E_pt']*resultados['G_pt'] - resultados['F_pt']**2)))
-    return resultados['H_pt']
+    return resultados
 
 def curvaturaMedia_pt_xyz(parametrizacion, u, v, x0, y0, z0, curv=None, EFG=None, efg=None):
     """
@@ -608,8 +587,9 @@ def curvaturasPrincipales(parametrizacion, u, v, resultados={}):
     if 'H' not in resultados:
         curvaturaMedia(parametrizacion, u, v, resultados)
     raiz = sp.simplify(sp.sqrt(resultados['H']**2 - resultados['K']))
-    resultados['curv_princ'] = sp.Matrix([sp.simplify(resultados['H'] + raiz), sp.simplify(resultados['H'] - raiz)])
-    return resultados['curv_princ']
+    resultados['k1'] = sp.simplify(resultados['H'] + raiz)
+    resultados['k2'] = sp.simplify(resultados['H'] - raiz)
+    return resultados
 
 def curvaturasPrincipales_pt_uv(parametrizacion, u, v, u0, v0, resultados={}):
     """
@@ -629,8 +609,9 @@ def curvaturasPrincipales_pt_uv(parametrizacion, u, v, u0, v0, resultados={}):
     if 'H_pt' not in resultados:
         curvaturaMedia_pt_uv(parametrizacion, u, v, u0, v0, resultados)
     raiz = sp.simplify(sp.sqrt(resultados['H_pt']**2 - resultados['K_pt']))
-    resultados['curv_princ_pt'] = sp.Matrix([sp.simplify(resultados['H_pt'] + raiz), sp.simplify(resultados['H_pt'] - raiz)])
-    return resultados['curv_princ_pt']
+    resultados['k1_pt'] = sp.simplify(resultados['H_pt'] + raiz)
+    resultados['k2_pt'] = sp.simplify(resultados['H_pt'] - raiz)
+    return resultados
 
 def curvaturasPrincipales_pt_xyz(parametrizacion, u, v, x0, y0, z0, curv=None, K=None, H=None):
     """
@@ -670,19 +651,33 @@ def clasicPt_uv(parametrizacion, u, v, u0, v0, resultados={}):
     v0                  valor v del punto
     resultados          diccionario con todos los resultados calculados hasta el momento
     """
-    #TODO-Hacerlo con diccionario
     #Se usa el hecho de que k1*k2=K
-    K = curvaturaGauss_pt_uv(parametrizacion, u, v, u0, v0)
-    if K > 0:
-        return 'Eliptico'
-    elif K < 0:
-        return 'Hiperbólitco'
-    elif K == 0:
-        k1, k2 = curvaturasPrincipales_pt_uv(parametrizacion, u, v, u0, v0)
-        if sp.simplify(k1-k2) == 0:
-            return 'Planar'
-        else:
-            return 'Parabólico'
+    if 'k1_pt' in resultados:
+        K = resultados['k1_pt']*resultados['k2_pt']
+        if K > 0:
+            resultados['clasif_pt'] = 'Eliptico'
+        elif K < 0:
+            resultados['clasif_pt'] = 'Hiperbólitco'
+        elif K == 0:
+            if sp.simplify(resultados['k1_pt']-resultados['k2_pt']) == 0:
+                return 'Planar'
+            else:
+                return 'Parabólico'
+    else:
+        if 'K_pt' not in resultados:
+            curvaturaGauss_pt_uv(parametrizacion, u, v, u0, v0, resultados)
+        if resultados['K_pt'] > 0:
+            resultados['clasif_pt'] = 'Eliptico'
+        elif resultados['K_pt'] < 0:
+            resultados['clasif_pt'] = 'Hiperbólitco'
+        elif resultados['K_pt'] == 0:
+            if 'k1_pt' not in resultados:
+                curvaturasPrincipales_pt_uv(parametrizacion, u, v, u0, v0, resultados)
+            if sp.simplify(resultados['k1_pt']-resultados['k2_pt']) == 0:
+                resultados['clasif_pt'] = 'Planar'
+            else:
+                resultados['clasif_pt'] = 'Parabólico'
+    
 
 def clasicPt_xyz(parametrizacion, u, v, x0, y0, z0):
     """
@@ -730,9 +725,13 @@ def dirPrinc_pt(parametrizacion, u, v, resultados={}):
     autovalores = W.eigenvects(simplify=True)
 
     if autovalores[0][1] == 2:
-        return tuple(autovalores[0][-1][0]), tuple(autovalores[0][-1][1])
+        resultados['d1'] = tuple(autovalores[0][-1][0])
+        resultados['d2'] = tuple(autovalores[0][-1][1])
+        return resultados
     elif autovalores[0][1] == 1:
-        return tuple(autovalores[0][-1][0]), tuple(autovalores[1][-1][0])
+        resultados['d1'] = tuple(autovalores[0][-1][0])
+        resultados['d2'] = tuple(autovalores[0][-1][0])
+        return resultados
     else:
         raise Exception("No se ha podido calcular los autovectores")
     
@@ -762,9 +761,13 @@ def dirPrinc_pt_uv(parametrizacion, u, v, u0, v0, resultados={}):
     autovalores = W.eigenvects(simplify=True)
 
     if autovalores[0][1] == 2:
-        return tuple(autovalores[0][-1][0]), tuple(autovalores[0][-1][1])
+        resultados['d1_pt'] = tuple(autovalores[0][-1][0])
+        resultados['d2_pt'] = tuple(autovalores[0][-1][1])
+        return resultados
     elif autovalores[0][1] == 1:
-        return tuple(autovalores[0][-1][0]), tuple(autovalores[1][-1][0])
+        resultados['d1_pt'] = tuple(autovalores[0][-1][0])
+        resultados['d2_pt'] = tuple(autovalores[0][-1][0])
+        return resultados
     else:
         raise Exception("No se ha podido calcular los autovectores")
 

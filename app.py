@@ -1,8 +1,9 @@
-from flask import Flask, request, send_file
+from flask import Flask, request, send_file, jsonify
 import io
 from PIL import Image
 import sympy as sp
 import numpy as np
+import re
 
 from mayavi import mlab
 
@@ -24,8 +25,28 @@ FUNCIONES AUXILIARES Y ATRIBUTOS GENERALES
 #colormapas = list(colormaps)
 #colores = list(mcolors.BASE_COLORS.keys())+list(mcolors.TABLEAU_COLORS.keys()) + list(mcolors.CSS4_COLORS.keys()) + list(mcolors.XKCD_COLORS.keys())
 
+def procesar_parametrizacion():
+    """
+    Procesa una solicitud
+    """
+    var1 = request.args.get('var1', None)
+    var2 = request.args.get('var2', None)
+    superficie_str  = request.args.get('superficie')
+    const_str = request.args.getlist('const')
+    func_str = request.args.getlist('func')
+    
+    if not superficie_str:
+        raise Exception("No se ha encontrado la parametrización de la superficie")
 
-def normaliza_parametrizacion(var1, var2, sup, consts):
+    try:
+        superficie, u, v = normaliza_parametrizacion(var1, var2, superficie_str, const_str, func_str)
+    except Exception as e:
+        # TODO: ¿Qué hacer si hay un error?
+        raise e
+
+    return superficie, u, v
+
+def normaliza_parametrizacion(var1, var2, sup, consts, func):
     """
     Transforma la parametrización de una superficie a una expresion sympy con sus variable correspondientes
     No se hacen comprobaciones de tipo
@@ -34,17 +55,19 @@ def normaliza_parametrizacion(var1, var2, sup, consts):
     var1                string con la primera variable de la parametrización
     var2                string con la segunda variable de la parametrización
     sup                 string con la parametrización de la superficie
+    consts              lista de strings con constantes y su descripción
+    func                lista de strings con funciones y su descripción
     """
     variables = {}
 
     if not var1:
         var1='u'
-    u = sp.symbols(var1)
+    u = sp.symbols(var1, real=True)
     variables[var1] = u
 
     if not var2:
         var2='v'
-    v = sp.symbols(var2)
+    v = sp.symbols(var2, real=True)
     variables[var2] = v
 
     #https://docs.sympy.org/latest/guides/assumptions.html#predicates
@@ -57,8 +80,23 @@ def normaliza_parametrizacion(var1, var2, sup, consts):
             opciones_dict = {}
             for opcion in opciones:
                 opciones_dict[opcion.strip()] = True
+            opciones_dict['real'] = True
             variables[nombre_variable] = sp.symbols(nombre_variable, **opciones_dict)
-            print(variables[nombre_variable], variables[nombre_variable].assumptions0)
+    
+    if func:
+        for elem in func:
+            elem = elem.replace(' ', '')
+            partes  = elem.strip('[]').split(')')
+            definicion_func = re.split(r'[(),]', partes[0])
+            definicion_func = [elemento.strip() for elemento in definicion_func if elemento.strip() != '']
+            nombre_func = definicion_func[0]
+            variables_func = [variables[var] for var in definicion_func[1:]]
+            descripciones = partes[1].split(',')
+            descripciones_dict = {}
+            for descripcion in descripciones:
+                descripciones_dict[descripcion.strip()] = True
+            descripciones_dict['real'] = True
+            variables[nombre_func] = sp.Function(nombre_func, **descripciones_dict)(*variables_func)
 
     elementos_str = sup.strip('[]').split(',')
     try:
@@ -68,7 +106,27 @@ def normaliza_parametrizacion(var1, var2, sup, consts):
     if len(superficie) != 3:
         raise Exception(f"La parametrización de la superficie debe tener 3 elementos pero se han encontrado {len(superficie)}")
     
-    return superficie, u, v
+    return sp.Matrix(superficie), u, v
+
+def convertir_a_string(diccionario):
+    def sustituir_derivadas(expr):
+        patrones = [
+            (r'Derivative\((\w+)\(([^),]+)\), (\w+)\)', r"\1'(\2)"),                             #Derivative(f(u), u) -> f'(u)
+            (r'Derivative\((\w+)\(([^),]+)\), \(([^,]+), 2\)\)', r"\1''(\2)"),                   #Derivative(f(u), (u, 2)) -> f''(u)
+            (r'Derivative\((\w+)\(([^,]+), ([^)]+)\), (\w+)\)', r'\1_\4(\2,\3)'),                #Derivative(f(u, v), u) -> f_u(u,v)
+            (r'Derivative\((\w+)\(([^,]+), ([^)]+)\), (\w+), (\w+)\)', r'\1_\4\5(\2,\3)'),       #Derivative(f(u, v), u, v) -> f_uv(u,v)
+            (r'Derivative\((\w+)\(([^,]+), ([^)]+)\), \(([^,]+), 2\)\)', r'\1_\4\4(\2,\3)'),     #Derivative(f(u, v), (u, 2)) -> f_uu(u,v)
+        ]
+        for patron, reemplazo in patrones:
+            expr = re.sub(patron, reemplazo, expr)
+        return expr
+    def convertir_valor(valor):
+        if isinstance(valor, (sp.Matrix, sp.MutableDenseMatrix, sp.ImmutableDenseMatrix)):
+            return sustituir_derivadas(str(tuple(valor)))
+        else:
+            return sustituir_derivadas(str(valor))
+
+    return {k: convertir_valor(v) for k, v in diccionario.items()}
 
 
 def grafica_sup_param(sup, u, v, limite_inf_u, limite_sup_u, limite_inf_v, limite_sup_v):
@@ -102,193 +160,134 @@ app = Flask(__name__)
 
 @app.route('/primera_forma_fundamental')
 def primera_forma_fundamental():
-    var1 = request.args.get('var1', None)
-    var2 = request.args.get('var2', None)
-    superficie_str  = request.args.get('superficie')
-    const_str = request.args.getlist('const')
-    
-    if not superficie_str:
-        raise Exception("No se ha encontrado la parametrización de la superficie")
+    superficie, u, v = procesar_parametrizacion()
+    resultados = {}
 
-    try:
-        superficie, u, v = normaliza_parametrizacion(var1, var2, superficie_str, const_str)
-    except Exception as e:
-        #TODO-que hacer si hay error?
-        raise e
-    
     u0 = request.args.get('u0', None)
     v0 = request.args.get('v0', None)
     if u0 and v0:
-        return str(tuple(primeraFormaFundamental_pt_uv(superficie, u, v, u0, v0)))
+        primeraFormaFundamental_pt_uv(superficie, u, v, u0, v0, resultados)
+        return jsonify(convertir_a_string(resultados))
 
     x0 = request.args.get('x0', None)
     y0 = request.args.get('y0', None)
     z0 = request.args.get('z0', None)
     if x0 and y0 and z0:
-        return str(tuple(primeraFormaFundamental_pt_xyz(superficie, u, v, x0, y0, z0)))
+        primeraFormaFundamental_pt_xyz(superficie, u, v, x0, y0, z0, resultados)
+        return jsonify(convertir_a_string(resultados))
     
-    return str(tuple(primeraFormaFundamental(superficie, u, v)))
+    primeraFormaFundamental(superficie, u, v, resultados)
+    return jsonify(convertir_a_string(resultados))
 
 @app.route('/segunda_forma_fundamental')
 def segunda_forma_fundamental():
-    var1 = request.args.get('var1', None)
-    var2 = request.args.get('var2', None)
-    superficie_str  = request.args.get('superficie')
-    const_str = request.args.getlist('const')
-    
-    if not superficie_str:
-        raise Exception("No se ha encontrado la parametrización de la superficie")
+    superficie, u, v = procesar_parametrizacion()
+    resultados = {}
 
-    try:
-        superficie, u, v = normaliza_parametrizacion(var1, var2, superficie_str, const_str)
-    except Exception as e:
-        #TODO-que hacer si hay error?
-        raise e
-    
     u0 = request.args.get('u0', None)
     v0 = request.args.get('v0', None)
     if u0 and v0:
-        return str(tuple(segundaFormaFundamental_pt_uv(superficie, u, v, u0, v0)))
+        segundaFormaFundamental_pt_uv(superficie, u, v, u0, v0, resultados)
+        return jsonify(convertir_a_string(resultados))
 
     x0 = request.args.get('x0', None)
     y0 = request.args.get('y0', None)
     z0 = request.args.get('z0', None)
     if x0 and y0 and z0:
-        return str(tuple(segundaFormaFundamental_pt_xyz(superficie, u, v, x0, y0, z0)))
+        segundaFormaFundamental_pt_xyz(superficie, u, v, x0, y0, z0, resultados)
+        return jsonify(convertir_a_string(resultados))
     
-    return str(tuple(segundaFormaFundamental(superficie, u, v)))
+    segundaFormaFundamental(superficie, u, v, resultados)
+    return jsonify(convertir_a_string(resultados))
 
 @app.route('/curvatura_Gauss')
 def curvatura_Gauss():
-    var1 = request.args.get('var1', None)
-    var2 = request.args.get('var2', None)
-    superficie_str  = request.args.get('superficie')
-    const_str = request.args.getlist('const')
-    
-    if not superficie_str:
-        raise Exception("No se ha encontrado la parametrización de la superficie")
-
-    try:
-        superficie, u, v = normaliza_parametrizacion(var1, var2, superficie_str, const_str)
-    except Exception as e:
-        #TODO-que hacer si hay error?
-        raise e
+    superficie, u, v = procesar_parametrizacion()
+    resultados = {}
     
     u0 = request.args.get('u0', None)
     v0 = request.args.get('v0', None)
     if u0 and v0:
-        return str(curvaturaGauss_pt_uv(superficie, u, v, u0, v0))
+        curvaturaGauss_pt_uv(superficie, u, v, u0, v0, resultados)
+        return jsonify(convertir_a_string(resultados))
 
     x0 = request.args.get('x0', None)
     y0 = request.args.get('y0', None)
     z0 = request.args.get('z0', None)
     if x0 and y0 and z0:
-        return str(curvaturaGauss_pt_xyz(superficie, u, v, x0, y0, z0))
+        curvaturaGauss_pt_xyz(superficie, u, v, x0, y0, z0, resultados)
+        return jsonify(convertir_a_string(resultados))
     
-    return str(curvaturaGauss(superficie, u, v))
+    curvaturaGauss(superficie, u, v, resultados)
+    return jsonify(convertir_a_string(resultados))
 
 @app.route('/curvatura_media')
 def curvatura_media():
-    var1 = request.args.get('var1', None)
-    var2 = request.args.get('var2', None)
-    superficie_str  = request.args.get('superficie')
-    const_str = request.args.getlist('const')
-
-    if not superficie_str:
-        raise Exception("No se ha encontrado la parametrización de la superficie")
-
-    try:
-        superficie, u, v = normaliza_parametrizacion(var1, var2, superficie_str, const_str)
-    except Exception as e:
-        #TODO-que hacer si hay error?
-        raise e
+    superficie, u, v = procesar_parametrizacion()
+    resultados = {}
     
     u0 = request.args.get('u0', None)
     v0 = request.args.get('v0', None)
     if u0 and v0:
-        return str(curvaturaMedia_pt_uv(superficie, u, v, u0, v0))
+        curvaturaMedia_pt_uv(superficie, u, v, u0, v0, resultados)
+        return jsonify(convertir_a_string(resultados))
 
     x0 = request.args.get('x0', None)
     y0 = request.args.get('y0', None)
     z0 = request.args.get('z0', None)
     if x0 and y0 and z0:
-        return str(curvaturaMedia_pt_xyz(superficie, u, v, x0, y0, z0))
+        curvaturaMedia_pt_xyz(superficie, u, v, x0, y0, z0, resultados)
+        return jsonify(convertir_a_string(resultados))
     
-    return str(curvaturaMedia(superficie, u, v))
+    curvaturaMedia(superficie, u, v, resultados)
+    return jsonify(convertir_a_string(resultados))
 
 @app.route('/curvaturas_principales')
 def curvaturas_principales():
-    var1 = request.args.get('var1', None)
-    var2 = request.args.get('var2', None)
-    superficie_str  = request.args.get('superficie')
-    const_str = request.args.getlist('const')
-
-    if not superficie_str:
-        raise Exception("No se ha encontrado la parametrización de la superficie")
-
-    try:
-        superficie, u, v = normaliza_parametrizacion(var1, var2, superficie_str, const_str)
-    except Exception as e:
-        #TODO-que hacer si hay error?
-        raise e
+    superficie, u, v = procesar_parametrizacion()
+    resultados = {}
     
     u0 = request.args.get('u0', None)
     v0 = request.args.get('v0', None)
     if u0 and v0:
-        return str(tuple(curvaturasPrincipales_pt_uv(superficie, u, v, u0, v0)))
+        curvaturasPrincipales_pt_uv(superficie, u, v, u0, v0, resultados)
+        return jsonify(convertir_a_string(resultados))
 
     x0 = request.args.get('x0', None)
     y0 = request.args.get('y0', None)
     z0 = request.args.get('z0', None)
     if x0 and y0 and z0:
-        return str(tuple(curvaturasPrincipales_pt_xyz(superficie, u, v, x0, y0, z0)))
+        curvaturasPrincipales_pt_xyz(superficie, u, v, x0, y0, z0, resultados)
+        return jsonify(convertir_a_string(resultados))
 
-    
-    return str(tuple(curvaturasPrincipales(superficie, u, v)))
+    curvaturasPrincipales(superficie, u, v, resultados)
+    return jsonify(convertir_a_string(resultados))
 
 @app.route('/vector_normal')
 def vector_normal():
-    var1 = request.args.get('var1', None)
-    var2 = request.args.get('var2', None)
-    superficie_str  = request.args.get('superficie')
-    const_str = request.args.getlist('const')
-    
-    if not superficie_str:
-        raise Exception("No se ha encontrado la parametrización de la superficie")
+    superficie, u, v = procesar_parametrizacion()
+    resultados = {}
 
-    try:
-        superficie, u, v = normaliza_parametrizacion(var1, var2, superficie_str, const_str)
-    except Exception as e:
-        #TODO-que hacer si hay error?
-        raise e
     u0 = request.args.get('u0', None)
     v0 = request.args.get('v0', None)
     if u0 and v0:
-        return str(tuple(normal_pt_uv(superficie, u, v, u0, v0)))
+        normal_pt_uv(superficie, u, v, u0, v0, resultados)
+        return jsonify(convertir_a_string(resultados))
 
     x0 = request.args.get('x0', None)
     y0 = request.args.get('y0', None)
     z0 = request.args.get('z0', None)
     if x0 and y0 and z0:
-        return str(tuple(normal_pt_xyz(superficie, u, v, x0, y0, z0)))
+        normal_pt_xyz(superficie, u, v, x0, y0, z0, resultados)
+        return jsonify(convertir_a_string(resultados))
     
-    return str(tuple(normal(superficie, u, v)))
+    normal(superficie, u, v, resultados)
+    return jsonify(convertir_a_string(resultados))
 
 @app.route('/clasificacion_punto')
 def clasificacion_punto():
-    var1 = request.args.get('var1', None)
-    var2 = request.args.get('var2', None)
-    superficie_str  = request.args.get('superficie')
-    const_str = request.args.getlist('const')
-    
-    if not superficie_str:
-        raise Exception("No se ha encontrado la parametrización de la superficie")
-
-    try:
-        superficie, u, v = normaliza_parametrizacion(var1, var2, superficie_str, const_str)
-    except Exception as e:
-        #TODO-que hacer si hay error?
-        raise e
+    superficie, u, v = procesar_parametrizacion()
+    resultados = {}
     
     u0 = request.args.get('u0', None)
     v0 = request.args.get('v0', None)
@@ -305,75 +304,51 @@ def clasificacion_punto():
 
 @app.route('/plano_tangente')
 def plano_tangente():
-    var1 = request.args.get('var1', None)
-    var2 = request.args.get('var2', None)
-    superficie_str  = request.args.get('superficie')
-    const_str = request.args.getlist('const')
-    
-    if not superficie_str:
-        raise Exception("No se ha encontrado la parametrización de la superficie")
-
-    try:
-        superficie, u, v = normaliza_parametrizacion(var1, var2, superficie_str, const_str)
-    except Exception as e:
-        #TODO-que hacer si hay error?
-        raise e
+    superficie, u, v = procesar_parametrizacion()
+    resultados = {}
     
     u0 = request.args.get('u0', None)
     v0 = request.args.get('v0', None)
     if u0 and v0:
-        return str(planoTangente_pt_uv(superficie, u, v, u0, v0))
+        planoTangente_pt_uv(superficie, u, v, u0, v0, resultados)
+        return jsonify(convertir_a_string(resultados))
 
     x0 = request.args.get('x0', None)
     y0 = request.args.get('y0', None)
     z0 = request.args.get('z0', None)
     if x0 and y0 and z0:
-        return str(planoTangente_pt_xyz(superficie, u, v, x0, y0, z0))
-    return str(planoTangente(superficie, u, v))
+        planoTangente_pt_xyz(superficie, u, v, x0, y0, z0, resultados)
+        return jsonify(convertir_a_string(resultados))
+    
+    planoTangente(superficie, u, v, resultados)
+    return jsonify(convertir_a_string(resultados))
 
 @app.route('/direcciones_principales')
 def direcciones_principales():
-    var1 = request.args.get('var1', None)
-    var2 = request.args.get('var2', None)
-    superficie_str  = request.args.get('superficie')
-    const_str = request.args.getlist('const')
-
-    if not superficie_str:
-        raise Exception("No se ha encontrado la parametrización de la superficie")
-
-    try:
-        superficie, u, v = normaliza_parametrizacion(var1, var2, superficie_str, const_str)
-    except Exception as e:
-        #TODO-que hacer si hay error?
-        raise e
+    superficie, u, v = procesar_parametrizacion()
+    resultados = {}
     
     u0 = request.args.get('u0', None)
     v0 = request.args.get('v0', None)
     if u0 and v0:
-        return str(tuple(dirPrinc_pt_uv(superficie, u, v, u0, v0)))
+        dirPrinc_pt_uv(superficie, u, v, u0, v0, resultados)
+        return jsonify(convertir_a_string(resultados))
 
     x0 = request.args.get('x0', None)
     y0 = request.args.get('y0', None)
     z0 = request.args.get('z0', None)
     if x0 and y0 and z0:
-        return str(tuple(dirPrinc_pt_xyz(superficie, u, v, x0, y0, z0)))
+        dirPrinc_pt_xyz(superficie, u, v, x0, y0, z0, resultados)
+        return jsonify(convertir_a_string(resultados))
 
-    return str(tuple(dirPrinc_pt(superficie, u, v)))
+    dirPrinc_pt(superficie, u, v, resultados)
+    return jsonify(convertir_a_string(resultados))
 
+    
 """@app.route('/grafica')
 def grafica():
-    var1 = request.args.get('var1', None)
-    var2 = request.args.get('var2', None)
-    superficie_str  = request.args.get('superficie')
-
-    if not superficie_str:
-        raise Exception("No se ha encontrado la parametrización de la superficie")
-
-    try:
-        superficie, u, v = normaliza_parametrizacion(var1, var2, superficie_str, None)
-    except Exception as e:
-        #TODO-que hacer si hay error?
-        raise e
+    superficie, u, v = procesar_parametrizacion()
+    resultados = {}
 
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
@@ -392,19 +367,8 @@ def grafica():
 
 @app.route('/grafica')
 def grafica():
-    var1 = request.args.get('var1', None)
-    var2 = request.args.get('var2', None)
-    superficie_str  = request.args.get('superficie')
-
-    if not superficie_str:
-        raise Exception("No se ha encontrado la parametrización de la superficie")
-
-    try:
-        superficie, u, v = normaliza_parametrizacion(var1, var2, superficie_str, None)
-    except Exception as e:
-        #TODO-que hacer si hay error?
-        raise e
-    
+    superficie, u, v = procesar_parametrizacion()
+    resultados = {}
     
     maximo = grafica_sup_param(superficie,u,v,-sp.pi/2,sp.pi/2,0,2*sp.pi)
     print(maximo)
