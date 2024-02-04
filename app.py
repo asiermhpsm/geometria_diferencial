@@ -5,6 +5,11 @@ import sympy as sp
 import numpy as np
 import re
 
+#from sympy.core.assumptions import assumptions
+#print(assumptions(variables[nombre_func]))
+
+import plotly.graph_objects as go
+
 from mayavi import mlab
 
 from matplotlib.image import imsave
@@ -13,6 +18,7 @@ from matplotlib.image import imsave
 
 from utils import *
 #from utils_graph import *
+from utils_graph_plotly import *
 
 mlab.options.offscreen = True
 
@@ -21,7 +27,11 @@ mlab.options.offscreen = True
 FUNCIONES AUXILIARES Y ATRIBUTOS GENERALES
 -------------------------------------------------------------------------------
 """
-
+OPCIONES_VAR = ['infinite', 'finite', 'real', 'extended_real', 'rational', 'irrational', 
+                 'integer', 'noninteger', 'even', 'odd', 'prime', 'composite', 
+                 'zero', 'nonzero', 'extended_nonzero', 'positive', 'nonnegative', 
+                 'negative', 'nonpositive', 'extended_positive', 'extended_nonnegative',
+                 'extended_negative', 'extended_nonpositive']
 #colormapas = list(colormaps)
 #colores = list(mcolors.BASE_COLORS.keys())+list(mcolors.TABLEAU_COLORS.keys()) + list(mcolors.CSS4_COLORS.keys()) + list(mcolors.XKCD_COLORS.keys())
 
@@ -74,12 +84,14 @@ def normaliza_parametrizacion(var1, var2, sup, consts, func):
     #https://docs.sympy.org/latest/modules/core.html#module-sympy.core.assumptions
     if consts:
         for elem in consts:
+            elem = elem.replace(' ', '')
             partes  = elem.strip('[]').split(',')
             nombre_variable = partes[0].strip()
             opciones = partes[1:]
             opciones_dict = {}
             for opcion in opciones:
-                opciones_dict[opcion.strip()] = True
+                if opcion.strip() in OPCIONES_VAR:
+                    opciones_dict[opcion.strip()] = True
             opciones_dict['real'] = True
             variables[nombre_variable] = sp.symbols(nombre_variable, **opciones_dict)
     
@@ -94,7 +106,8 @@ def normaliza_parametrizacion(var1, var2, sup, consts, func):
             descripciones = partes[1].split(',')
             descripciones_dict = {}
             for descripcion in descripciones:
-                descripciones_dict[descripcion.strip()] = True
+                if descripcion in OPCIONES_VAR:
+                    descripciones_dict[descripcion] = True
             descripciones_dict['real'] = True
             variables[nombre_func] = sp.Function(nombre_func, **descripciones_dict)(*variables_func)
 
@@ -346,6 +359,16 @@ def direcciones_principales():
     dirPrinc_pt(superficie, u, v, resultados)
     return jsonify(convertir_a_string(resultados))
 
+@app.route('/grafica')
+def grafica():
+    fig = go.Figure()
+    if '[' in request.args.get('superficie'):
+        superficie, u, v = procesar_parametrizacion()
+        print(superficie)
+        fig = grafica_sup_param_plotly(superficie, u, v, 0, 2*sp.pi, 0, sp.pi, fig)
+        return jsonify(fig.to_json())
+    else:
+        return 'Superficie nivel'
     
 """@app.route('/grafica')
 def grafica():
@@ -367,6 +390,8 @@ def grafica():
     #return f"<img src='data:image/png;base64,{data}'/>"
     return send_file(io.BytesIO(buf.read()), mimetype='image/png')"""
 
+
+"""
 @app.route('/grafica')
 def grafica():
     superficie, u, v = procesar_parametrizacion()
@@ -418,7 +443,7 @@ def grafica():
     combined_buf.seek(0)
 
     return send_file(combined_buf, mimetype='image/png')
-
+"""
 
 if __name__ == '__main__':
     app.run(debug=True)
