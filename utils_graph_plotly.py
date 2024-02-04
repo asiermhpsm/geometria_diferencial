@@ -12,7 +12,6 @@ def grafica_sup_param_plotly(sup, u, v, limite_inf_u=-5, limite_sup_u=5, limite_
         Y = np.full_like(u_values, Y)
     if np.isscalar(Z):
         Z = np.full_like(u_values, Z)
-    print(X)
     if fig:
         fig.add_trace(go.Surface(x=X, y=Y, z=Z))
     else:
@@ -20,7 +19,7 @@ def grafica_sup_param_plotly(sup, u, v, limite_inf_u=-5, limite_sup_u=5, limite_
     
     return fig
 
-def grafica_sup_ec_plotly(sup, x, y, z, limite_inf_x=-10, limite_sup_x=10, limite_inf_y=-10, limite_sup_y=10, limite_inf_z=-10, limite_sup_z=10,fig=None):
+def grafica_sup_ec_plotly(sup, x, y, z, limite_inf_x=-5, limite_sup_x=5, limite_inf_y=-5, limite_sup_y=5, limite_inf_z=-5, limite_sup_z=5,fig=None):
     parametric_surface = sp.lambdify((x, y, z), sup, 'numpy')
     X, Y, Z = np.mgrid[float(limite_inf_x):float(limite_sup_x):75j, float(limite_inf_y):float(limite_sup_y):75j, float(limite_inf_z):float(limite_sup_z):75j]
     values = parametric_surface(X, Y, Z)

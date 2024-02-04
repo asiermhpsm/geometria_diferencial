@@ -1,8 +1,10 @@
 from utils_graph_matplotlib import *
 from utils_graph_mayavi import *
+from utils_graph_plotly import *
 import sympy as sp
 from mayavi import mlab
 import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 
 u, v = sp.symbols('u v')
 s, t = sp.symbols('s t')
@@ -34,7 +36,7 @@ superficies_parametrizadas.append( ((u*sp.cos(v), u*sp.sin(v), (u**2)/2), 0, 2*s
 superficies_parametrizadas.append( ((sp.cos(u)*sp.cos(v), sp.cos(u)*sp.sin(v) , sp.sin(u)*sp.cos(v)), 0, 2*sp.pi, 0, 2*sp.pi) )
 superficies_parametrizadas.append( ((u, v, u**2+v**2), -1, 1, -1, 1) )
 
-esfera_eq = x**2+y**2+z**2-1
+esfera_eq = x**2 + y**2 + z**2 - 1
 elipsoide_eq = (x/p)**2 + (y/q)**2 + (z/r)**2 - 1
 hiperboloide1hoja_eq = (x/p)**2 + (y/q)**2 - (z/r)**2 - 1
 hiperboloide2hojas_eq = (x/p)**2 - (y/q)**2 - (z/r)**2 - 1
@@ -66,7 +68,8 @@ while True:
         sup, u_inf, u_sup, v_inf, v_sup = superficies_parametrizadas[superficie]
         print('\t1-mayavi'+
               '\n\t2-matplotlib'+
-              '\n\t3-salir')
+              '\n\t3-plotly'+
+              '\n\t4-salir')
         motor = int(input('Seleccione biblioteca:'))
         if motor == 1:
             grafica_sup_param_mayavi(sup, u, v, u_inf, u_sup, v_inf, v_sup)
@@ -79,6 +82,16 @@ while True:
             ax.set_aspect('equal')
             plt.show()
         elif motor == 3:
+            fig = go.Figure()
+            fig = grafica_sup_param_plotly(sup, u, v, u_inf, u_sup, v_inf, v_sup, fig)
+            fig.update_layout(
+                scene=dict(
+                    aspectmode='data',
+                    aspectratio=dict(x=1, y=1, z=1)
+                )
+            )
+            fig.show()
+        elif motor == 4:
             break
         else:
             continue    
@@ -97,13 +110,28 @@ while True:
               '\n\t11-2 planos'+
               '\n\t12-planos cruzados')
         sup = int(input('Seleccione superficie:'))
-        grafica_sup_ec_mayavi(superficies_eq[sup], x, y, z)
-        #mlab.plot3d([0, 2], [0, 0], [0, 0], color=(1, 0, 0), tube_radius=None)
-        #mlab.plot3d([0, 0], [0, 2], [0, 0], color=(0, 1, 0), tube_radius=None)
-        #mlab.plot3d([0, 0], [0, 0], [0, 2], color=(0, 0, 1), tube_radius=None)
-        #mlab.axes()
-        mlab.orientation_axes()
-        mlab.show()
+        print('\t1-mayavi'+
+              '\n\t2-plotly'+
+              '\n\t3-salir')
+        motor = int(input('Seleccione biblioteca:'))
+        if motor == 1:
+            grafica_sup_ec_mayavi(superficies_eq[sup], x, y, z)
+            #mlab.plot3d([0, 2], [0, 0], [0, 0], color=(1, 0, 0), tube_radius=None)
+            #mlab.plot3d([0, 0], [0, 2], [0, 0], color=(0, 1, 0), tube_radius=None)
+            #mlab.plot3d([0, 0], [0, 0], [0, 2], color=(0, 0, 1), tube_radius=None)
+            #mlab.axes()
+            mlab.orientation_axes()
+            mlab.show()
+        elif motor == 2:
+            fig = go.Figure()
+            fig = grafica_sup_ec_plotly(superficies_eq[sup], x, y, z, fig=fig)
+            fig.update_layout(
+                scene=dict(
+                    aspectmode='data',
+                    aspectratio=dict(x=1, y=1, z=1)
+                )
+            )
+            fig.show()
     elif opcion == 3:
         print('\ta*x+b*y+c*z+d=0')
         a = float(input('a:'))

@@ -78,20 +78,25 @@ x, y, z = sp.symbols('x, y, z')
 
 fig = go.Figure()
 
-sup0 = [sp.sin(v)*sp.cos(u), sp.sin(v)*sp.sin(u), sp.cos(v)]
+"""sup0 = [sp.sin(v)*sp.cos(u), sp.sin(v)*sp.sin(u), sp.cos(v)]
 fig = grafica_sup_param_plotly(sup0, u, v, 0, 2*sp.pi, 0, sp.pi, fig)
 
-"""sup1 = [sp.sin(v)*sp.cos(u) + 2, sp.sin(v)*sp.sin(u) + 2, sp.cos(v) + 2]
+sup1 = [sp.sin(v)*sp.cos(u) + 2, sp.sin(v)*sp.sin(u) + 2, sp.cos(v) + 2]
 fig = grafica_sup_param_plotly(sup1, u, v, 0, 2*sp.pi, 0, sp.pi, fig)
 
 sup2 = [sp.sin(v)*sp.cos(u) - 2, sp.sin(v)*sp.sin(u) - 2, sp.cos(v) - 2]
-fig = grafica_sup_param_plotly(sup2, u, v, 0, 2*sp.pi, 0, sp.pi, fig)
+fig = grafica_sup_param_plotly(sup2, u, v, 0, 2*sp.pi, 0, sp.pi, fig)"""
 
 sup3 = (x/3)**2 + (y/2)**2 + (z/1)**2 - 1
-fig = grafica_sup_ec_plotly(sup3, x, y, z, -4, 4, -4, 4, -4, 4, fig)"""
+fig = grafica_sup_ec_plotly(sup3, x, y, z, -4, 4, -4, 4, -4, 4, fig)
 
 #grafica_punto_plotly((0,0,1),fig)
-grafica_vector_plotly((0,0,1), (0,0,1),fig)
+#grafica_vector_plotly((0,0,1), (0,0,1),fig)
 
-#fig.update_layout(scene=dict(aspectratio=dict(x=1, y=1, z=1)))
+fig.update_layout(
+    scene=dict(
+        aspectmode='data',
+        aspectratio=dict(x=1, y=1, z=1)
+    )
+)
 fig.show()

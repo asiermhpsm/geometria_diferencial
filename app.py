@@ -1,5 +1,6 @@
-from flask import Flask, request, send_file, jsonify
+from flask import Flask, request, send_file, jsonify, render_template
 import io
+import json
 from PIL import Image
 import sympy as sp
 import numpy as np
@@ -364,9 +365,16 @@ def grafica():
     fig = go.Figure()
     if '[' in request.args.get('superficie'):
         superficie, u, v = procesar_parametrizacion()
-        print(superficie)
         fig = grafica_sup_param_plotly(superficie, u, v, 0, 2*sp.pi, 0, sp.pi, fig)
-        return jsonify(fig.to_json())
+        fig.update_layout(
+            scene=dict(
+                aspectmode='data',
+                aspectratio=dict(x=1, y=1, z=1)
+            )
+        )
+        fig.show()
+        return render_template('grafica.html', plot=fig.to_html())
+        return jsonify(json.loads(fig.to_json()))
     else:
         return 'Superficie nivel'
     
