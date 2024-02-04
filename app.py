@@ -136,7 +136,7 @@ def convertir_a_string(diccionario):
         return expr
     def convertir_valor(valor):
         if isinstance(valor, (sp.Matrix, sp.MutableDenseMatrix, sp.ImmutableDenseMatrix)):
-            return sustituir_derivadas(str(tuple(valor)))
+            return sustituir_derivadas(str(list(valor)))
         elif isinstance(valor, sp.Eq):
             return sustituir_derivadas(str(valor.lhs)) + ' = ' + sustituir_derivadas(str(valor.rhs))
         else:
@@ -357,7 +357,28 @@ def direcciones_principales():
         dirPrinc_pt_xyz(superficie, u, v, x0, y0, z0, resultados)
         return jsonify(convertir_a_string(resultados))
 
-    dirPrinc_pt(superficie, u, v, resultados)
+    dirPrinc(superficie, u, v, resultados)
+    return jsonify(convertir_a_string(resultados))
+
+@app.route('/description')
+def description():
+    superficie, u, v = procesar_parametrizacion()
+    resultados = {}
+    
+    u0 = request.args.get('u0', None)
+    v0 = request.args.get('v0', None)
+    if u0 and v0:
+        descripccion_pt_uv(superficie, u, v, u0, v0, resultados)
+        return jsonify(convertir_a_string(resultados))
+
+    x0 = request.args.get('x0', None)
+    y0 = request.args.get('y0', None)
+    z0 = request.args.get('z0', None)
+    if x0 and y0 and z0:
+        descripccion_pt_xyz(superficie, u, v, x0, y0, z0, resultados)
+        return jsonify(convertir_a_string(resultados))
+
+    descripccion(superficie, u, v, resultados)
     return jsonify(convertir_a_string(resultados))
 
 @app.route('/grafica')

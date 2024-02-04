@@ -8,6 +8,7 @@ H-Hecho
 H-Revisar que opciones hay para describir tanto constante como función general.
 EP-¿Dejar que haya variable infinita?
 -Dar opción de dar valores para u y para v, ademas dejar describirla.
+-Dar opción de describir derivadas de función, no solo de función en si.
 -Comprobar que una superficie es regular y diferenciable. Pag 49
 -Hacer lo que se pueda con superficies de nivel (o implicitas).
 -Comprobar que superficies de nivel es diferenciable. Pag 53
@@ -21,9 +22,11 @@ EP-¿Dejar que haya variable infinita?
 -¿Aplicación de Weingarten?. Pag 97
 -¿Paraboloide osculador?. Pag 102
 -Revisar como calcular curvatura y direcciones principales. Pag 107
+-¿Puntos umbílicos?. Pag 107
 -¿Curvatura normal?. Pag 109
 -¿Expresión canónica del paraboloide osculador?. Pag 111
 -¿Direcciones asintóticas?. Pag 113
 -¿Símbolos de Christoffel?. Pag 118
 -¿Superficies regladas?. Pag 125
 -¿Curva de estricción de superficies regladas?. Pag 133
+-Hacer bien los test
