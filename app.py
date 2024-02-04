@@ -372,7 +372,6 @@ def grafica():
                 aspectratio=dict(x=1, y=1, z=1)
             )
         )
-        fig.show()
         return render_template('grafica.html', plot=fig.to_html())
         return jsonify(json.loads(fig.to_json()))
     else:
