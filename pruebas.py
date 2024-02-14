@@ -1,39 +1,22 @@
-import re
+def funcion_principal(funcion_parametro):
+    # Aquí ejecutas la acción que quieras antes de llamar a la función parametro
+    print("Ejecutando acción antes de llamar a la función parametro")
+    
+    if funcion_parametro is funcion_b:
+        print('Voy a ejecutar la funcion B')
 
-def extraer_funciones(string):
-    string.replace(' ', '')
+    # Llamas a la función parametro que se pasó como argumento
+    funcion_parametro()
+    
+    # Aquí ejecutas la acción que quieras después de llamar a la función parametro
+    print("Ejecutando acción después de llamar a la función parametro")
 
-    coincidencias_funciones = re.findall(r'([a-zA-Z0-9]+)\(([\w,]+)\)', string)
-    print(coincidencias_funciones)
-    funciones = {}
-    for coincidencia in coincidencias_funciones:
-        funcion = coincidencia[0]
-        variables  = set(coincidencia[1].split(','))
-        string = re.sub(funcion+r'\(([\w,]+)\)', funcion, string)
-        if funcion not in funciones:
-            funciones[funcion] = variables
-        elif funciones[funcion] != variables:
-            raise Exception(f'Hay una inconsistencia de variables para la función {funcion}: se ha encontrado que esta definido a la vez por {funciones[funcion]} y por {variables}')
+# Definimos algunas funciones que podríamos pasar como parámetro a funcion_principal
+def funcion_a():
+    print("Estoy en la función A")
 
-    coincidencias_lista = re.match(r'\[([^,\[\]]*),\s*([^,\[\]]*),\s*([^,\[\]]*)\]', string)
-    if coincidencias_lista:
-        return [coincidencias_lista.group(1), coincidencias_lista.group(2), coincidencias_lista.group(3)], funciones
-    else:
-        return string, funciones
+def funcion_b():
+    print("Estoy en la función B")
 
-# Ejemplos de uso
-string1 = "[u+v, u-v + g(u,v), f(u)]"
-string2 = "u+v"
-
-print("Para el string '{}':".format(string1))
-elementos1, funciones1 = extraer_funciones(string1)
-print("Elementos extraídos:", elementos1)
-print("Funciones extraídas:", funciones1)
-
-print("\nPara el string '{}':".format(string2))
-elementos2, funciones2 = extraer_funciones(string2)
-print("Elementos extraídos:", elementos2)
-print("Funciones extraídas:", funciones2)
-
-for var in {'u', 'v'}:
-    print(var)
+# Llamamos a funcion_principal y pasamos una función como parámetro
+funcion_principal(funcion_b)

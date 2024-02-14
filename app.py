@@ -20,13 +20,13 @@ OPCIONES_VAR = ['infinite', 'finite', 'real', 'extended_real', 'rational', 'irra
                  'negative', 'nonpositive', 'extended_positive', 'extended_nonnegative',
                  'extended_negative', 'extended_nonpositive']
 
-def procesar_solicitud(func, func_pt_uv, func_pt_xyz):
+def procesar_solicitud(func : function, func_pt_uv : function, func_pt_xyz : function):
     """
     Procesa una solicitud
     """
     var1 = request.args.get('var1', None)
     var2 = request.args.get('var2', None)
-    superficie_str  = request.args.get('superficie')
+    superficie_str  = request.args.get('superficie', None)
     const_str = request.args.getlist('const')
     func_str = request.args.getlist('func')
     
@@ -40,24 +40,34 @@ def procesar_solicitud(func, func_pt_uv, func_pt_xyz):
         # TODO: ¿Qué hacer si hay un error?
         raise e
     
-    resultados = {}
+    resultados = {
+        'sup' : superficie,
+        'u' : u,
+        'v' : v
+    }
 
-    #TODO- comprobar que punto es numerico
-    u0 = request.args.get('u0', None)
-    v0 = request.args.get('v0', None)
-    if u0 and v0:
-        func_pt_uv(superficie, u, v, u0, v0, resultados)
+    u0 = obtiene_valor_pt('u0')
+    v0 = obtiene_valor_pt('v0')
+    if u0!=None and v0!=None :
+        resultados['u0'] = u0
+        resultados['v0'] = v0
+        func_pt_uv(resultados)
         return convertir_a_string(resultados)
 
-    #TODO- comprobar que punto es numerico
-    x0 = request.args.get('x0', None)
-    y0 = request.args.get('y0', None)
-    z0 = request.args.get('z0', None)
-    if x0 and y0 and z0:
-        func_pt_xyz(superficie, u, v, x0, y0, z0, resultados)
+    x0 = obtiene_valor_pt('x0')
+    y0 = obtiene_valor_pt('y0')
+    z0 = obtiene_valor_pt('z0')
+    if x0!=None and y0!=None and z0!=None:
+        resultados['x0'] = x0
+        resultados['y0'] = y0
+        resultados['z0'] = z0
+        func_pt_xyz(resultados)
         return convertir_a_string(resultados)
     
-    func(superficie, u, v, resultados)
+    if func_pt_uv is clasicPt_uv:
+        raise Exception("No se ha definido correctamente el punto a clasificar")
+    
+    func(resultados)
     return convertir_a_string(resultados)
 
 def normaliza_parametrizacion(var1, var2, sup, consts, funcs):
@@ -115,16 +125,21 @@ def normaliza_parametrizacion(var1, var2, sup, consts, funcs):
         variables[nombre_func] = sp.Function(nombre_func, **descripciones_dict)(*variables_func)
         sup = re.sub(nombre_func+r'\(([\w,]+)\)', nombre_func, sup)
 
-    try:
-        superficie = extrae_superficie(sup.strip('[] '))
-    except Exception as e:
-        raise Exception(f"Error al procesar la superficie: {e}")
     
-    if isinstance(superficie, list):
-        return sp.Matrix([sp.sympify(elem, locals=variables) for elem in superficie]), u, v
+    superficie = sup.strip('[] ').split(',')
+    if len(superficie) == 3:
+        try:
+            return sp.Matrix([sp.sympify(elem, locals=variables) for elem in superficie]), u, v
+        except Exception as e:
+            raise Exception(f"Error al procesar la superficie: {e}")
+    elif len(superficie) == 1:
+        try:
+            return sp.sympify(superficie, locals=variables), u, v
+        except Exception as e:
+            raise Exception(f"Error al procesar la superficie: {e}")
     else:
-        return sp.sympify(superficie, locals=variables), u, v
-    
+        raise Exception(f"Error al procesar la superficie: {sup}")
+   
 def extrae_opciones_var(string):
     partes  = string.replace(' ', '').strip('[]').split(',')
     opciones_dict = {}
@@ -132,16 +147,6 @@ def extrae_opciones_var(string):
         if opcion in OPCIONES_VAR:
             opciones_dict[opcion] = True
     return partes[0], opciones_dict
-
-def extrae_superficie(string):
-    string.replace(' ', '')
-    coincidencias_lista = re.match(r'\[([^,\[\]]*),\s*([^,\[\]]*),\s*([^,\[\]]*)\]', string)
-    if coincidencias_lista:
-        return [coincidencias_lista.group(1), coincidencias_lista.group(2), coincidencias_lista.group(3)]
-    else:
-        if '[' in string or ']' in string:
-            raise Exception(f"Error al procesar la superficie: {string}")
-        return string
 
 def sympy2latex(diccionario):
     return {k: sp.latex(v) for k, v in diccionario.items()}
@@ -168,6 +173,13 @@ def convertir_a_string(diccionario):
 
     return {k: convertir_valor(v) for k, v in diccionario.items()}
     return {k: sp.latex(v) for k, v in diccionario.items()}
+
+def obtiene_valor_pt(string):
+    pt = request.args.get(string, None)
+    pt = sp.sympify(pt) if pt else None
+    if pt != None and not pt.is_number:
+        pt = None
+    return pt
 
 """
 -------------------------------------------------------------------------------
@@ -202,22 +214,7 @@ def vector_normal():
 
 @app.route('/clasificacion_punto')
 def clasificacion_punto():
-    #TODO- como hacer con procesar_solicitud() ?
-    superficie, u, v = procesar_solicitud()
-    resultados = {}
-    
-    u0 = request.args.get('u0', None)
-    v0 = request.args.get('v0', None)
-    if u0 and v0:
-        return str(clasicPt_uv(superficie, u, v, u0, v0))
-
-    x0 = request.args.get('x0', None)
-    y0 = request.args.get('y0', None)
-    z0 = request.args.get('z0', None)
-    if x0 and y0 and z0:
-        return str(clasicPt_xyz(superficie, u, v, x0, y0, z0))
-    
-    raise Exception("No se ha definido correctamente el punto a clasificar")
+    return jsonify(procesar_solicitud(None, clasicPt_uv, clasicPt_xyz))
 
 @app.route('/plano_tangente')
 def plano_tangente():
