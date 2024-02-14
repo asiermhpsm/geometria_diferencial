@@ -70,6 +70,8 @@ def normaliza(vector):
     Argumentos:
     vector     lista con el vector en cuestion
     """
+    if not isinstance(vector, sp.Matrix):
+        vector = sp.Matrix(vector)
     return sp.simplify(vector/norm(vector))
 
 def uv_to_xyz(parametrizacion, u, v, u0, v0):
@@ -101,7 +103,7 @@ def xyz_to_uv(parametrizacion, u, v, x0, y0, z0):
     y0                  valor y del punto
     z0                  valor z del punto
     """
-    punto = (float(x0), float(y0), float(z0))
+    punto = (x0, y0, z0)
     ecuaciones = [sp.Eq(s, p) for s, p in zip(parametrizacion, punto)]
     soluciones = sp.solve(ecuaciones, (u, v))
     if not soluciones:
@@ -113,6 +115,57 @@ def xyz_to_uv(parametrizacion, u, v, x0, y0, z0):
     else:
         return soluciones[0]
 
+def esClaseInf(f, u, v):
+    def terminoClaseInf(term):
+        return term == 0 or any(isinstance(term, func) for func in [sp.exp, sp.sin, sp.cos, sp.cosh, sp.sinh, sp.asin, sp.acos, sp.atan, sp.acot, sp.sinh, sp.cosh, sp.sech, sp.asinh])
+    #TODO- no funciona cuando u y v estan muy mezcladas
+    def esContinua(f, u, v):
+        for sing in sp.singularities(f, u):
+            lim = sp.limit(f, u, sing)
+            if lim==sp.oo or -lim==sp.oo:
+                return False
+            if sp.limit(f, u, sing, '-')!=lim or sp.limit(f, u, sing, '+')!=lim:
+                return False
+        for sing in sp.singularities(f, v):
+            lim = sp.limit(f, v, sing)
+            if lim==sp.oo or -lim==sp.oo:
+                return False
+            if sp.limit(f, v, sing, '-')!=lim or sp.limit(f, v, sing, '+')!=lim:
+                return False
+        return True
+    #TODO: que hago cuando salta una excepción?
+    if not esContinua(f, u, v):
+        return False
+    elif len(f.args)==1:
+        if terminoClaseInf(f):
+            return True
+        else:
+            return esClaseInf(sp.diff(f, u), u, v) and esClaseInf(sp.diff(f, v), u, v)
+    else:
+        return all(esClaseInf(term, u, v) for term in f.args)
+
+def esRegular(parametrizacion, u, v, resultados={}):
+    if not all(esClaseInf(f, u, v) for f in parametrizacion):
+        return False
+    
+    if not isinstance(parametrizacion, sp.Matrix):
+        parametrizacion = sp.Matrix(parametrizacion)
+    if 'duXdv' not in resultados:
+        if 'du' not in resultados:
+            resultados['du'] = sp.diff(parametrizacion, u)
+        if 'dv' not in resultados:
+            resultados['dv'] = sp.diff(parametrizacion, v)
+        resultados['duXdv'] = resultados['du'].cross(resultados['dv'])
+    return resultados['duXdv']!=0
+
+def esSupNivel(f, x, y, z, resultados={}):
+    resultados['dx'] = sp.diff(f, x)
+    resultados['dy'] = sp.diff(f, y)
+    resultados['dz'] = sp.diff(f, z)
+    return False if sp.solve([sp.Eq(f, 0), 
+                              sp.Eq(resultados['dx'], 0), 
+                              sp.Eq(resultados['dy'], 0), 
+                              sp.Eq(resultados['dz'], 0)], (x, y, z)) else True
 
 """
 -------------------------------------------------------------------------------
@@ -242,7 +295,7 @@ def planoTangente_pt_uv(parametrizacion, u, v, u0, v0, resultados={}):
         resultados['duXdv_pt'] = resultados['du_pt'].cross(resultados['dv_pt'])
 
     x, y, z = sp.symbols('x, y, z', real = True)
-    resultados['tangente_afin_pt'] = sp.Eq(sp.simplify(resultados['duXdv_pt'].dot(sp.Matrix([x,y,z]))), sp.simplify(resultados['duXdv_pt'].dot(parametrizacion)))
+    resultados['tangente_afin_pt'] = sp.Eq(sp.simplify(resultados['duXdv_pt'].dot(sp.Matrix([x,y,z]))), sp.simplify(resultados['duXdv_pt'].dot(parametrizacion.subs({u:u0, v:v0}))))
     return resultados
 
 def planoTangente_pt_xyz(parametrizacion, u, v, x0, y0,z0, resultados={}):
@@ -698,9 +751,9 @@ def clasicPt_xyz(parametrizacion, u, v, x0, y0, z0, resultados={}):
 DIRECCIONES PRINCIPALES
 -------------------------------------------------------------------------------
 """
-def dirPrinc(parametrizacion, u, v, resultados={}):
+def weingarten(parametrizacion, u, v, resultados={}):
     """
-    Calcula las direcciones principales en un punto
+    Devuelve la matriz de weingarten
     No se hacen comprobaciones de tipo
 
     Argumentos:
@@ -715,11 +768,74 @@ def dirPrinc(parametrizacion, u, v, resultados={}):
         segundaFormaFundamental(parametrizacion, u, v, resultados)
 
     denom = resultados['E']*resultados['G'] - resultados['F']**2
-    W = sp.Matrix([[resultados['e']*resultados['G']-resultados['f']*resultados['F'], 
+    resultados['W'] = sp.Matrix([[resultados['e']*resultados['G']-resultados['f']*resultados['F'], 
                     resultados['f']*resultados['G']-resultados['g']*resultados['F']], 
                     [resultados['f']*resultados['E']-resultados['e']*resultados['F'], 
                     resultados['g']*resultados['E']-resultados['f']*resultados['F']]])/denom
-    autovalores = W.eigenvects(simplify=True)
+    return resultados
+
+def weingarten_pt_uv(parametrizacion, u, v, u0, v0, resultados={}):
+    """
+    Devuelve la matriz de weingarten en un punto
+    No se hacen comprobaciones de tipo
+
+    Argumentos:
+    parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
+    u                   primera variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
+    v                   segunda variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
+    u0                  valor u del punto
+    v0                  valor v del punto
+    resultados          diccionario con todos los resultados calculados hasta el moment
+    """
+    if 'E_pt' not in resultados:
+        primeraFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0, resultados)
+    if 'e_pt' not in resultados:
+        segundaFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0, resultados)
+
+    denom = resultados['E_pt']*resultados['G_pt'] - resultados['F_pt']**2
+    resultados['W_pt'] = sp.Matrix([[resultados['e_pt']*resultados['G_pt']-resultados['f_pt']*resultados['F_pt'], 
+                    resultados['f_pt']*resultados['G_pt']-resultados['g_pt']*resultados['F_pt']], 
+                    [resultados['f_pt']*resultados['E_pt']-resultados['e_pt']*resultados['F_pt'], 
+                    resultados['g_pt']*resultados['E_pt']-resultados['f_pt']*resultados['F_pt']]])/denom
+    return resultados
+
+def weingarten_pt_xyz(parametrizacion, u, v, x0, y0, z0, resultados={}):
+    """
+    Devuelve la matriz de weingarten en un punto
+    No se hacen comprobaciones de tipo
+
+    Argumentos:
+    parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
+    u                   primera variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
+    v                   segunda variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
+    x0                  valor x del punto
+    y0                  valor y del punto
+    z0                  valor z del punto
+    """
+    u0, v0 = xyz_to_uv(parametrizacion, u, v, x0, y0, z0)
+    return weingarten_pt_uv(parametrizacion, u, v, u0, v0, resultados)
+
+
+"""
+-------------------------------------------------------------------------------
+DIRECCIONES PRINCIPALES
+-------------------------------------------------------------------------------
+"""
+def dirPrinc(parametrizacion, u, v, resultados={}):
+    """
+    Calcula las direcciones principales
+    No se hacen comprobaciones de tipo
+
+    Argumentos:
+    parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
+    u                   primera variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
+    v                   segunda variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
+    resultados          diccionario con todos los resultados calculados hasta el momento
+    """
+    if 'W' not in resultados:
+        weingarten(parametrizacion, u, v, resultados)
+
+    autovalores = resultados['W'].eigenvects(simplify=True)
 
     if autovalores[0][1] == 2:
         resultados['d1'] = list(autovalores[0][-1][0])
@@ -745,17 +861,10 @@ def dirPrinc_pt_uv(parametrizacion, u, v, u0, v0, resultados={}):
     v0                  valor v del punto
     resultados          diccionario con todos los resultados calculados hasta el momento
     """
-    if 'E_pt' not in resultados:
-        primeraFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0, resultados)
-    if 'e_pt' not in resultados:
-        segundaFormaFundamental_pt_uv(parametrizacion, u, v, u0, v0, resultados)
+    if 'W_pt' not in resultados:
+        weingarten_pt_uv(parametrizacion, u, v, u0, v0, resultados)
 
-    denom = resultados['E_pt']*resultados['G_pt'] - resultados['F_pt']**2
-    W = sp.Matrix([[resultados['e_pt']*resultados['G_pt']-resultados['f_pt']*resultados['F_pt'], 
-                    resultados['f_pt']*resultados['G_pt']-resultados['g_pt']*resultados['F_pt']], 
-                    [resultados['f_pt']*resultados['E_pt']-resultados['e_pt']*resultados['F_pt'], 
-                    resultados['g_pt']*resultados['E_pt']-resultados['f_pt']*resultados['F_pt']]])/denom
-    autovalores = W.eigenvects(simplify=True)
+    autovalores = resultados['W_pt'].eigenvects(simplify=True)
 
     if autovalores[0][1] == 2:
         resultados['d1_pt'] = list(autovalores[0][-1][0])
@@ -788,7 +897,7 @@ def dirPrinc_pt_xyz(parametrizacion, u, v, x0, y0, z0, resultados={}):
 
 """
 -------------------------------------------------------------------------------
-CÁLCULO GENERAL
+CÁLCULO COMPLETO
 -------------------------------------------------------------------------------
 """
 def descripccion(parametrizacion, u, v, resultados={}):

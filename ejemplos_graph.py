@@ -22,7 +22,6 @@ superficies_parametrizadas.append( ((sp.sin(u), sp.cos(u), v), 0, 2*sp.pi, 0, 2*
 superficies_parametrizadas.append( ((u*sp.cos(v),u*sp.sin(v), 0), 0, 2*sp.pi, 0, 2*sp.pi) )
 superficies_parametrizadas.append( ((u+v, u*v, u-v), -1, 1, -1, 1) )
 superficies_parametrizadas.append( ((u**2+v, u-v**2, u), -1, 1, -1, 1) )
-superficies_parametrizadas.append( ((sp.sin(u), sp.cos(u), u), 0, sp.pi, 0, 2) ) #TODO-Revisar
 superficies_parametrizadas.append( ((u, 0, v), -1, 1, -1, 1) )
 superficies_parametrizadas.append( ((u, u**2, v), -1, 1, -1, 1) )
 superficies_parametrizadas.append( ((sp.cos(u), sp.sin(u), v), 0, 2*sp.pi, 0, 2*sp.pi) )

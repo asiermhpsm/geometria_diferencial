@@ -10,6 +10,8 @@ EP-¿Dejar que haya variable infinita?
 -Dar opción de dar valores para u y para v, ademas dejar describirla.
 -Dar opción de describir derivadas de función, no solo de función en si.
 -Comprobar que una superficie es regular y diferenciable. Pag 49
+    -¿compruebo que es inyectiva?
+    -¿Compruebo que es regular en un dominio?
 -Hacer lo que se pueda con superficies de nivel (o implicitas).
 -Comprobar que superficies de nivel es diferenciable. Pag 53
 -Poner el ejemplo de parametrizacion de Monge. Pag 62. http://127.0.0.1:5000/plano_tangente?superficie=[u, u, f]&func=[f(u,v)]
@@ -19,11 +21,11 @@ EP-¿Dejar que haya variable infinita?
 -Hacer los ejemplos que puso Juan en el correo
 -¿Área de una superficie? Pag 74
 -Vector unitario normal a superficie de nivel. Pag 81
--¿Aplicación de Weingarten?. Pag 97
--¿Paraboloide osculador?. Pag 102
+-¿Aplicación de Weingarten?. Pag 97 -SI
+-¿Paraboloide osculador?. Pag 102 -No
 -Revisar como calcular curvatura y direcciones principales. Pag 107
--¿Puntos umbílicos?. Pag 107
--¿Curvatura normal?. Pag 109
+-¿Puntos umbílicos?. Pag 107 -Si, dado un punto decir si lo es
+-¿Curvatura normal?. Pag 109 _ Por el momento no
 -¿Expresión canónica del paraboloide osculador?. Pag 111
 -¿Direcciones asintóticas?. Pag 113
 -¿Símbolos de Christoffel?. Pag 118
