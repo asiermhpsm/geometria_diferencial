@@ -20,7 +20,7 @@ OPCIONES_VAR = ['infinite', 'finite', 'real', 'extended_real', 'rational', 'irra
                  'negative', 'nonpositive', 'extended_positive', 'extended_nonnegative',
                  'extended_negative', 'extended_nonpositive']
 
-def procesar_solicitud(func : function, func_pt_uv : function, func_pt_xyz : function):
+def procesar_solicitud(func, func_pt_uv, func_pt_xyz):
     """
     Procesa una solicitud
     """
