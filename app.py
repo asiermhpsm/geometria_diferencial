@@ -1,10 +1,6 @@
 from flask import Flask, request, jsonify
-import dash
-from dash import Dash, html, dcc
-import json
 
 import sympy as sp
-import numpy as np
 import re
 
 import plotly.graph_objects as go
