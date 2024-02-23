@@ -1,22 +1,23 @@
-def funcion_principal(funcion_parametro):
-    # Aquí ejecutas la acción que quieras antes de llamar a la función parametro
-    print("Ejecutando acción antes de llamar a la función parametro")
-    
-    if funcion_parametro is funcion_b:
-        print('Voy a ejecutar la funcion B')
+import utils.toLatex as tx
+import utils.calc as calc
+import sympy as sp
 
-    # Llamas a la función parametro que se pasó como argumento
-    funcion_parametro()
-    
-    # Aquí ejecutas la acción que quieras después de llamar a la función parametro
-    print("Ejecutando acción después de llamar a la función parametro")
+u, v = sp.symbols('u, v', real=True)
+res = {
+    'sup': sp.Matrix([sp.cos(u)*sp.cos(v), sp.cos(u)*sp.sin(v) , sp.sin(u)]).T,
+    'u' : u,
+    'v' : v
+}
 
-# Definimos algunas funciones que podríamos pasar como parámetro a funcion_principal
-def funcion_a():
-    print("Estoy en la función A")
+res = calc.descripccion(res)
 
-def funcion_b():
-    print("Estoy en la función B")
+def sympy2latex(diccionario: dict) -> dict:
+    return {k: sp.latex(v) for k, v in diccionario.items()}
 
-# Llamamos a funcion_principal y pasamos una función como parámetro
-funcion_principal(funcion_b)
+#res = sympy2latex(res)
+
+print(tx.imprime_resultados(tx.res_normal(res)))
+
+
+"""from utils.graph import ejemplo_sup
+ejemplo_sup()"""

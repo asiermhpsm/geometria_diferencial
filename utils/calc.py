@@ -1,6 +1,10 @@
 import sympy as sp
+from .utils import xyz_to_uv
 
-"""res = {
+"""
+Todos los calculos se guardarán en un diccionario de resultados para evitar cálculos repetidos y para centralizar la información.
+LEYENDA DE ALMACENAMIENTO DE RESULTADOS:
+res = {
     'sup' : ...            #Parametrización de la superficie. Debe ser de tipo sympy.Matrx()
     'u' : ...              #Primera variable de dependencia. Debe ser de tipo sp.Symbol
     'v' : ...              #Segunda variable de dependencia. Debe ser de tipo sp.Symbol
@@ -11,6 +15,7 @@ import sympy as sp
     'duv' : ...            #derivada de uv
     'dvv' : ...            #derivada de vv
     'duXdv' : ...          #du producto vectorial dv
+    'norma' : ...          #norma de duXdv
     'normal' : ...         #vector normal
     'E' : ...              #componente E de primera forma fundamental
     'F' : ...              #componente F de primera forma fundamental
@@ -32,6 +37,7 @@ import sympy as sp
     'duv_pt' : ...            #derivada de uv
     'dvv_pt' : ...            #derivada de vv
     'duXdv_pt' : ...          #du producto vectorial dv
+    'norma_pt' : ...          #norma de duXdv_pt
     'normal_pt' : ...         #vector normal
     'E_pt' : ...              #componente E de primera forma fundamental
     'F_pt' : ...              #componente F de primera forma fundamental
@@ -46,137 +52,21 @@ import sympy as sp
     'k2_pt'                   #curvatura principal 2
     'd1_pt'                   #direccion principal 1
     'd2_pt'                   #direccion principal 2
-}"""
+}
+"""
 
 """
 -------------------------------------------------------------------------------
 METODOS AUXILIARES
 -------------------------------------------------------------------------------
 """
-def norm(vector):
-    """
-    Retorna la norma de un vector
-    No se hacen comprobaciones de tipo
-
-    Argumentos:
-    vector     lista con el vector en cuestion
-    """
-    sum = 0
-    for elem in vector:
-        sum = sum + elem**2
-    return sp.simplify(sp.sqrt(sum))
-
-def normaliza(vector):
-    """
-    Retorna el vector normalizado
-    No se hacen comprobaciones de tipo
-
-    Argumentos:
-    vector     lista con el vector en cuestion
-    """
-    if not isinstance(vector, sp.Matrix):
-        vector = sp.Matrix(vector)
-    return sp.simplify(vector/norm(vector))
-
-def uv_to_xyz(parametrizacion, u, v, u0, v0):
-    """
-    Sustituye u y v en la superficie parametrizada
-    No se hacen comprobaciones de tipo
-
-    Argumentos:
-    parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
-    u                   primera variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
-    v                   segunda variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
-    u0                  valor u del punto
-    v0                  valor v del punto
-    """
-    if not isinstance(parametrizacion, sp.Matrix):
-        parametrizacion = sp.Matrix(parametrizacion)
-    return tuple(parametrizacion.subs({u:u0, v:v0}))
-
-def xyz_to_uv(parametrizacion, u, v, x0, y0, z0):
-    """
-    Dado un x,y,z devuelve su valor u y v de una superficie parametrizada. Se devuelve la primera solucion que se encuentre
-    No se hacen comprobaciones de tipo
-
-    Argumentos:
-    parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
-    u                   primera variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
-    v                   segunda variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
-    x0                  valor x del punto
-    y0                  valor y del punto
-    z0                  valor z del punto
-    """
-    punto = (x0, y0, z0)
-    ecuaciones = [sp.Eq(s, p) for s, p in zip(parametrizacion, punto)]
-    soluciones = sp.solve(ecuaciones, (u, v))
-    if not soluciones:
-        raise('El punto dado no esta en la superficie.')
-    
-    #TODO: devuelvo todas las soluciones o solo una
-    if isinstance(soluciones, dict):
-        return soluciones[u] ,soluciones[v]
-    else:
-        return soluciones[0]
-
-def esClaseInf(f, u, v):
-    def terminoClaseInf(term):
-        return term == 0 or any(isinstance(term, func) for func in [sp.exp, sp.sin, sp.cos, sp.cosh, sp.sinh, sp.asin, sp.acos, sp.atan, sp.acot, sp.sinh, sp.cosh, sp.sech, sp.asinh])
-    #TODO- no funciona cuando u y v estan muy mezcladas
-    def esContinua(f, u, v):
-        for sing in sp.singularities(f, u):
-            lim = sp.limit(f, u, sing)
-            if lim==sp.oo or -lim==sp.oo:
-                return False
-            if sp.limit(f, u, sing, '-')!=lim or sp.limit(f, u, sing, '+')!=lim:
-                return False
-        for sing in sp.singularities(f, v):
-            lim = sp.limit(f, v, sing)
-            if lim==sp.oo or -lim==sp.oo:
-                return False
-            if sp.limit(f, v, sing, '-')!=lim or sp.limit(f, v, sing, '+')!=lim:
-                return False
-        return True
-    #TODO: que hago cuando salta una excepción?
-    if not esContinua(f, u, v):
-        return False
-    elif len(f.args)==1:
-        if terminoClaseInf(f):
-            return True
-        else:
-            return esClaseInf(sp.diff(f, u), u, v) and esClaseInf(sp.diff(f, v), u, v)
-    else:
-        return all(esClaseInf(term, u, v) for term in f.args)
-
-def esRegular(parametrizacion, u, v, res : dict ={}):
-    if not all(esClaseInf(f, u, v) for f in parametrizacion):
-        return False
-    
-    if not isinstance(parametrizacion, sp.Matrix):
-        parametrizacion = sp.Matrix(parametrizacion)
-    if 'duXdv' not in res:
-        if 'du' not in res:
-            res['du'] = sp.diff(parametrizacion, u)
-        if 'dv' not in res:
-            res['dv'] = sp.diff(parametrizacion, v)
-        res['duXdv'] = res['du'].cross(res['dv'])
-    return res['duXdv']!=0
-
-def esSupNivel(f, x, y, z, res : dict ={}):
-    res['dx'] = sp.diff(f, x)
-    res['dy'] = sp.diff(f, y)
-    res['dz'] = sp.diff(f, z)
-    return False if sp.solve([sp.Eq(f, 0), 
-                              sp.Eq(res['dx'], 0), 
-                              sp.Eq(res['dy'], 0), 
-                              sp.Eq(res['dz'], 0)], (x, y, z)) else True
 
 """
 -------------------------------------------------------------------------------
 VECTOR NORMAL
 -------------------------------------------------------------------------------
 """
-def normal(res : dict ={}):
+def normal(res : dict ={}) -> dict:
     """
     Retorna el vector normal de una superficie
     No se hacen comprobaciones de tipo
@@ -189,11 +79,12 @@ def normal(res : dict ={}):
             res['du'] = sp.diff(res['sup'], res['u'])
         if 'dv' not in res:
             res['dv'] = sp.diff(res['sup'], res['v'])
-        res['duXdv'] = res['du'].cross(res['dv'])
-    res['normal'] = normaliza(res['duXdv'])
+        res['duXdv'] = sp.simplify(res['du'].cross(res['dv']))
+    res['norma'] = sp.simplify(res['duXdv'].norm())
+    res['normal'] = sp.simplify(res['duXdv'].normalized())
     return res
 
-def normal_pt_uv(res : dict ={}):
+def normal_pt_uv(res : dict ={}) -> dict:
     """
     Retorna el vector normal de una superficie en un punto descrito por u,v
     No se hacen comprobaciones de tipo
@@ -211,10 +102,11 @@ def normal_pt_uv(res : dict ={}):
                 res['dv'] = sp.diff(res['sup'], res['v'])
             res['dv_pt'] = res['dv'].subs({res['u']:res['u0'], res['v']:res['v0']})
         res['duXdv_pt'] = res['du_pt'].cross(res['dv_pt'])
-    res['normal_pt'] = normaliza(res['duXdv_pt'])
+    res['norma_pt'] = sp.simplify(res['duXdv_pt'].norm())
+    res['normal_pt'] = sp.simplify(res['duXdv_pt'].normalized())
     return res
 
-def normal_pt_xyz(res : dict ={}):
+def normal_pt_xyz(res : dict ={}) -> dict:
     """
     Retorna el vector normal de una superficie en un punto descrito por x, y, z
     No se hacen comprobaciones de tipo
@@ -231,7 +123,7 @@ def normal_pt_xyz(res : dict ={}):
 PLANO TANGENTE
 -------------------------------------------------------------------------------
 """
-def planoTangente(res : dict ={}):
+def planoTangente(res : dict ={}) -> dict:
     """
     Retorna el plano tangente (sin igualar a cero) de una superficie parametrizada
     No se hacen comprobaciones de tipo
@@ -244,12 +136,12 @@ def planoTangente(res : dict ={}):
             res['du'] = sp.diff(res['sup'], res['u'])
         if 'dv' not in res:
             res['dv'] = sp.diff(res['sup'], res['v'])
-        res['duXdv'] = res['du'].cross(res['dv'])
+        res['duXdv'] = sp.simplify(res['du'].cross(res['dv']))
     x, y, z = sp.symbols('x, y, z', real = True)
     res['tangente'] = sp.Eq(sp.simplify(res['duXdv'].dot(sp.Matrix([x,y,z]))), sp.simplify(res['duXdv'].dot(res['sup'])))
     return res
 
-def planoTangente_pt_uv(res : dict ={}):
+def planoTangente_pt_uv(res : dict ={}) -> dict:
     """
     Retorna el plano tangente (sin igualar a cero) de una superficie parametrizada en un punto descrito con u, v
     No se hacen comprobaciones de tipo
@@ -272,7 +164,7 @@ def planoTangente_pt_uv(res : dict ={}):
     res['tangente_afin_pt'] = sp.Eq(sp.simplify(res['duXdv_pt'].dot(sp.Matrix([x,y,z]))), sp.simplify(res['duXdv_pt'].dot(res['sup'].subs({res['u']:res['u0'], res['v']:res['v0']}))))
     return res
 
-def planoTangente_pt_xyz(res : dict ={}):
+def planoTangente_pt_xyz(res : dict ={}) -> dict:
     """
     Retorna el plano tangente (sin igualar a cero) de una superficie parametrizada en un punto descrito con u, v
     No se hacen comprobaciones de tipo
@@ -289,7 +181,7 @@ def planoTangente_pt_xyz(res : dict ={}):
 PRIMERA FORMA FUNDAMENTAL
 -------------------------------------------------------------------------------
 """
-def primeraFormaFundamental(res : dict ={}):
+def primeraFormaFundamental(res : dict ={}) -> dict:
     """
     Retorna la primera forma fundamental en forma de Matrix(E, F, G)
     No se hacen comprobaciones de tipo
@@ -308,7 +200,7 @@ def primeraFormaFundamental(res : dict ={}):
 
     return res
 
-def primeraFormaFundamental_pt_uv(res : dict ={}):
+def primeraFormaFundamental_pt_uv(res : dict ={}) -> dict:
     """
     Retorna en forma de Matrix(E, F, G) la primera forma fundamental en un punto  descrito por u,v
     No se hacen comprobaciones de tipo
@@ -331,7 +223,7 @@ def primeraFormaFundamental_pt_uv(res : dict ={}):
 
     return res
 
-def primeraFormaFundamental_pt_xyz( res : dict ={}):
+def primeraFormaFundamental_pt_xyz( res : dict ={}) -> dict:
     """
     Retorna en forma de Matrix(E, F, G) la primera forma fundamental en un punto  descrito por x, y, z
     No se hacen comprobaciones de tipo
@@ -348,7 +240,7 @@ def primeraFormaFundamental_pt_xyz( res : dict ={}):
 SEGUNDA FORMA FUNDAMENTAL
 -------------------------------------------------------------------------------
 """
-def segundaFormaFundamental(res : dict ={}):
+def segundaFormaFundamental(res : dict ={}) -> dict:
     """
     Retorna la segunda forma fundamental en forma de Matrix(e, f, g)
     No se hacen comprobaciones de tipo
@@ -378,7 +270,7 @@ def segundaFormaFundamental(res : dict ={}):
     
     return res
 
-def segundaFormaFundamental_pt_uv(res : dict ={}):
+def segundaFormaFundamental_pt_uv(res : dict ={}) -> dict:
     """
     Retorna en forma de Matrix(e, f, g) la segunda forma fundamental en un punto  descrito por u, v
     No se hacen comprobaciones de tipo
@@ -411,7 +303,7 @@ def segundaFormaFundamental_pt_uv(res : dict ={}):
     
     return res
 
-def segundaFormaFundamental_pt_xyz(res : dict ={}):
+def segundaFormaFundamental_pt_xyz(res : dict ={}) -> dict:
     """
     Retorna en forma de Matrix(e, f, g) la segunda forma fundamental en un punto  descrito por x, y, z
     No se hacen comprobaciones de tipo
@@ -428,7 +320,7 @@ def segundaFormaFundamental_pt_xyz(res : dict ={}):
 CURVATURA DE GAUSS
 -------------------------------------------------------------------------------
 """
-def curvaturaGauss(res : dict ={}):
+def curvaturaGauss(res : dict ={}) -> dict:
     """
     Retorna la curvatura de Gauss
     No se hacen comprobaciones de tipo
@@ -446,7 +338,7 @@ def curvaturaGauss(res : dict ={}):
     res['K'] = sp.simplify((res['e']*res['g'] - res['f']**2)/(res['E']*res['G'] - res['F']**2))
     return res
 
-def curvaturaGauss_pt_uv(res : dict ={}):
+def curvaturaGauss_pt_uv(res : dict ={}) -> dict:
     """
     Retorna la curvatura de Gauss en un punto descrito por u, v
     No se hacen comprobaciones de tipo
@@ -462,7 +354,7 @@ def curvaturaGauss_pt_uv(res : dict ={}):
     res['K_pt'] = sp.simplify((res['e_pt']*res['g_pt'] - res['f_pt']**2)/(res['E_pt']*res['G_pt'] - res['F_pt']**2))
     return res
 
-def curvaturaGauss_pt_xyz(res : dict ={}):
+def curvaturaGauss_pt_xyz(res : dict ={}) -> dict:
     """
     Retorna la curvatura de Gauss en un punto descrito por x, y, z
     No se hacen comprobaciones de tipo
@@ -479,7 +371,7 @@ def curvaturaGauss_pt_xyz(res : dict ={}):
 CURVATURA MEDIA
 -------------------------------------------------------------------------------
 """
-def curvaturaMedia(res : dict ={}):
+def curvaturaMedia(res : dict ={}) -> dict:
     """
     Retorna la curvatura media
     No se hacen comprobaciones de tipo
@@ -498,7 +390,7 @@ def curvaturaMedia(res : dict ={}):
                                   /(2*(res['E']*res['G'] - res['F']**2)))
     return res
 
-def curvaturaMedia_pt_uv(res : dict ={}):
+def curvaturaMedia_pt_uv(res : dict ={}) -> dict:
     """
     Retorna la curvatura media en un punto descrito por u, v
     No se hacen comprobaciones de tipo
@@ -515,7 +407,7 @@ def curvaturaMedia_pt_uv(res : dict ={}):
                                      /(2*(res['E_pt']*res['G_pt'] - res['F_pt']**2)))
     return res
 
-def curvaturaMedia_pt_xyz(res : dict ={}):
+def curvaturaMedia_pt_xyz(res : dict ={}) -> dict:
     """
     Retorna la curvatura media en un punto descrito por x, y, z
     No se hacen comprobaciones de tipo
@@ -532,7 +424,7 @@ def curvaturaMedia_pt_xyz(res : dict ={}):
 CURVATURAS PRINCIPALES
 -------------------------------------------------------------------------------
 """
-def curvaturasPrincipales(res : dict ={}):
+def curvaturasPrincipales(res : dict ={}) -> dict:
     """
     Retorna las curvaturas principales como tupla
     No se hacen comprobaciones de tipo
@@ -552,7 +444,7 @@ def curvaturasPrincipales(res : dict ={}):
     res['k2'] = sp.simplify(res['H'] - raiz)
     return res
 
-def curvaturasPrincipales_pt_uv(res : dict ={}):
+def curvaturasPrincipales_pt_uv(res : dict ={}) -> dict:
     """
     Retorna como tupla las curvaturas principales en un punto descrito como u,v
     No se hacen comprobaciones de tipo
@@ -569,7 +461,7 @@ def curvaturasPrincipales_pt_uv(res : dict ={}):
     res['k2_pt'] = sp.simplify(res['H_pt'] - raiz)
     return res
 
-def curvaturasPrincipales_pt_xyz(res : dict ={}):
+def curvaturasPrincipales_pt_xyz(res : dict ={}) -> dict:
     """
     Retorna como tupla las curvaturas principales en un punto descrito como x, y, z
     No se hacen comprobaciones de tipo
@@ -586,7 +478,7 @@ def curvaturasPrincipales_pt_xyz(res : dict ={}):
 CLASIFICACION DE UN PUNTO
 -------------------------------------------------------------------------------
 """
-def clasicPt_uv(res : dict ={}):
+def clasicPt_uv(res : dict ={}) -> dict:
     """
     Imprime la clasificacion de una superficie en un punto descrito con x, y, z
     No se hacen comprobaciones de tipo
@@ -622,8 +514,7 @@ def clasicPt_uv(res : dict ={}):
                 res['clasif_pt'] = 'Parabólico'
     return res
     
-
-def clasicPt_xyz(res : dict ={}):
+def clasicPt_xyz(res : dict ={}) -> dict:
     """
     Imprime la clasificacion de una superficie en un punto descrito con x, y, z
     No se hacen comprobaciones de tipo
@@ -640,7 +531,7 @@ def clasicPt_xyz(res : dict ={}):
 DIRECCIONES PRINCIPALES
 -------------------------------------------------------------------------------
 """
-def weingarten(res : dict ={}):
+def weingarten(res : dict ={}) -> dict:
     """
     Devuelve la matriz de weingarten
     No se hacen comprobaciones de tipo
@@ -663,7 +554,7 @@ def weingarten(res : dict ={}):
                     res['g']*res['E']-res['f']*res['F']]])/denom
     return res
 
-def weingarten_pt_uv(res : dict ={}):
+def weingarten_pt_uv(res : dict ={}) -> dict:
     """
     Devuelve la matriz de weingarten en un punto
     No se hacen comprobaciones de tipo
@@ -683,7 +574,7 @@ def weingarten_pt_uv(res : dict ={}):
                     res['g_pt']*res['E_pt']-res['f_pt']*res['F_pt']]])/denom
     return res
 
-def weingarten_pt_xyz(res : dict ={}):
+def weingarten_pt_xyz(res : dict ={}) -> dict:
     """
     Devuelve la matriz de weingarten en un punto
     No se hacen comprobaciones de tipo
@@ -700,7 +591,7 @@ def weingarten_pt_xyz(res : dict ={}):
 DIRECCIONES PRINCIPALES
 -------------------------------------------------------------------------------
 """
-def dirPrinc(res : dict ={}):
+def dirPrinc(res : dict ={}) -> dict:
     """
     Calcula las direcciones principales
     No se hacen comprobaciones de tipo
@@ -727,7 +618,7 @@ def dirPrinc(res : dict ={}):
     else:
         raise Exception("No se ha podido calcular los autovectores")
     
-def dirPrinc_pt_uv(res : dict ={}):
+def dirPrinc_pt_uv(res : dict ={}) -> dict:
     """
     Calcula las direcciones principales en un punto
     No se hacen comprobaciones de tipo
@@ -751,7 +642,7 @@ def dirPrinc_pt_uv(res : dict ={}):
     else:
         raise Exception("No se ha podido calcular los autovectores")
 
-def dirPrinc_pt_xyz(res : dict ={}):
+def dirPrinc_pt_xyz(res : dict ={}) -> dict:
     """
     Calcula las direcciones principales en un punto
     No se hacen comprobaciones de tipo
@@ -769,7 +660,7 @@ def dirPrinc_pt_xyz(res : dict ={}):
 CÁLCULO COMPLETO
 -------------------------------------------------------------------------------
 """
-def descripccion(res : dict ={}):
+def descripccion(res : dict ={}) -> dict:
     """
     Hace un cálculo general de todo lo que pueda
     No se hacen comprobaciones de tipo
@@ -806,7 +697,7 @@ def descripccion(res : dict ={}):
     else:
         raise Exception("No se ha podido calcular los autovectores")
 
-def descripccion_pt_uv(res : dict ={}):
+def descripccion_pt_uv(res : dict ={}) -> dict:
     """
     Hace un cálculo general de todo lo que pueda
     No se hacen comprobaciones de tipo
@@ -840,7 +731,7 @@ def descripccion_pt_uv(res : dict ={}):
     clasicPt_uv(res)
     return res
     
-def descripccion_pt_xyz(res : dict ={}):
+def descripccion_pt_xyz(res : dict ={}) -> dict:
     """
     Hace un cálculo general de todo lo que pueda
     No se hacen comprobaciones de tipo

@@ -5,8 +5,9 @@ import re
 
 import plotly.graph_objects as go
 
-from utils import *
-from utils_graph_plotly import *
+import utils.calc as calc
+import utils.graph as graph
+from utils.graph import *
 
 
 """
@@ -20,7 +21,7 @@ OPCIONES_VAR = ['infinite', 'finite', 'real', 'extended_real', 'rational', 'irra
                  'negative', 'nonpositive', 'extended_positive', 'extended_nonnegative',
                  'extended_negative', 'extended_nonpositive']
 
-def procesar_solicitud(func, func_pt_uv, func_pt_xyz):
+def procesar_solicitud(func: callable, func_pt_uv: callable, func_pt_xyz: callable) -> dict:
     """
     Procesa una solicitud
     """
@@ -64,13 +65,13 @@ def procesar_solicitud(func, func_pt_uv, func_pt_xyz):
         func_pt_xyz(resultados)
         return convertir_a_string(resultados)
     
-    if func_pt_uv is clasicPt_uv:
+    if func_pt_uv is calc.clasicPt_uv:
         raise Exception("No se ha definido correctamente el punto a clasificar")
     
     func(resultados)
     return convertir_a_string(resultados)
 
-def normaliza_parametrizacion(var1, var2, sup, consts, funcs):
+def normaliza_parametrizacion(var1: str, var2: str, sup: str, consts: list, funcs: list) -> tuple:
     """
     Transforma la parametrización de una superficie a una expresion sympy con sus variable correspondientes
     No se hacen comprobaciones de tipo
@@ -140,7 +141,7 @@ def normaliza_parametrizacion(var1, var2, sup, consts, funcs):
     else:
         raise Exception(f"Error al procesar la superficie: {sup}")
    
-def extrae_opciones_var(string):
+def extrae_opciones_var(string: str) -> tuple:
     partes  = string.replace(' ', '').strip('[]').split(',')
     opciones_dict = {}
     for opcion in partes[1:]:
@@ -148,10 +149,10 @@ def extrae_opciones_var(string):
             opciones_dict[opcion] = True
     return partes[0], opciones_dict
 
-def sympy2latex(diccionario):
+def sympy2latex(diccionario: dict) -> dict:
     return {k: sp.latex(v) for k, v in diccionario.items()}
 
-def convertir_a_string(diccionario):
+def convertir_a_string(diccionario: dict) -> dict:
     def sustituir_derivadas(expr):
         patrones = [
             (r'Derivative\((\w+)\(([^),]+)\), (\w+)\)', r"\1'(\2)"),                             #Derivative(f(u), u) -> f'(u)
@@ -172,9 +173,8 @@ def convertir_a_string(diccionario):
             return sustituir_derivadas(str(valor))
 
     return {k: convertir_valor(v) for k, v in diccionario.items()}
-    return {k: sp.latex(v) for k, v in diccionario.items()}
 
-def obtiene_valor_pt(string):
+def obtiene_valor_pt(string: str):
     pt = request.args.get(string, None)
     pt = sp.sympify(pt) if pt else None
     if pt != None and not pt.is_number:
@@ -190,43 +190,43 @@ app = Flask(__name__)
 
 @app.route('/primera_forma_fundamental')
 def primera_forma_fundamental():
-    return jsonify(procesar_solicitud(primeraFormaFundamental, primeraFormaFundamental_pt_uv, primeraFormaFundamental_pt_xyz))
+    return jsonify(procesar_solicitud(calc.primeraFormaFundamental, calc.primeraFormaFundamental_pt_uv, calc.primeraFormaFundamental_pt_xyz))
 
 @app.route('/segunda_forma_fundamental')
 def segunda_forma_fundamental():
-    return jsonify(procesar_solicitud(segundaFormaFundamental, segundaFormaFundamental_pt_uv, segundaFormaFundamental_pt_xyz))
+    return jsonify(procesar_solicitud(calc.segundaFormaFundamental, calc.segundaFormaFundamental_pt_uv, calc.segundaFormaFundamental_pt_xyz))
 
 @app.route('/curvatura_Gauss')
 def curvatura_Gauss():
-    return jsonify(procesar_solicitud(curvaturaGauss, curvaturaGauss_pt_uv, curvaturaGauss_pt_xyz))
+    return jsonify(procesar_solicitud(calc.curvaturaGauss, calc.curvaturaGauss_pt_uv, calc.curvaturaGauss_pt_xyz))
 
 @app.route('/curvatura_media')
 def curvatura_media():
-    return jsonify(procesar_solicitud(curvaturaMedia, curvaturaMedia_pt_uv, curvaturaMedia_pt_xyz))
+    return jsonify(procesar_solicitud(calc.curvaturaMedia, calc.curvaturaMedia_pt_uv, calc.curvaturaMedia_pt_xyz))
 
 @app.route('/curvaturas_principales')
 def curvaturas_principales():
-    return jsonify(procesar_solicitud(curvaturasPrincipales, curvaturasPrincipales_pt_uv, curvaturasPrincipales_pt_xyz))
+    return jsonify(procesar_solicitud(calc.curvaturasPrincipales, calc.curvaturasPrincipales_pt_uv, calc.curvaturasPrincipales_pt_xyz))
 
 @app.route('/vector_normal')
 def vector_normal():
-    return jsonify(procesar_solicitud(normal, normal_pt_uv, normal_pt_xyz))
+    return jsonify(procesar_solicitud(calc.normal, calc.normal_pt_uv, calc.normal_pt_xyz))
 
 @app.route('/clasificacion_punto')
 def clasificacion_punto():
-    return jsonify(procesar_solicitud(None, clasicPt_uv, clasicPt_xyz))
+    return jsonify(procesar_solicitud(calc.clasicPt_uv, calc.clasicPt_uv, calc.clasicPt_xyz))
 
 @app.route('/plano_tangente')
 def plano_tangente():
-    return jsonify(procesar_solicitud(planoTangente, planoTangente_pt_uv, planoTangente_pt_xyz))
+    return jsonify(procesar_solicitud(calc.planoTangente, calc.planoTangente_pt_uv, calc.planoTangente_pt_xyz))
 
 @app.route('/direcciones_principales')
 def direcciones_principales():
-    return jsonify(procesar_solicitud(dirPrinc, dirPrinc_pt_uv, dirPrinc_pt_xyz))
+    return jsonify(procesar_solicitud(calc.dirPrinc, calc.dirPrinc_pt_uv, calc.dirPrinc_pt_xyz))
 
 @app.route('/description')
 def description():
-    return jsonify(procesar_solicitud(descripccion, descripccion_pt_uv, descripccion_pt_xyz))
+    return jsonify(procesar_solicitud(calc.descripccion, calc.descripccion_pt_uv, calc.descripccion_pt_xyz))
 
 @app.route('/grafica')
 def grafica():
@@ -261,7 +261,7 @@ def grafica():
 
     if '[' in request.args.get('superficie'):
         superficie, u, v = procesar_solicitud()
-        fig = grafica_sup_param_plotly(superficie, u, v, 0, 2*sp.pi, 0, sp.pi, fig)
+        fig = sup_param(superficie, u, v, 0, 2*sp.pi, 0, sp.pi, fig)
         fig.update_layout(
             scene=dict(
                 aspectmode='data',

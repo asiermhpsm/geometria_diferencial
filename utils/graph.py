@@ -1,9 +1,11 @@
 import plotly.graph_objects as go
 import numpy as np
 import sympy as sp
-from utils import descripccion_pt_uv, norm, normaliza, xyz_to_uv
 
-def grafica_sup_param_plotly(sup, u, v, 
+from .calc import descripccion_pt_uv
+from .utils import xyz_to_uv
+
+def sup_param(sup, u, v, 
                              limite_inf_u=-5, limite_sup_u=5, limite_inf_v=-5, limite_sup_v=5, 
                              fig=None, resolucion=100, titulo='Superficie'):
     sup = list(sup)
@@ -19,11 +21,16 @@ def grafica_sup_param_plotly(sup, u, v,
         Z = np.full_like(u_values, Z)
     if not fig:
         fig = go.Figure()
-    fig.add_trace(go.Surface(x=X, y=Y, z=Z, colorbar=dict(x=-0.1), name=titulo, showlegend=True))
+    fig.add_trace(go.Surface(x=X, 
+                             y=Y, 
+                             z=Z, 
+                             colorbar=dict(x=-0.1), 
+                             name=titulo, 
+                             showlegend=True))
     fig.update_layout(scene=dict(aspectmode='data'))
     return fig
 
-def grafica_sup_ec_plotly(sup, x, y, z, 
+def sup_imp(sup, x, y, z, 
                           limite_inf_x=-5, limite_sup_x=5, 
                           limite_inf_y=-5, limite_sup_y=5, 
                           limite_inf_z=-5, limite_sup_z=5, 
@@ -51,7 +58,7 @@ def grafica_sup_ec_plotly(sup, x, y, z,
     fig.update_layout(scene=dict(aspectmode='data'))
     return fig
 
-def grafica_punto_plotly(punto, fig=None, titulo=None):
+def point(punto, fig=None, titulo=None):
     punto = [float(elem) for elem in punto]
     if not fig:
         fig = go.Figure()
@@ -59,7 +66,7 @@ def grafica_punto_plotly(punto, fig=None, titulo=None):
     fig.update_layout(scene=dict(aspectmode='data'))
     return fig
 
-def grafica_vector_plotly(inicio, vector, fig=None, color='red', titulo='vector'):
+def vector(inicio, vector, fig=None, color='red', titulo=None):
     if not fig:
         fig = go.Figure()
     inicio = [float(comp) for comp in inicio]
@@ -83,11 +90,12 @@ def grafica_vector_plotly(inicio, vector, fig=None, color='red', titulo='vector'
     fig.update_layout(scene=dict(aspectmode='data'))
     return fig
 
-def grafica_circulo(centro, radio, dir1, dir2, fig=None, color='red', titulo='circulo'):
+def circulo(centro, radio, dir1, dir2, 
+            fig=None, color='red', titulo='circulo'):
     centro = [float(elem) for elem in centro]
     radio = float(radio)
-    dir1 = [float(elem) for elem in normaliza(dir1)]
-    dir2 = [float(elem) for elem in normaliza(dir2)]
+    dir1 = [float(elem) for elem in dir1.normalized()]
+    dir2 = [float(elem) for elem in dir2.normalized()]
     theta = np.linspace(0, 2*np.pi, 100)
     x = centro[0] + radio*np.cos(theta)*dir1[0] + radio*np.sin(theta)*dir2[0]
     y = centro[1] + radio*np.cos(theta)*dir1[1] + radio*np.sin(theta)*dir2[1]
@@ -96,19 +104,28 @@ def grafica_circulo(centro, radio, dir1, dir2, fig=None, color='red', titulo='ci
     fig.update_layout(scene=dict(aspectmode='data'))
     return fig
 
-def anade_descr_pt_uv(sup, u, v, u0, v0, limite_inf_u=-5, limite_sup_u=5, limite_inf_v=-5, limite_sup_v=5, fig=None):
-    sup = sp.Matrix(sup)
+def desc_punto(sup, u, v, u0, v0, 
+               limite_inf_u=-5, limite_sup_u=5, 
+               limite_inf_v=-5, limite_sup_v=5, 
+               fig=None):
+    sup = sp.Matrix(sup).T
 
-    fig = grafica_sup_param_plotly(sup, u, v, limite_inf_u, limite_sup_u, limite_inf_v, limite_sup_v, fig)
+    fig = sup_param(sup, u, v, limite_inf_u, limite_sup_u, limite_inf_v, limite_sup_v, fig, titulo=r'$\vec{\varphi}='+sp.latex(sup)+r'$')
     fig.data[0].update(opacity=0.4)
 
-    resultados = {}
-    resultados = descripccion_pt_uv(sup, u, v, u0, v0, resultados)
+    resultados = {
+        'sup' : sup,
+        'u' : u,
+        'v' : v,
+        'u0' : u0,
+        'v0' : v0
+    }
+    resultados = descripccion_pt_uv(resultados)
     punto = sup.subs({u:u0, v:v0})
 
     x, y, z = sp.symbols('x y z')
-    tamaño_plano = max(float(norm(resultados['du_pt'])), float(norm(resultados['dv_pt'])))
-    grafica_sup_ec_plotly(resultados['tangente_afin_pt'].lhs-resultados['tangente_afin_pt'].rhs, 
+    tamaño_plano = max(float(resultados['du_pt'].norm()), float(resultados['dv_pt'].norm()))
+    sup_imp(resultados['tangente_afin_pt'].lhs-resultados['tangente_afin_pt'].rhs, 
                           x, y, z, 
                           limite_inf_x=punto[0]-tamaño_plano, limite_sup_x=punto[0]+tamaño_plano, 
                           limite_inf_y=punto[1]-tamaño_plano, limite_sup_y=punto[1]+tamaño_plano, 
@@ -116,76 +133,78 @@ def anade_descr_pt_uv(sup, u, v, u0, v0, limite_inf_u=-5, limite_sup_u=5, limite
                           fig=fig, color='grey', titulo='Plano tangente', resolucion=30)
     fig.data[1].update(opacity=0.6)
 
-    fig = grafica_punto_plotly(punto, fig=fig, titulo='Punto')
-    fig = grafica_vector_plotly(punto, resultados['du_pt'], fig, 'blue', r'$\vec{\varphi_u}$')
+    fig = point(punto, fig=fig, titulo='Punto')
+    fig = vector(punto, resultados['du_pt'], fig, 'blue', r'$\vec{\varphi_u}$')
     if resultados['k1_pt'] !=0:
         radio = 1/resultados['k1_pt']
-        fig = grafica_circulo(punto + radio*normaliza(resultados['normal_pt']), 
+        fig = circulo(punto + radio*resultados['normal_pt'].normalized(), 
                             radio,
                             resultados['normal_pt'],
                             resultados['du_pt'],
                             fig, 'blue', r'$r=1/k_1$')
     
-    fig = grafica_vector_plotly(punto, resultados['dv_pt'], fig, 'green', r'$\vec{\varphi_v}$')
+    fig = vector(punto, resultados['dv_pt'], fig, 'green', r'$\vec{\varphi_v}$')
     if resultados['k2_pt'] !=0:
         radio = 1/resultados['k2_pt']
-        fig = grafica_circulo(punto + radio*normaliza(resultados['normal_pt']), 
+        fig = circulo(punto + radio*resultados['normal_pt'].normalized(), 
                             radio,
                             resultados['normal_pt'],
                             resultados['dv_pt'],
                             fig, 'green', r'$r=1/k_2$')
     
-    fig = grafica_vector_plotly(punto, tuple(float(comp) for comp in resultados['normal_pt']), fig, 'red', r'$\vec{n}$')
+    fig = vector(punto, tuple(float(comp) for comp in resultados['normal_pt']), fig, 'red', r'$\vec{n}$')
     fig.update_layout(
         legend=dict(font=dict(size=15)), 
         scene=dict(aspectmode='data'),
         title={
-            'text': "<b>SUPERFICIES 3D</b><br><span style='font-size: 12px;'>Pinchar en un elemento de la leyenda permite hacerlo aparecer o desaparecer.</span>",
+            'text': f"<b>SUPERFICIE 3D. </b><br><span style='font-size: 12px;'>Pinchar en un elemento de la leyenda permite hacerlo aparecer o desaparecer.</span>",
             'font': {'size': 24, 'family': 'Arial'},
             'x': 0.5,
             'xanchor': 'center'
         })
     return fig
 
-def anade_descr_pt_xyz(sup, u, v, x0, y0, z0, limite_inf_u=-5, limite_sup_u=5, limite_inf_v=-5, limite_sup_v=5, fig=None):
+def anade_descr_pt_xyz(sup, u, v, x0, y0, z0, 
+                       limite_inf_u=-5, limite_sup_u=5, 
+                       limite_inf_v=-5, limite_sup_v=5, 
+                       fig=None):
     u0, v0 = xyz_to_uv(sup, u, v, x0, y0, z0)
     if isinstance(u0, sp.Symbol):
         u0 = limite_inf_u
     if isinstance(v0, sp.Symbol):
         v0 = limite_inf_v
-    return anade_descr_pt_uv(sup, u, v, u0, v0, 
+    return desc_punto(sup, u, v, u0, v0, 
                              limite_inf_u=limite_inf_u, limite_sup_u=limite_sup_u, 
                              limite_inf_v=limite_inf_v, limite_sup_v=limite_sup_v, 
                              fig=fig)
 
+def ejemplo_sup():
+    u, v = sp.symbols('u v')
+    superficies_parametrizadas = []
+    superficies_parametrizadas.append( ((sp.cos(u)*sp.cos(v), sp.cos(u)*sp.sin(v) , sp.sin(u)), -sp.pi/2, sp.pi/2, 0, 2*sp.pi) )
+    superficies_parametrizadas.append( ((u, v, 0), -1, 1, -1, 1) )
+    superficies_parametrizadas.append( ((sp.cos(u + v), sp.sin(u - v), u - v), 0, 2*sp.pi, 0, 2*sp.pi) )
+    superficies_parametrizadas.append( ((sp.sin(u), sp.cos(u), v), 0, 2*sp.pi, 0, 2*sp.pi) )
+    superficies_parametrizadas.append( ((u*sp.cos(v),u*sp.sin(v), 0), 0, 2*sp.pi, 0, 2*sp.pi) )
+    superficies_parametrizadas.append( ((u+v, u*v, u-v), -1, 1, -1, 1) )
+    superficies_parametrizadas.append( ((u**2+v, u-v**2, u), -1, 1, -1, 1) )
+    superficies_parametrizadas.append( ((u, 0, v), -1, 1, -1, 1) )
+    superficies_parametrizadas.append( ((u, u**2, v), -1, 1, -1, 1) )
+    superficies_parametrizadas.append( ((sp.cos(u), sp.sin(u), v), 0, 2*sp.pi, 0, 2*sp.pi) )
+    superficies_parametrizadas.append( ( ((1 + 2*sp.cos(u))*sp.cos(v), (1 + 2*sp.cos(u))*sp.sin(v), 2*sp.sin(u)), 0, 2*sp.pi, 0, 2*sp.pi) )
+    superficies_parametrizadas.append( ((u, u**2 + v, v), -1, 1, -1, 1) )
+    superficies_parametrizadas.append( ((sp.cosh(u)*sp.cos(v), sp.cosh(u)*sp.sin(v), sp.sinh(u)), 0, 2*sp.pi, 0, 2*sp.pi) )
+    superficies_parametrizadas.append( ((u, v, u**2 + v**2), -1, 1, -1, 1) )
+    superficies_parametrizadas.append( ((u*sp.cos(v), u*sp.sin(v), u**2), 0, 2*sp.pi, 0, 2*sp.pi) )
+    superficies_parametrizadas.append( ((sp.cos(u)*sp.cos(v), -sp.cos(u)*sp.sin(v), 2*sp.sin(u)), 0, 2*sp.pi, 0, 2*sp.pi) )
+    superficies_parametrizadas.append( ((u*sp.cos(v), u*sp.sin(v), (u**2)/2), 0, 2*sp.pi, 0, 2*sp.pi) )
+    superficies_parametrizadas.append( ((sp.cos(u)*sp.cos(v), sp.cos(u)*sp.sin(v) , sp.sin(u)*sp.cos(v)), 0, 2*sp.pi, 0, 2*sp.pi) )
+    superficies_parametrizadas.append( ((u, v, u**2+v**2), -1, 1, -1, 1) )
 
-
-"""u, v = sp.symbols('u v')
-superficies_parametrizadas = []
-superficies_parametrizadas.append( ((sp.cos(u)*sp.cos(v), sp.cos(u)*sp.sin(v) , sp.sin(u)), -sp.pi/2, sp.pi/2, 0, 2*sp.pi) )
-superficies_parametrizadas.append( ((u, v, 0), -1, 1, -1, 1) )
-superficies_parametrizadas.append( ((sp.cos(u + v), sp.sin(u - v), u - v), 0, 2*sp.pi, 0, 2*sp.pi) )
-superficies_parametrizadas.append( ((sp.sin(u), sp.cos(u), v), 0, 2*sp.pi, 0, 2*sp.pi) )
-superficies_parametrizadas.append( ((u*sp.cos(v),u*sp.sin(v), 0), 0, 2*sp.pi, 0, 2*sp.pi) )
-superficies_parametrizadas.append( ((u+v, u*v, u-v), -1, 1, -1, 1) )
-superficies_parametrizadas.append( ((u**2+v, u-v**2, u), -1, 1, -1, 1) )
-superficies_parametrizadas.append( ((u, 0, v), -1, 1, -1, 1) )
-superficies_parametrizadas.append( ((u, u**2, v), -1, 1, -1, 1) )
-superficies_parametrizadas.append( ((sp.cos(u), sp.sin(u), v), 0, 2*sp.pi, 0, 2*sp.pi) )
-superficies_parametrizadas.append( ( ((1 + 2*sp.cos(u))*sp.cos(v), (1 + 2*sp.cos(u))*sp.sin(v), 2*sp.sin(u)), 0, 2*sp.pi, 0, 2*sp.pi) )
-superficies_parametrizadas.append( ((u, u**2 + v, v), -1, 1, -1, 1) )
-superficies_parametrizadas.append( ((sp.cosh(u)*sp.cos(v), sp.cosh(u)*sp.sin(v), sp.sinh(u)), 0, 2*sp.pi, 0, 2*sp.pi) )
-superficies_parametrizadas.append( ((u, v, u**2 + v**2), -1, 1, -1, 1) )
-superficies_parametrizadas.append( ((u*sp.cos(v), u*sp.sin(v), u**2), 0, 2*sp.pi, 0, 2*sp.pi) )
-superficies_parametrizadas.append( ((sp.cos(u)*sp.cos(v), -sp.cos(u)*sp.sin(v), 2*sp.sin(u)), 0, 2*sp.pi, 0, 2*sp.pi) )
-superficies_parametrizadas.append( ((u*sp.cos(v), u*sp.sin(v), (u**2)/2), 0, 2*sp.pi, 0, 2*sp.pi) )
-superficies_parametrizadas.append( ((sp.cos(u)*sp.cos(v), sp.cos(u)*sp.sin(v) , sp.sin(u)*sp.cos(v)), 0, 2*sp.pi, 0, 2*sp.pi) )
-superficies_parametrizadas.append( ((u, v, u**2+v**2), -1, 1, -1, 1) )
-
-while True:
-    i = int(input(f'Indica entero del 0 al {len(superficies_parametrizadas)-1}:'))
-    sup, inf_u, sup_u, inf_v, sup_v = superficies_parametrizadas[i]
-    u0 = float(input(f'Indica u0:'))
-    v0 = float(input(f'Indica v0:'))
-    fig = anade_descr_pt_uv(sup, u, v, u0, v0, inf_u, sup_u, inf_v, sup_v)
-    fig.show()"""
+    while True:
+        i = int(input(f'Indica entero del 0 al {len(superficies_parametrizadas)-1}:'))
+        sup, inf_u, sup_u, inf_v, sup_v = superficies_parametrizadas[i]
+        u0 = float(input(f'Indica u0:'))
+        v0 = float(input(f'Indica v0:'))
+        fig = desc_punto(sup, u, v, u0, v0, inf_u, sup_u, inf_v, sup_v)
+        fig.show()
