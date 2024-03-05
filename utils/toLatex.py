@@ -1,6 +1,6 @@
 import sympy as sp
 
-from .calc import *
+from .calc_param import *
 
 SALTO_LINEA = r'\newline'
 PHI_VARS = r'\vec{\varphi}(u,v)'

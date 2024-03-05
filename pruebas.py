@@ -1,5 +1,5 @@
 import utils.toLatex as tx
-import utils.calc as calc
+import utils.calc_param as calc_param
 import sympy as sp
 
 a, b, c, d = sp.symbols('a b c d', real=True)
@@ -17,7 +17,7 @@ res = {
     'v' : v
 }
 
-res = calc.descripccion(res)
+res = calc_param.descripccion(res)
 
 def sympy2latex(diccionario: dict) -> dict:
     return {k: sp.latex(v) for k, v in diccionario.items()}

@@ -6,7 +6,7 @@ import re
 import plotly.graph_objects as go
 
 import utils.utils as utils
-import utils.calc as calc
+import utils.calc_param as calcp
 import utils.graph as graph
 import utils.toLatex as tx
 from utils.graph import *
@@ -86,7 +86,7 @@ def procesar_solicitud(func: callable, func_pt_uv: callable, func_pt_xyz: callab
         func_pt_xyz(resultados)
         return dict2latex(resultados)
     
-    if func_pt_uv is calc.clasicPt_uv:
+    if func_pt_uv is calcp.clasicPt_uv:
         raise Exception("No se ha definido correctamente el punto a clasificar")
     
     func(resultados)
@@ -110,7 +110,7 @@ def normaliza_parametrizacion(var1: str, var2: str, sup: str, consts: list, func
     #Se obtiene la primera variable de la parametrización, por defecto es 'u'. Siempre real
     if not var1:
         var1='u'
-    elif '[' in var1:
+    elif ',' in var1:
         var1, opciones = extrae_opciones_var(var1)
     opciones['real'] = True
     u = sp.symbols(var1.replace(' ', ''), **opciones)
@@ -120,7 +120,7 @@ def normaliza_parametrizacion(var1: str, var2: str, sup: str, consts: list, func
     opciones = {}
     if not var2:
         var2='v'
-    elif '[' in var2:
+    elif ',' in var2:
         var2, opciones = extrae_opciones_var(var2)
     opciones['real'] = True
     v = sp.symbols(var2.replace(' ', ''), **opciones)
@@ -160,6 +160,82 @@ def normaliza_parametrizacion(var1: str, var2: str, sup: str, consts: list, func
             raise Exception(f"Error al procesar la superficie: {e}")
     else:
         raise Exception(f"Error al procesar la superficie: {sup}")
+
+def normaliza_implicita(var1: str, var2: str, var3: str, sup: str, consts: list, funcs: list) -> tuple:
+    """
+    Transforma la parametrización de una superficie a una expresion sympy con sus variable correspondientes
+    No se hacen comprobaciones de tipo
+
+    Argumentos:
+    var1                string con la primera variable (x)
+    var2                string con la segunda variable (y)
+    var3                string con la tercera variable (z)
+    sup                 string con la ecuación de la superficie
+    consts              lista de strings con constantes y su descripción
+    func                lista de strings con funciones y su descripción
+    """
+    variables = {}
+
+    opciones = {}
+    #Se obtiene la primera variable de la superficie, por defecto es 'x'. Siempre real
+    if not var1:
+        var1='x'
+    elif ',' in var1:
+        var1, opciones = extrae_opciones_var(var1)
+    opciones['real'] = True
+    x = sp.symbols(var1.replace(' ', ''), **opciones)
+    variables[var1] = x
+
+    #Se obtiene la segunda variable de la superficie, por defecto es 'y'. Siempre real
+    opciones = {}
+    if not var2:
+        var2='y'
+    elif ',' in var2:
+        var2, opciones = extrae_opciones_var(var2)
+    opciones['real'] = True
+    y = sp.symbols(var2.replace(' ', ''), **opciones)
+    variables[var2] = y
+
+    #Se obtiene la tercera variable de la superficie, por defecto es 'z'. Siempre real
+    opciones = {}
+    if not var3:
+        var3='z'
+    elif ',' in var3:
+        var3, opciones = extrae_opciones_var(var3)
+    opciones['real'] = True
+    z = sp.symbols(var3.replace(' ', ''), **opciones)
+    variables[var3] = z
+
+    #Se obtiene la descripción de las constantes
+    #La lista debe ser de la forma ["[a, positive]", "[b]", "c, real", ...]
+    for const in consts:
+        nombre, opciones = extrae_opciones_var(const)
+        opciones['real'] = True
+        variables[nombre] = sp.symbols(nombre, **opciones)
+    
+    #Se obtiene la descripción de las funciones.
+    #La lista debe ser de la forma ["[f(x,y), positive]", "[g(x)]", "h(a,x), real", ...]
+    for func in funcs:
+        if '(' not in func or ')' not in func:
+            raise Exception(f'No se ha podido procesar las variables de las que depende {func}')
+        partes  = func.replace(' ', '').strip('[]').split(')')
+        definicion_func = list(re.split(r'[(),]', partes[0]))
+        nombre_func = definicion_func[0]
+        variables_func = [variables[var] for var in definicion_func[1:]]
+        descripciones = partes[1].split(',')
+        descripciones_dict = {}
+        for descripcion in descripciones:
+            if descripcion in OPCIONES_VAR:
+                descripciones_dict[descripcion] = True
+        descripciones_dict['real'] = True
+        variables[nombre_func] = sp.Function(nombre_func, **descripciones_dict)(*variables_func)
+        sup = re.sub(nombre_func+r'\(([\w,]+)\)', nombre_func, sup)
+
+    #Se obtiene la superficie implicita a expresion sympy
+    try:
+        return sp.sympify(sup, locals=variables), x, y, z
+    except Exception as e:
+        raise Exception(f"Error al procesar la superficie: {e}")
 
 def extrae_dominio(dom_var) -> tuple:
     """
@@ -223,65 +299,71 @@ app = Flask(__name__)
 
 @app.route('/primera_forma_fundamental')
 def primera_forma_fundamental():
-    return jsonify(procesar_solicitud(calc.primeraFormaFundamental, calc.primeraFormaFundamental_pt_uv, calc.primeraFormaFundamental_pt_xyz, tx.res_PFF))
+    return jsonify(procesar_solicitud(calcp.primeraFormaFundamental, calcp.primeraFormaFundamental_pt_uv, calcp.primeraFormaFundamental_pt_xyz, tx.res_PFF))
 
 @app.route('/segunda_forma_fundamental')
 def segunda_forma_fundamental():
-    return jsonify(procesar_solicitud(calc.segundaFormaFundamental, calc.segundaFormaFundamental_pt_uv, calc.segundaFormaFundamental_pt_xyz, tx.res_SFF))
+    return jsonify(procesar_solicitud(calcp.segundaFormaFundamental, calcp.segundaFormaFundamental_pt_uv, calcp.segundaFormaFundamental_pt_xyz, tx.res_SFF))
 
 @app.route('/curvatura_Gauss')
 def curvatura_Gauss():
-    return jsonify(procesar_solicitud(calc.curvaturaGauss, calc.curvaturaGauss_pt_uv, calc.curvaturaGauss_pt_xyz, tx.res_curv_Gauss))
+    return jsonify(procesar_solicitud(calcp.curvaturaGauss, calcp.curvaturaGauss_pt_uv, calcp.curvaturaGauss_pt_xyz, tx.res_curv_Gauss))
 
 @app.route('/curvatura_media')
 def curvatura_media():
-    return jsonify(procesar_solicitud(calc.curvaturaMedia, calc.curvaturaMedia_pt_uv, calc.curvaturaMedia_pt_xyz, tx.res_curv_media))
+    return jsonify(procesar_solicitud(calcp.curvaturaMedia, calcp.curvaturaMedia_pt_uv, calcp.curvaturaMedia_pt_xyz, tx.res_curv_media))
 
 @app.route('/curvaturas_principales')
 def curvaturas_principales():
-    return jsonify(procesar_solicitud(calc.curvaturasPrincipales, calc.curvaturasPrincipales_pt_uv, calc.curvaturasPrincipales_pt_xyz, tx.res_curv_media))
+    return jsonify(procesar_solicitud(calcp.curvaturasPrincipales, calcp.curvaturasPrincipales_pt_uv, calcp.curvaturasPrincipales_pt_xyz, tx.res_curv_media))
 
 @app.route('/vector_normal')
 def vector_normal():
-    return jsonify(procesar_solicitud(calc.normal, calc.normal_pt_uv, calc.normal_pt_xyz, tx.res_normal))
+    return jsonify(procesar_solicitud(calcp.normal, calcp.normal_pt_uv, calcp.normal_pt_xyz, tx.res_normal))
 
 @app.route('/clasificacion_punto')
 def clasificacion_punto():
     #TODO- ¿como tranformar a Latex?
-    return jsonify(procesar_solicitud(calc.clasicPt_uv, calc.clasicPt_uv, calc.clasicPt_xyz))
+    return jsonify(procesar_solicitud(calcp.clasicPt_uv, calcp.clasicPt_uv, calcp.clasicPt_xyz))
 
 @app.route('/punto_umbilico')
 def punto_umbilico():
     #TODO- ¿como tranformar a Latex?
-    return jsonify(procesar_solicitud(calc.umbilico, calc.umbilico_pt_uv, calc.umbilico_pt_xyz))
+    return jsonify(procesar_solicitud(calcp.umbilico, calcp.umbilico_pt_uv, calcp.umbilico_pt_xyz))
 
 @app.route('/plano_tangente')
 def plano_tangente():
-    return jsonify(procesar_solicitud(calc.planoTangente, calc.planoTangente_pt_uv, calc.planoTangente_pt_xyz, tx.res_tangente))
+    return jsonify(procesar_solicitud(calcp.planoTangente, calcp.planoTangente_pt_uv, calcp.planoTangente_pt_xyz, tx.res_tangente))
 
 @app.route('/weingarten')
 def weingarten():
-    return jsonify(procesar_solicitud(calc.weingarten, calc.weingarten_pt_uv, calc.planoTangenteweingarten_pt_xyzpt_xyz, tx.res_Weingarten))
+    return jsonify(procesar_solicitud(calcp.weingarten, calcp.weingarten_pt_uv, calcp.planoTangenteweingarten_pt_xyzpt_xyz, tx.res_Weingarten))
 
 @app.route('/direcciones_principales')
 def direcciones_principales():
-    return jsonify(procesar_solicitud(calc.dirPrinc, calc.dirPrinc_pt_uv, calc.dirPrinc_pt_xyz, tx.res_dirs_princ))
+    return jsonify(procesar_solicitud(calcp.dirPrinc, calcp.dirPrinc_pt_uv, calcp.dirPrinc_pt_xyz, tx.res_dirs_princ))
 
 @app.route('/description')
 def description():
-    return jsonify(procesar_solicitud(calc.descripccion, calc.descripccion_pt_uv, calc.descripccion_pt_xyz))
+    return jsonify(procesar_solicitud(calcp.descripccion, calcp.descripccion_pt_uv, calcp.descripccion_pt_xyz))
 
 @app.route('/grafica')
 def grafica():
+    superficie_str  = request.args.get('superficie', None)
     #Ejemplo: 
     # http://127.0.0.1:5000/grafica?superficie=[cos(u)*cos(v),%20cos(u)*sin(v),%20sin(u)]&dom_var1=(-pi/2,pi/2)&dom_var2=(0,2*pi)
     # http://127.0.0.1:5000/grafica?superficie=[cos(u)*cos(v),%20cos(u)*sin(v),%20sin(u)]&dom_var1=(-pi/2,pi/2)&dom_var2=(0,2*pi)&u0=0.5&v0=0.5
-    if '[' in request.args.get('superficie'):
+    # http://127.0.0.1:5000/grafica?superficie=x**2-y**2-z**2-1
+    # http://127.0.0.1:5000/grafica?superficie=x**2%2By**2%2Bz**2-1&dom_var1=[-1,1]&dom_var2=[-1,1]&dom_var3=[-1,1]
+
+    if superficie_str == None:
+        #TODO_ Devolver teoría
+        raise Exception("No se ha encontrado la parametrización de la superficie")
+    elif '[' in superficie_str:
         var1 = request.args.get('var1', None)
         dom_var1_str = request.args.get('dom_var1', None)
         var2 = request.args.get('var2', None)
         dom_var2_str = request.args.get('dom_var2', None)
-        superficie_str  = request.args.get('superficie', None)
         const_str = request.args.getlist('const')
         func_str = request.args.getlist('func')
         
@@ -297,10 +379,10 @@ def grafica():
         
         #Se extraen los dominios de las variables
         dom_u = extrae_dominio(dom_var1_str)
-        if not isinstance(dom_u, sp.Interval):
+        if dom_u==sp.S.Reals or not isinstance(dom_u, sp.Interval):
             dom_u = sp.Interval(-5, 5)
         dom_v = extrae_dominio(dom_var2_str)
-        if not isinstance(dom_v, sp.Interval):
+        if dom_v==sp.S.Reals or not isinstance(dom_v, sp.Interval):
             dom_v = sp.Interval(-5, 5)
         
         if not utils.esRegular(superficie, u, v, dom_u, dom_v, {}):
@@ -328,7 +410,47 @@ def grafica():
                         limite_inf_v=dom_v.start, limite_sup_v=dom_v.end)
         return fig.to_html(include_mathjax="cdn")
     else:
-        return 'Superficie nivel'
+        var1 = request.args.get('var1', None)
+        var2 = request.args.get('var2', None)
+        var3 = request.args.get('var3', None)
+        const_str = request.args.getlist('const')
+        func_str = request.args.getlist('func')
+        dom_x  = request.args.get('dom_var1', None)
+        dom_y  = request.args.get('dom_var2', None)    
+        dom_z  = request.args.get('dom_var3', None)
+
+        
+        if not superficie_str:
+            # TODO: Devolver teoría
+            raise Exception("No se ha encontrado la parametrización de la superficie")
+
+        try:
+            superficie, x, y, z = normaliza_implicita(var1, var2, var3, superficie_str, const_str, func_str)
+        except Exception as e:
+            # TODO: ¿Qué hacer si hay un error?
+            raise e
+        #Compruebo que es una superficie de nivel
+        if not utils.esSupNivel(superficie, x, y, z, {}):
+            raise Exception("La superficie parametrizada no es regular")
+
+        #Extraigo el dominio donde se quiere considerar la superficie, si no hay o son los reales de pone [-5, 5]
+        dom_x = extrae_dominio(dom_x)
+        if dom_x==sp.S.Reals or not isinstance(dom_x, sp.Interval):
+            dom_x = sp.Interval(-5, 5)
+        dom_y = extrae_dominio(dom_y)
+        if dom_y==sp.S.Reals or not isinstance(dom_y, sp.Interval):
+            dom_y = sp.Interval(-5, 5)
+        dom_z = extrae_dominio(dom_z)
+        if dom_z==sp.S.Reals or not isinstance(dom_z, sp.Interval):
+            dom_z = sp.Interval(-5, 5)
+        
+        fig = sup_imp(superficie, x, y, z,
+                        limite_inf_x=dom_x.start, limite_sup_x=dom_x.end, 
+                        limite_inf_y=dom_y.start, limite_sup_y=dom_y.end,
+                        limite_inf_z=dom_z.start, limite_sup_z=dom_z.end,
+                        titulo=r'$'+sp.latex(superficie)+r'=0$')
+        return fig.to_html(include_mathjax="cdn")
+
 
 
 

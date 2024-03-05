@@ -2,7 +2,7 @@ import plotly.graph_objects as go
 import numpy as np
 import sympy as sp
 
-from .calc import descripccion_pt_uv
+from .calc_param import descripccion_pt_uv
 from .utils import xyz_to_uv
 
 def sup_param(sup, u, v, 
