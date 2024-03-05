@@ -30,6 +30,7 @@ res = {
     'k2'                   #curvatura principal 2
     'd1'                   #direccion principal 1
     'd2'                   #direccion principal 2
+    'W'                    #Matriz de Weingarten
 
     'du_pt' : ...             #derivada de u
     'dv_pt' : ...             #derivada de v
@@ -52,6 +53,7 @@ res = {
     'k2_pt'                   #curvatura principal 2
     'd1_pt'                   #direccion principal 1
     'd2_pt'                   #direccion principal 2
+    'W_pt'                    #Matriz de Weingarten
 }
 """
 
@@ -161,7 +163,7 @@ def planoTangente_pt_uv(res : dict ={}) -> dict:
         res['duXdv_pt'] = res['du_pt'].cross(res['dv_pt'])
 
     x, y, z = sp.symbols('x, y, z', real = True)
-    res['tangente_afin_pt'] = sp.Eq(sp.simplify(res['duXdv_pt'].dot(sp.Matrix([x,y,z]))), sp.simplify(res['duXdv_pt'].dot(res['sup'].subs({res['u']:res['u0'], res['v']:res['v0']}))))
+    res['tangente_pt'] = sp.Eq(sp.simplify(res['duXdv_pt'].dot(sp.Matrix([x,y,z]))), sp.simplify(res['duXdv_pt'].dot(res['sup'].subs({res['u']:res['u0'], res['v']:res['v0']}))))
     return res
 
 def planoTangente_pt_xyz(res : dict ={}) -> dict:
@@ -246,9 +248,7 @@ def segundaFormaFundamental(res : dict ={}) -> dict:
     No se hacen comprobaciones de tipo
 
     Argumentos:
-    parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
-    u                   primera variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
-    v                   segunda variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
+    
     res          diccionario con todos los res calculados hasta el momento
     """
     if 'du' not in res:
@@ -326,9 +326,7 @@ def curvaturaGauss(res : dict ={}) -> dict:
     No se hacen comprobaciones de tipo
 
     Argumentos:
-    parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
-    u                   primera variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
-    v                   segunda variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
+    
     res          diccionario con todos los res calculados hasta el momento
     """
     if 'E' not in res:
@@ -377,9 +375,7 @@ def curvaturaMedia(res : dict ={}) -> dict:
     No se hacen comprobaciones de tipo
 
     Argumentos:
-    parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
-    u                   primera variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
-    v                   segunda variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
+    
     res          diccionario con todos los res calculados hasta el momento
     """
     if 'E' not in res:
@@ -430,9 +426,7 @@ def curvaturasPrincipales(res : dict ={}) -> dict:
     No se hacen comprobaciones de tipo
 
     Argumentos:
-    parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
-    u                   primera variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
-    v                   segunda variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
+    
     res          diccionario con todos los res calculados hasta el momento
     """
     if 'K' not in res:
@@ -537,9 +531,7 @@ def weingarten(res : dict ={}) -> dict:
     No se hacen comprobaciones de tipo
 
     Argumentos:
-    parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
-    u                   primera variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
-    v                   segunda variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
+    
     res          diccionario con todos los res calculados hasta el momento
     """
     if 'E' not in res:
@@ -597,9 +589,7 @@ def dirPrinc(res : dict ={}) -> dict:
     No se hacen comprobaciones de tipo
 
     Argumentos:
-    parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
-    u                   primera variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
-    v                   segunda variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
+    
     res          diccionario con todos los res calculados hasta el momento
     """
     if 'W' not in res:
@@ -608,10 +598,14 @@ def dirPrinc(res : dict ={}) -> dict:
     autovalores = res['W'].eigenvects(simplify=True)
 
     if autovalores[0][1] == 2:
+        res['k1'] = autovalores[0][0]
+        res['k2'] = autovalores[0][0]
         res['d1'] = list(autovalores[0][-1][0])
         res['d2'] = list(autovalores[0][-1][1])
         return res
     elif autovalores[0][1] == 1:
+        res['k1'] = autovalores[0][0]
+        res['k2'] = autovalores[1][0]
         res['d1'] = list(autovalores[0][-1][0])
         res['d2'] = list(autovalores[1][-1][0])
         return res
@@ -653,7 +647,49 @@ def dirPrinc_pt_xyz(res : dict ={}) -> dict:
     res['u0'], res['v0'] = xyz_to_uv(res['sup'], res['u'], res['v'], res['x0'], res['y0'], res['z0'])
     return dirPrinc_pt_uv(res)
 
+"""
+-------------------------------------------------------------------------------
+PUNTOS UMBÍLICOS
+-------------------------------------------------------------------------------
+"""
+def umbilico(res : dict ={}) -> dict:
+    """
+    Calcula los puntos umbílicos
+    No se hacen comprobaciones de tipo
 
+    Argumentos:
+    res          diccionario con todos los res calculados hasta el momento
+    """
+    res = curvaturasPrincipales(res)
+    if res['k1'] == res['k2']:
+        res['umbilico'] = set([(res['u'], res['v'])])
+    else:
+        soluciones = sp.solve(sp.Eq(res['k1'], res['k2']), (res['u'], res['v']))
+        res['umbilico'] = set([(sp.re(sol[0]), sp.re(sol[1])) for sol in soluciones])
+    return res
+
+def umbilico_pt_uv(res : dict ={}) -> dict:
+    """
+    Calcula si un punto es umbílico
+    No se hacen comprobaciones de tipo
+
+    Argumentos:
+    res          diccionario con todos los res calculados hasta el momento
+    """
+    res = curvaturasPrincipales_pt_uv(res)
+    res['umbilico_pt'] = res['k1_pt']== res['k2_pt']
+    return res
+
+def umbilico_pt_xyz(res : dict ={}) -> dict:
+    """
+    Calcula los puntos umbílicos
+    No se hacen comprobaciones de tipo
+
+    Argumentos:
+    res          diccionario con todos los res calculados hasta el momento
+    """
+    res['u0'], res['v0'] = xyz_to_uv(res['sup'], res['u'], res['v'], res['x0'], res['y0'], res['z0'])
+    return dirPrinc_pt_uv(res)
 
 """
 -------------------------------------------------------------------------------
@@ -666,9 +702,7 @@ def descripccion(res : dict ={}) -> dict:
     No se hacen comprobaciones de tipo
 
     Argumentos:
-    parametrizacion     parametrizacion de superficie (lista de longitud 3 con funciones)
-    u                   primera variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
-    v                   segunda variable de parametrizacion ( clase sp.Symbol, resultado de sp.symbols() )
+    
     res          diccionario con todos los res calculados hasta el momento
     """
     curvaturaGauss(res)

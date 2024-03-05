@@ -7,7 +7,7 @@ from .utils import xyz_to_uv
 
 def sup_param(sup, u, v, 
                              limite_inf_u=-5, limite_sup_u=5, limite_inf_v=-5, limite_sup_v=5, 
-                             fig=None, resolucion=100, titulo='Superficie'):
+                             fig=None, resolucion=100, titulo='Superficie', color=None):
     sup = list(sup)
     parametric_surface = sp.lambdify((u, v), sup, 'numpy')
     u_values, v_values = np.mgrid[float(limite_inf_u):float(limite_sup_u):resolucion*1j, 
@@ -21,11 +21,20 @@ def sup_param(sup, u, v,
         Z = np.full_like(u_values, Z)
     if not fig:
         fig = go.Figure()
-    fig.add_trace(go.Surface(x=X, 
+    if color:
+        fig.add_trace(go.Surface(x=X, 
                              y=Y, 
                              z=Z, 
                              colorbar=dict(x=-0.1), 
-                             name=titulo, 
+                             name=titulo,
+                             colorscale=[[0, color], [1, color]],
+                             showlegend=True))
+    else:
+        fig.add_trace(go.Surface(x=X, 
+                             y=Y, 
+                             z=Z, 
+                             colorbar=dict(x=-0.1), 
+                             name=titulo,
                              showlegend=True))
     fig.update_layout(scene=dict(aspectmode='data'))
     return fig
@@ -123,14 +132,14 @@ def desc_punto(sup, u, v, u0, v0,
     resultados = descripccion_pt_uv(resultados)
     punto = sup.subs({u:u0, v:v0})
 
-    x, y, z = sp.symbols('x y z')
-    tamaño_plano = max(float(resultados['du_pt'].norm()), float(resultados['dv_pt'].norm()))
-    sup_imp(resultados['tangente_afin_pt'].lhs-resultados['tangente_afin_pt'].rhs, 
-                          x, y, z, 
-                          limite_inf_x=punto[0]-tamaño_plano, limite_sup_x=punto[0]+tamaño_plano, 
-                          limite_inf_y=punto[1]-tamaño_plano, limite_sup_y=punto[1]+tamaño_plano, 
-                          limite_inf_z=punto[2]-tamaño_plano, limite_sup_z=punto[2]+tamaño_plano,
-                          fig=fig, color='grey', titulo='Plano tangente', resolucion=30)
+    u, v = sp.symbols('u v', real=True)
+    plano = sp.Matrix([u*resultados['du_pt'].normalized() + v*resultados['dv_pt'].normalized() + punto])
+    fig = sup_param(plano, u, v, 
+                    limite_inf_u=-1, limite_sup_u=1, 
+                    limite_inf_v=-1, limite_sup_v=1, 
+                    fig=fig, titulo='Plano tangente', color='grey')
+
+    
     fig.data[1].update(opacity=0.6)
 
     fig = point(punto, fig=fig, titulo='Punto')
@@ -200,6 +209,8 @@ def ejemplo_sup():
     superficies_parametrizadas.append( ((u*sp.cos(v), u*sp.sin(v), (u**2)/2), 0, 2*sp.pi, 0, 2*sp.pi) )
     superficies_parametrizadas.append( ((sp.cos(u)*sp.cos(v), sp.cos(u)*sp.sin(v) , sp.sin(u)*sp.cos(v)), 0, 2*sp.pi, 0, 2*sp.pi) )
     superficies_parametrizadas.append( ((u, v, u**2+v**2), -1, 1, -1, 1) )
+    superficies_parametrizadas.append( ((sp.sqrt(1+v**2)*sp.cos(u), sp.sqrt(1+v**2)*sp.sin(u), v), 0, 2*sp.pi, -5, 5) )
+    superficies_parametrizadas.append( ((u, v, sp.sqrt(1-u**2-v**2)), -1, 1, -1, 1) )
 
     while True:
         i = int(input(f'Indica entero del 0 al {len(superficies_parametrizadas)-1}:'))

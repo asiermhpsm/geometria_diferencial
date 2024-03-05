@@ -119,9 +119,9 @@ def todas_formulas():
     return res
 
 def imprime_resultados(json):
-    res = r'TEOR\'iA \\'
+    res = r'TEOR\'iA '
     for i, paso in enumerate(json):
-        res = res + r'\textbf{Paso '+str(i)+r':} \\ ' + paso['descripcion'] + r' \\ ' + paso['pasoLatex'] + r' \\ '
+        res = res + r' \\ \textbf{Paso '+str(i)+r':} \\ ' + paso['descripcion'] + r' \\ $$' + paso['pasoLatex'] + r'$$'
 
     return res
 
@@ -131,35 +131,530 @@ def imprime_resultados(json):
 def res_normal(res) -> dict:
     pasos = [
         {
-            "descripcion" : r'Se va a calcular el vector normal de la superficie parametrizada $' + sp.latex(res['sup'], mat_delim='(') + r'$',
+            "descripcion" : r'Se va a calcular el \textbf{vector normal} de la superficie parametrizada',
             "paso" : "",
-            "pasoLatex" : ""
+            "pasoLatex" : r'\varphi='+sp.latex(res['sup'], mat_delim='(')
         },
         {
             "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a ' + str(res['u']) + r'}: El vector $\vec{\varphi_'+str(res['u'])+r'}$ de la superficie es',
             "paso" : "",
-            "pasoLatex" : r'$\varphi_{'+str(res['u'])+r'}='+sp.latex(res['du'], mat_delim='(')+r'$'
+            "pasoLatex" : r'\varphi_{'+str(res['u'])+r'}='+sp.latex(res['du'], mat_delim='(')
         },
         {
             "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a ' + str(res['v']) + r'}: El vector $\vec{\varphi_'+str(res['v'])+r'}$ de la superficie es',
             "paso" : "",
-            "pasoLatex" : r'$\varphi_{'+str(res['v'])+r'}='+sp.latex(res['dv'], mat_delim='(')+r'$'
+            "pasoLatex" : r'\varphi_{'+str(res['v'])+r'}='+sp.latex(res['dv'], mat_delim='(')
         },
         {
             "descripcion" : r'C\'alculo del \textbf{producto vectorial de las derivadas parciales}: El vector producto vectorial de las derivadas parciales de la superficie es',
             "paso" : "",
-            "pasoLatex" : r'$\varphi_'+str(res['u'])+r' \times'+r' \varphi_'+str(res['v'])+r'='+sp.latex(res['duXdv'], mat_delim='(')+r'$'
+            "pasoLatex" : r'\varphi_'+str(res['u'])+r' \times'+r' \varphi_'+str(res['v'])+r'='+sp.latex(res['duXdv'], mat_delim='(')
         },
         {
             "descripcion" : r'C\'alculo de la \textbf{norma del producto vectorial}: La norma del producto vectorial de las derivadas parciales de la superficie es',
             "paso" : "",
-            "pasoLatex" : r'$\|\varphi_'+str(res['u'])+r' \times'+r' \varphi_'+str(res['v'])+r'\|='+sp.latex(res['norma'], mat_delim='(')+r'$'
+            "pasoLatex" : r'\|\varphi_'+str(res['u'])+r' \times'+r' \varphi_'+str(res['v'])+r'\|='+sp.latex(res['norma'], mat_delim='(')
         },
         {
             "descripcion" : r'C\'alculo del \textbf{vector normal}: El vector normal de la superficie en un punto genérico es',
             "paso" : "",
-            "pasoLatex" : r'$\vec{n}='+sp.latex(res['normal'], mat_delim='(')+r'$'
+            "pasoLatex" : r'\vec{n}='+sp.latex(res['normal'], mat_delim='(')
         }
     ]
-
     return pasos
+
+def res_PFF(res) -> dict:
+    pasos = [
+        {
+            "descripcion" : r'Se va a calcular la \textbf{primera forma fundamental} de la superficie parametrizada',
+            "paso" : "",
+            "pasoLatex" : r'\varphi='+sp.latex(res['sup'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a ' + str(res['u']) + r'}: El vector $\vec{\varphi_'+str(res['u'])+r'}$ de la superficie es',
+            "paso" : "",
+            "pasoLatex" : r'\varphi_{'+str(res['u'])+r'}='+sp.latex(res['du'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a ' + str(res['v']) + r'}: El vector $\vec{\varphi_'+str(res['v'])+r'}$ de la superficie es',
+            "paso" : "",
+            "pasoLatex" : r'\varphi_{'+str(res['v'])+r'}='+sp.latex(res['dv'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{componente E}: La componente E de la primera forma fundamental de la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'E='+sp.latex(res['E'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{componente F}: La componente F de la primera forma fundamental de la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'F='+sp.latex(res['F'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{componente G}: La componente G de la primera forma fundamental de la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'G='+sp.latex(res['G'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'Juntando todas sus componentes, se tiene que la primera forma fundamental en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'\left[I_p\right]=\begin{pmatrix} '+sp.latex(res['E'], mat_delim='(')+r' & '+sp.latex(res['F'], mat_delim='(')+r' \\ '+sp.latex(res['F'], mat_delim='(')+r' & '+sp.latex(res['G'], mat_delim='(')+r' \end{pmatrix}'
+        }
+    ]
+    return pasos
+
+def res_SFF(res) -> dict:
+    pasos = [
+        {
+            "descripcion" : r'Se va a calcular la \textbf{segunda forma fundamental} de la superficie parametrizada ' ,
+            "paso" : "",
+            "pasoLatex" : r'\varphi='+sp.latex(res['sup'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a ' + str(res['u']) + r'}: El vector $\vec{\varphi_'+str(res['u'])+r'}$ de la superficie es',
+            "paso" : "",
+            "pasoLatex" : r'\varphi_{'+str(res['u'])+r'}='+sp.latex(res['du'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a ' + str(res['v']) + r'}: El vector $\vec{\varphi_'+str(res['v'])+r'}$ de la superficie es',
+            "paso" : "",
+            "pasoLatex" : r'\varphi_{'+str(res['v'])+r'}='+sp.latex(res['dv'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a '+str(res['u'])+str(res['u'])+r'}: El vector $\vec{\varphi_'+str(res['u'])+str(res['u'])+r'}$ de la superficie es',
+            "paso" : "",
+            "pasoLatex" : r'\varphi_{'+str(res['u'])+str(res['u'])+r'}='+sp.latex(res['duu'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a '+str(res['u'])+str(res['v'])+r'}: El vector $\vec{\varphi_'+str(res['u'])+str(res['v'])+r'}$ de la superficie es',
+            "paso" : "",
+            "pasoLatex" : r'\varphi_{'+str(res['u'])+str(res['v'])+r'}='+sp.latex(res['duv'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a '+str(res['v'])+str(res['v'])+r'}: El vector $\vec{\varphi_'+str(res['v'])+str(res['v'])+r'}$ de la superficie es',
+            "paso" : "",
+            "pasoLatex" : r'\varphi_{'+str(res['v'])+str(res['v'])+r'}='+sp.latex(res['dvv'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{componente e}: La componente e de la primera forma fundamental de la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'e='+sp.latex(res['e'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{componente f}: La componente f de la primera forma fundamental de la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'f='+sp.latex(res['f'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{componente g}: La componente g de la primera forma fundamental de la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'g='+sp.latex(res['g'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'Juntando todas sus componentes, se tiene que la segunda forma fundamental en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'\left[II_p\right]=\begin{pmatrix} '+sp.latex(res['e'], mat_delim='(')+r' & '+sp.latex(res['f'], mat_delim='(')+r' \\ '+sp.latex(res['f'], mat_delim='(')+r' & '+sp.latex(res['g'], mat_delim='(')+r' \end{pmatrix}'
+        }
+    ]
+    return pasos
+
+def res_tangente(res) -> dict:
+    pasos = [
+        {
+            "descripcion" : r'Se va a calcular el \textbf{plano tangente} a la superficie parametrizada en un punto gen\'erico',
+            "paso" : "",
+            "pasoLatex" : r'\varphi='+sp.latex(res['sup'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a ' + str(res['u']) + r'}: El vector $\vec{\varphi_'+str(res['u'])+r'}$ de la superficie es',
+            "paso" : "",
+            "pasoLatex" : r'\varphi_{'+str(res['u'])+r'}='+sp.latex(res['du'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a ' + str(res['v']) + r'}: El vector $\vec{\varphi_'+str(res['v'])+r'}$ de la superficie es',
+            "paso" : "",
+            "pasoLatex" : r'\varphi_{'+str(res['v'])+r'}='+sp.latex(res['dv'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo del \textbf{producto vectorial de las derivadas parciales}: El vector producto vectorial de las derivadas parciales de la superficie es',
+            "paso" : "",
+            "pasoLatex" : r'\varphi_'+str(res['u'])+r' \times'+r' \varphi_'+str(res['v'])+r'='+sp.latex(res['duXdv'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo del \textbf{plano tangente}: El plano tangente a la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : sp.latex(res['tangente'], mat_delim='(')
+        }
+    ]
+    return pasos
+
+def res_curv_Gauss(res) -> dict:
+    pasos = [
+        {
+            "descripcion" : r'Se va a calcular la \textbf{curvatura de Gauss} de la superficie parametrizada ' ,
+            "paso" : "",
+            "pasoLatex" : r'\varphi='+sp.latex(res['sup'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a ' + str(res['u']) + r'}: El vector $\vec{\varphi_'+str(res['u'])+r'}$ de la superficie es',
+            "paso" : "",
+            "pasoLatex" : r'\varphi_{'+str(res['u'])+r'}='+sp.latex(res['du'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a ' + str(res['v']) + r'}: El vector $\vec{\varphi_'+str(res['v'])+r'}$ de la superficie es',
+            "paso" : "",
+            "pasoLatex" : r'\varphi_{'+str(res['v'])+r'}='+sp.latex(res['dv'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a '+str(res['u'])+str(res['u'])+r'}: El vector $\vec{\varphi_'+str(res['u'])+str(res['u'])+r'}$ de la superficie es',
+            "paso" : "",
+            "pasoLatex" : r'\varphi_{'+str(res['u'])+str(res['u'])+r'}='+sp.latex(res['duu'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a '+str(res['u'])+str(res['v'])+r'}: El vector $\vec{\varphi_'+str(res['u'])+str(res['v'])+r'}$ de la superficie es',
+            "paso" : "",
+            "pasoLatex" : r'\varphi_{'+str(res['u'])+str(res['v'])+r'}='+sp.latex(res['duv'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a '+str(res['v'])+str(res['v'])+r'}: El vector $\vec{\varphi_'+str(res['v'])+str(res['v'])+r'}$ de la superficie es',
+            "paso" : "",
+            "pasoLatex" : r'\varphi_{'+str(res['v'])+str(res['v'])+r'}='+sp.latex(res['dvv'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{componente E}: La componente E de la primera forma fundamental de la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'E='+sp.latex(res['E'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{componente F}: La componente F de la primera forma fundamental de la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'F='+sp.latex(res['F'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{componente G}: La componente G de la primera forma fundamental de la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'G='+sp.latex(res['G'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{componente e}: La componente e de la primera forma fundamental de la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'e='+sp.latex(res['e'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{componente f}: La componente f de la primera forma fundamental de la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'f='+sp.latex(res['f'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{componente g}: La componente g de la primera forma fundamental de la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'g='+sp.latex(res['g'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{curvatura de Gauss}: Usando la fórmula de la curvatura de Gauss se tiene que ',
+            "paso" : "",
+            "pasoLatex" : r'K='+sp.latex(res['K'], mat_delim='(')
+        }
+    ]
+    return pasos
+
+def res_curv_media(res) -> dict:
+    pasos = [
+        {
+            "descripcion" : r'Se va a calcular la \textbf{curvatura media} de la superficie parametrizada ' ,
+            "paso" : "",
+            "pasoLatex" : r'\varphi='+sp.latex(res['sup'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a ' + str(res['u']) + r'}: El vector $\vec{\varphi_'+str(res['u'])+r'}$ de la superficie es',
+            "paso" : "",
+            "pasoLatex" : r'\varphi_{'+str(res['u'])+r'}='+sp.latex(res['du'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a ' + str(res['v']) + r'}: El vector $\vec{\varphi_'+str(res['v'])+r'}$ de la superficie es',
+            "paso" : "",
+            "pasoLatex" : r'\varphi_{'+str(res['v'])+r'}='+sp.latex(res['dv'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a '+str(res['u'])+str(res['u'])+r'}: El vector $\vec{\varphi_'+str(res['u'])+str(res['u'])+r'}$ de la superficie es',
+            "paso" : "",
+            "pasoLatex" : r'\varphi_{'+str(res['u'])+str(res['u'])+r'}='+sp.latex(res['duu'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a '+str(res['u'])+str(res['v'])+r'}: El vector $\vec{\varphi_'+str(res['u'])+str(res['v'])+r'}$ de la superficie es',
+            "paso" : "",
+            "pasoLatex" : r'\varphi_{'+str(res['u'])+str(res['v'])+r'}='+sp.latex(res['duv'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a '+str(res['v'])+str(res['v'])+r'}: El vector $\vec{\varphi_'+str(res['v'])+str(res['v'])+r'}$ de la superficie es',
+            "paso" : "",
+            "pasoLatex" : r'\varphi_{'+str(res['v'])+str(res['v'])+r'}='+sp.latex(res['dvv'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{componente E}: La componente E de la primera forma fundamental de la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'E='+sp.latex(res['E'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{componente F}: La componente F de la primera forma fundamental de la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'F='+sp.latex(res['F'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{componente G}: La componente G de la primera forma fundamental de la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'G='+sp.latex(res['G'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{componente e}: La componente e de la primera forma fundamental de la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'e='+sp.latex(res['e'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{componente f}: La componente f de la primera forma fundamental de la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'f='+sp.latex(res['f'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{componente g}: La componente g de la primera forma fundamental de la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'g='+sp.latex(res['g'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{curvatura media}: Usando la fórmula de la curvatura media se tiene que ',
+            "paso" : "",
+            "pasoLatex" : r'H='+sp.latex(res['H'], mat_delim='(')
+        }
+    ]
+    return pasos
+
+def res_curvs_princ(res) -> dict:
+    pasos = [
+        {
+            "descripcion" : r'Se van a calcular las \textbf{curvaturas principales} de la superficie parametrizada ' ,
+            "paso" : "",
+            "pasoLatex" : r'\varphi='+sp.latex(res['sup'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a ' + str(res['u']) + r'}: El vector $\vec{\varphi_'+str(res['u'])+r'}$ de la superficie es',
+            "paso" : "",
+            "pasoLatex" : r'\varphi_{'+str(res['u'])+r'}='+sp.latex(res['du'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a ' + str(res['v']) + r'}: El vector $\vec{\varphi_'+str(res['v'])+r'}$ de la superficie es',
+            "paso" : "",
+            "pasoLatex" : r'\varphi_{'+str(res['v'])+r'}='+sp.latex(res['dv'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a '+str(res['u'])+str(res['u'])+r'}: El vector $\vec{\varphi_'+str(res['u'])+str(res['u'])+r'}$ de la superficie es',
+            "paso" : "",
+            "pasoLatex" : r'\varphi_{'+str(res['u'])+str(res['u'])+r'}='+sp.latex(res['duu'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a '+str(res['u'])+str(res['v'])+r'}: El vector $\vec{\varphi_'+str(res['u'])+str(res['v'])+r'}$ de la superficie es',
+            "paso" : "",
+            "pasoLatex" : r'\varphi_{'+str(res['u'])+str(res['v'])+r'}='+sp.latex(res['duv'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a '+str(res['v'])+str(res['v'])+r'}: El vector $\vec{\varphi_'+str(res['v'])+str(res['v'])+r'}$ de la superficie es',
+            "paso" : "",
+            "pasoLatex" : r'\varphi_{'+str(res['v'])+str(res['v'])+r'}='+sp.latex(res['dvv'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{componente E}: La componente E de la primera forma fundamental de la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'E='+sp.latex(res['E'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{componente F}: La componente F de la primera forma fundamental de la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'F='+sp.latex(res['F'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{componente G}: La componente G de la primera forma fundamental de la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'G='+sp.latex(res['G'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{componente e}: La componente e de la primera forma fundamental de la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'e='+sp.latex(res['e'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{componente f}: La componente f de la primera forma fundamental de la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'f='+sp.latex(res['f'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{componente g}: La componente g de la primera forma fundamental de la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'g='+sp.latex(res['g'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{curvatura de Gauss}: Usando la fórmula de la curvatura de Gauss se tiene que ',
+            "paso" : "",
+            "pasoLatex" : r'K='+sp.latex(res['K'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{curvatura media}: Usando la fórmula de la curvatura media se tiene que ',
+            "paso" : "",
+            "pasoLatex" : r'H='+sp.latex(res['H'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de las \textbf{curvaturas principales}: Usando la fórmula de las curvaturas principales se tiene que ',
+            "paso" : "",
+            "pasoLatex" : r'k_1, k_2 = ('+sp.latex(res['k1'], mat_delim='(')+r','+sp.latex(res['k2'], mat_delim='(')+r')'
+        }
+    ]
+    return pasos
+
+def res_Weingarten(res) -> dict:
+    pasos = [
+        {
+            "descripcion" : r'Se va a calcular la \textbf{matriz de Weingarten} de la superficie parametrizada ' ,
+            "paso" : "",
+            "pasoLatex" : r'\varphi='+sp.latex(res['sup'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a ' + str(res['u']) + r'}: El vector $\vec{\varphi_'+str(res['u'])+r'}$ de la superficie es',
+            "paso" : "",
+            "pasoLatex" : r'\varphi_{'+str(res['u'])+r'}='+sp.latex(res['du'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a ' + str(res['v']) + r'}: El vector $\vec{\varphi_'+str(res['v'])+r'}$ de la superficie es',
+            "paso" : "",
+            "pasoLatex" : r'\varphi_{'+str(res['v'])+r'}='+sp.latex(res['dv'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a '+str(res['u'])+str(res['u'])+r'}: El vector $\vec{\varphi_'+str(res['u'])+str(res['u'])+r'}$ de la superficie es',
+            "paso" : "",
+            "pasoLatex" : r'\varphi_{'+str(res['u'])+str(res['u'])+r'}='+sp.latex(res['duu'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a '+str(res['u'])+str(res['v'])+r'}: El vector $\vec{\varphi_'+str(res['u'])+str(res['v'])+r'}$ de la superficie es',
+            "paso" : "",
+            "pasoLatex" : r'\varphi_{'+str(res['u'])+str(res['v'])+r'}='+sp.latex(res['duv'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a '+str(res['v'])+str(res['v'])+r'}: El vector $\vec{\varphi_'+str(res['v'])+str(res['v'])+r'}$ de la superficie es',
+            "paso" : "",
+            "pasoLatex" : r'\varphi_{'+str(res['v'])+str(res['v'])+r'}='+sp.latex(res['dvv'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{componente E}: La componente E de la primera forma fundamental de la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'E='+sp.latex(res['E'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{componente F}: La componente F de la primera forma fundamental de la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'F='+sp.latex(res['F'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{componente G}: La componente G de la primera forma fundamental de la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'G='+sp.latex(res['G'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{componente e}: La componente e de la primera forma fundamental de la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'e='+sp.latex(res['e'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{componente f}: La componente f de la primera forma fundamental de la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'f='+sp.latex(res['f'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{componente g}: La componente g de la primera forma fundamental de la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'g='+sp.latex(res['g'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{matriz de Weingarten}: Usando la fórmula de la matriz de Weingarten se tiene que ',
+            "paso" : "",
+            "pasoLatex" : r'\left[W_p\right]='+sp.latex(res['W'], mat_delim='(')
+        }
+    ]
+    return pasos
+
+def res_dirs_princ(res) -> dict:
+    pasos = [
+        {
+            "descripcion" : r'Se van a calcular las \textbf{direcciones principales} de la superficie parametrizada ' ,
+            "paso" : "",
+            "pasoLatex" : r'\varphi='+sp.latex(res['sup'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a ' + str(res['u']) + r'}: El vector $\vec{\varphi_'+str(res['u'])+r'}$ de la superficie es',
+            "paso" : "",
+            "pasoLatex" : r'\varphi_{'+str(res['u'])+r'}='+sp.latex(res['du'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a ' + str(res['v']) + r'}: El vector $\vec{\varphi_'+str(res['v'])+r'}$ de la superficie es',
+            "paso" : "",
+            "pasoLatex" : r'\varphi_{'+str(res['v'])+r'}='+sp.latex(res['dv'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a '+str(res['u'])+str(res['u'])+r'}: El vector $\vec{\varphi_'+str(res['u'])+str(res['u'])+r'}$ de la superficie es',
+            "paso" : "",
+            "pasoLatex" : r'\varphi_{'+str(res['u'])+str(res['u'])+r'}='+sp.latex(res['duu'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a '+str(res['u'])+str(res['v'])+r'}: El vector $\vec{\varphi_'+str(res['u'])+str(res['v'])+r'}$ de la superficie es',
+            "paso" : "",
+            "pasoLatex" : r'\varphi_{'+str(res['u'])+str(res['v'])+r'}='+sp.latex(res['duv'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a '+str(res['v'])+str(res['v'])+r'}: El vector $\vec{\varphi_'+str(res['v'])+str(res['v'])+r'}$ de la superficie es',
+            "paso" : "",
+            "pasoLatex" : r'\varphi_{'+str(res['v'])+str(res['v'])+r'}='+sp.latex(res['dvv'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{componente E}: La componente E de la primera forma fundamental de la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'E='+sp.latex(res['E'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{componente F}: La componente F de la primera forma fundamental de la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'F='+sp.latex(res['F'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{componente G}: La componente G de la primera forma fundamental de la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'G='+sp.latex(res['G'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{componente e}: La componente e de la primera forma fundamental de la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'e='+sp.latex(res['e'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{componente f}: La componente f de la primera forma fundamental de la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'f='+sp.latex(res['f'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{componente g}: La componente g de la primera forma fundamental de la superficie en un punto genérico es',
+            "paso" : "",
+            "pasoLatex" : r'g='+sp.latex(res['g'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de la \textbf{matriz de Weingarten}: Usando la fórmula de la matriz de Weingarten se tiene que ',
+            "paso" : "",
+            "pasoLatex" : r'\left[W_p\right]='+sp.latex(res['W'], mat_delim='(')
+        },
+        {
+            "descripcion" : r'C\'alculo de las \textbf{curvaturas principales}: Consiguiendo los autovalores de la matriz de Weingarten, se consigue que las direcciones principales son',
+            "paso" : "",
+            "pasoLatex" : r'k_1, k_2 = ('+sp.latex(res['k1'], mat_delim='(')+r','+sp.latex(res['k2'], mat_delim='(')+r')'
+        },
+        {
+            "descripcion" : r'C\'alculo de las \textbf{direcciones principales}: Usando los autovalores de la matriz de Weingarten y calculando los subespacios asociados, se tiene que las direcciones principales son',
+            "paso" : "",
+            "pasoLatex" : r'd_1, d_2 = ('+sp.latex(res['d1'], mat_delim='(')+r','+sp.latex(res['d2'], mat_delim='(')+r')'
+        }
+    ]
+    return pasos
+
