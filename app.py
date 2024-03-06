@@ -354,7 +354,7 @@ def grafica():
     # http://127.0.0.1:5000/grafica?superficie=[cos(u)*cos(v),%20cos(u)*sin(v),%20sin(u)]&dom_var1=(-pi/2,pi/2)&dom_var2=(0,2*pi)
     # http://127.0.0.1:5000/grafica?superficie=[cos(u)*cos(v),%20cos(u)*sin(v),%20sin(u)]&dom_var1=(-pi/2,pi/2)&dom_var2=(0,2*pi)&u0=0.5&v0=0.5
     # http://127.0.0.1:5000/grafica?superficie=x**2-y**2-z**2-1
-    # http://127.0.0.1:5000/grafica?superficie=x**2%2By**2%2Bz**2-1&dom_var1=[-1,1]&dom_var2=[-1,1]&dom_var3=[-1,1]
+    # http://127.0.0.1:5000/grafica?superficie=x**2%2By**2%2Bz**2-1&dom_var1=[-1,1]&dom_var2=[-1,1]&dom_var3=[-1,1]&x0=0&y0=0&z0=1
 
     if superficie_str == None:
         #TODO_ Devolver teoría
@@ -391,7 +391,7 @@ def grafica():
         u0 = obtiene_valor_pt('u0')
         v0 = obtiene_valor_pt('v0')
         if u0!=None and v0!=None :
-            fig = graph.desc_punto(superficie, u, v, u0, v0,
+            fig = graph.param_desc_pt_uv(superficie, u, v, u0, v0,
                                    limite_inf_u=dom_u.start, limite_sup_u=dom_u.end,
                                    limite_inf_v=dom_v.start, limite_sup_v=dom_v.end)
             return fig.to_html(include_mathjax="cdn")
@@ -400,12 +400,12 @@ def grafica():
         y0 = obtiene_valor_pt('y0')
         z0 = obtiene_valor_pt('z0')
         if x0!=None and y0!=None and z0!=None:
-            fig = graph.anade_descr_pt_xyz(superficie, u, v, x0, y0, z0,
+            fig = graph.param_desc_pt_xyz(superficie, u, v, x0, y0, z0,
                                    limite_inf_u=dom_u.start, limite_sup_u=dom_u.end,
                                    limite_inf_v=dom_v.start, limite_sup_v=dom_v.end)
             return fig.to_html(include_mathjax="cdn")
         
-        fig = sup_param(superficie, u, v, 
+        fig = graph.sup_param(superficie, u, v, 
                         limite_inf_u=dom_u.start, limite_sup_u=dom_u.end, 
                         limite_inf_v=dom_v.start, limite_sup_v=dom_v.end)
         return fig.to_html(include_mathjax="cdn")
@@ -443,8 +443,18 @@ def grafica():
         dom_z = extrae_dominio(dom_z)
         if dom_z==sp.S.Reals or not isinstance(dom_z, sp.Interval):
             dom_z = sp.Interval(-5, 5)
+
+        x0 = obtiene_valor_pt('x0')
+        y0 = obtiene_valor_pt('y0')
+        z0 = obtiene_valor_pt('z0')
+        if x0!=None and y0!=None and z0!=None:
+            fig = graph.imp_desc_pt(superficie, x, y, z, x0, y0, z0,
+                                   limite_inf_x=dom_x.start, limite_sup_x=dom_x.end,
+                                   limite_inf_y=dom_y.start, limite_sup_y=dom_y.end,
+                                   limite_inf_z=dom_z.start, limite_sup_z=dom_z.end)
+            return fig.to_html(include_mathjax="cdn")
         
-        fig = sup_imp(superficie, x, y, z,
+        fig = graph.sup_imp(superficie, x, y, z,
                         limite_inf_x=dom_x.start, limite_sup_x=dom_x.end, 
                         limite_inf_y=dom_y.start, limite_sup_y=dom_y.end,
                         limite_inf_z=dom_z.start, limite_sup_z=dom_z.end,

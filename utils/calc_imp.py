@@ -110,6 +110,7 @@ def normal(res: dict={}) -> dict:
     if 'laplaciano' not in res:
         res['laplaciano'] = sp.Matrix([res['dx'], res['dy'], res['dz']])
 
+    #TODO- Revisar si es normalized
     res['normal'] = sp.simplify(res['laplaciano'].normalized())
     return res
 

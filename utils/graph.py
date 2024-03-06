@@ -3,6 +3,7 @@ import numpy as np
 import sympy as sp
 
 from .calc_param import descripccion_pt_uv
+from .calc_imp import tangente_pt, normal_pt
 from .utils import xyz_to_uv
 
 def sup_param(sup, u, v, 
@@ -113,7 +114,7 @@ def circulo(centro, radio, dir1, dir2,
     fig.update_layout(scene=dict(aspectmode='data'))
     return fig
 
-def desc_punto(sup, u, v, u0, v0, 
+def param_desc_pt_uv(sup, u, v, u0, v0, 
                limite_inf_u=-5, limite_sup_u=5, 
                limite_inf_v=-5, limite_sup_v=5, 
                fig=None):
@@ -173,7 +174,7 @@ def desc_punto(sup, u, v, u0, v0,
         })
     return fig
 
-def anade_descr_pt_xyz(sup, u, v, x0, y0, z0, 
+def param_desc_pt_xyz(sup, u, v, x0, y0, z0, 
                        limite_inf_u=-5, limite_sup_u=5, 
                        limite_inf_v=-5, limite_sup_v=5, 
                        fig=None):
@@ -182,11 +183,55 @@ def anade_descr_pt_xyz(sup, u, v, x0, y0, z0,
         u0 = limite_inf_u
     if isinstance(v0, sp.Symbol):
         v0 = limite_inf_v
-    return desc_punto(sup, u, v, u0, v0, 
+    return param_desc_pt_uv(sup, u, v, u0, v0, 
                              limite_inf_u=limite_inf_u, limite_sup_u=limite_sup_u, 
                              limite_inf_v=limite_inf_v, limite_sup_v=limite_sup_v, 
                              fig=fig)
 
+def imp_desc_pt(f, x, y, z, x0, y0, z0, 
+                       limite_inf_x=-5, limite_sup_x=5, 
+                       limite_inf_y=-5, limite_sup_y=5,
+                       limite_inf_z=-5, limite_sup_z=5, 
+                       fig=None):
+    fig = sup_imp(f, x, y, z, 
+                  limite_inf_x, limite_sup_x,
+                  limite_inf_y, limite_sup_y, 
+                  limite_inf_z, limite_sup_z,
+                  titulo=r'$'+sp.latex(f)+r'=0$')
+    fig.data[0].update(opacity=0.4)
+
+    resultados = {
+        'f' : f,
+        'x' : x,
+        'y' : y,
+        'z' : z,
+        'x0' : x0,
+        'y0' : y0,
+        'z0' : z0
+    }
+
+    resultados = normal_pt(resultados)
+    resultados = tangente_pt(resultados)
+
+    punto = (x0, y0, z0)
+
+    fig = sup_imp(resultados['tangente_pt'].rhs - resultados['tangente_pt'].lhs, 
+                  x, y, z,
+                  punto[0]-1, punto[0]+1,
+                  punto[1]-1, punto[1]+1,
+                  punto[2]-1, punto[2]+1,
+                  fig=fig, color='grey', titulo='Plano tangente')
+    fig.data[1].update(opacity=0.6)
+
+    fig = point(punto, fig=fig, titulo='Punto')
+    fig = vector(punto, resultados['normal_pt'], fig, 'red', r'$\vec{n}$')
+
+    return fig
+
+
+
+
+"""
 def ejemplo_sup():
     u, v = sp.symbols('u v')
     superficies_parametrizadas = []
@@ -219,3 +264,5 @@ def ejemplo_sup():
         v0 = float(input(f'Indica v0:'))
         fig = desc_punto(sup, u, v, u0, v0, inf_u, sup_u, inf_v, sup_v)
         fig.show()
+
+        """
