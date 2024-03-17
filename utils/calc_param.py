@@ -8,7 +8,8 @@ res = {
     'sup' : ...            #Parametrización de la superficie. Debe ser de tipo sympy.Matrx()
     'u' : ...              #Primera variable de dependencia. Debe ser de tipo sp.Symbol
     'v' : ...              #Segunda variable de dependencia. Debe ser de tipo sp.Symbol
-
+    'cond' : ...           #Condicion de u y v que hacen que una operación sea negativa estricta. Por ejemplo si u^2+v^2<1 entonces poner u**2+v**2-1
+    
     'du' : ...             #derivada de u
     'dv' : ...             #derivada de v
     'duu' : ...            #derivada de uu
@@ -30,6 +31,8 @@ res = {
     'k2'                   #curvatura principal 2
     'd1'                   #direccion principal 1
     'd2'                   #direccion principal 2
+    'coord_d1'             #coordenadas de direccion principal 1 respecto a dervadas parciales
+    'coord_d2'             #coordenadas de direccion principal 2 respecto a dervadas parciales
     'W'                    #Matriz de Weingarten
 
     'du_pt' : ...             #derivada de u
@@ -53,6 +56,8 @@ res = {
     'k2_pt'                   #curvatura principal 2
     'd1_pt'                   #direccion principal 1
     'd2_pt'                   #direccion principal 2
+    'coord_d1_pt'             #coordenadas de direccion principal 1 respecto a dervadas parciales
+    'coord_d2_pt'             #coordenadas de direccion principal 2 respecto a dervadas parciales
     'W_pt'                    #Matriz de Weingarten
 }
 """
@@ -594,17 +599,19 @@ def dirPrinc(res : dict ={}) -> dict:
     if autovalores[0][1] == 2:
         res['k1'] = autovalores[0][0]
         res['k2'] = autovalores[0][0]
-        res['d1'] = list(autovalores[0][-1][0])
-        res['d2'] = list(autovalores[0][-1][1])
-        return res
+        res['coord_d1'] = list(autovalores[0][-1][0])
+        res['coord_d2'] = list(autovalores[0][-1][1])
     elif autovalores[0][1] == 1:
         res['k1'] = autovalores[0][0]
         res['k2'] = autovalores[1][0]
-        res['d1'] = list(autovalores[0][-1][0])
-        res['d2'] = list(autovalores[1][-1][0])
-        return res
+        res['coord_d1'] = list(autovalores[0][-1][0])
+        res['coord_d2'] = list(autovalores[1][-1][0])
     else:
         raise Exception("No se ha podido calcular los autovectores")
+
+    res['d1'] = res['coord_d1'][0]*res['du'] + res['coord_d1'][1]*res['dv']
+    res['d2'] = res['coord_d2'][0]*res['du'] + res['coord_d2'][1]*res['dv']
+    return res
     
 def dirPrinc_pt_uv(res : dict ={}) -> dict:
     """
@@ -620,15 +627,21 @@ def dirPrinc_pt_uv(res : dict ={}) -> dict:
     autovalores = res['W_pt'].eigenvects(simplify=True)
 
     if autovalores[0][1] == 2:
-        res['d1_pt'] = list(autovalores[0][-1][0])
-        res['d2_pt'] = list(autovalores[0][-1][1])
-        return res
+        res['k1_pt'] = autovalores[0][0]
+        res['k2_pt'] = autovalores[0][0]
+        res['coord_d1_pt'] = list(autovalores[0][-1][0])
+        res['coord_d2_pt'] = list(autovalores[0][-1][1])
     elif autovalores[0][1] == 1:
-        res['d1_pt'] = list(autovalores[0][-1][0])
-        res['d2_pt'] = list(autovalores[0][-1][0])
-        return res
+        res['k1_pt'] = autovalores[0][0]
+        res['k2_pt'] = autovalores[1][0]
+        res['coord_d1_pt'] = list(autovalores[0][-1][0])
+        res['coord_d2_pt'] = list(autovalores[0][-1][0])
     else:
         raise Exception("No se ha podido calcular los autovectores")
+    
+    res['d1_pt'] = res['coord_d1_pt'][0]*res['du_pt'] + res['coord_d1_pt'][1]*res['dv_pt']
+    res['d2_pt'] = res['coord_d2_pt'][0]*res['du_pt'] + res['coord_d2_pt'][1]*res['dv_pt']
+    return res
 
 def dirPrinc_pt_xyz(res : dict ={}) -> dict:
     """
@@ -713,17 +726,19 @@ def descripccion(res : dict ={}) -> dict:
     if autovalores[0][1] == 2:
         res['k1'] = autovalores[0][0]
         res['k2'] = autovalores[0][0]
-        res['d1'] = list(autovalores[0][-1][0])
-        res['d2'] = list(autovalores[0][-1][1])
-        return res
+        res['coord_d1'] = list(autovalores[0][-1][0])
+        res['coord_d2'] = list(autovalores[0][-1][1])
     elif autovalores[0][1] == 1:
         res['k1'] = autovalores[0][0]
         res['k2'] = autovalores[1][0]
-        res['d1'] = list(autovalores[0][-1][0])
-        res['d2'] = list(autovalores[1][-1][0])
-        return res
+        res['coord_d1'] = list(autovalores[0][-1][0])
+        res['coord_d2'] = list(autovalores[1][-1][0])
     else:
         raise Exception("No se ha podido calcular los autovectores")
+    
+    res['d1'] = res['coord_d1'][0]*res['du'] + res['coord_d1'][1]*res['dv']
+    res['d2'] = res['coord_d2'][0]*res['du'] + res['coord_d2'][1]*res['dv']
+    return res
 
 def descripccion_pt_uv(res : dict ={}) -> dict:
     """
@@ -747,15 +762,17 @@ def descripccion_pt_uv(res : dict ={}) -> dict:
     if autovalores[0][1] == 2:
         res['k1_pt'] = autovalores[0][0]
         res['k2_pt'] = autovalores[0][0]
-        res['d1_pt'] = list(autovalores[0][-1][0])
-        res['d2_pt'] = list(autovalores[0][-1][1])
+        res['coord_d1_pt'] = list(autovalores[0][-1][0])
+        res['coord_d2_pt'] = list(autovalores[0][-1][1])
     elif autovalores[0][1] == 1:
         res['k1_pt'] = autovalores[0][0]
         res['k2_pt'] = autovalores[1][0]
-        res['d1_pt'] = list(autovalores[0][-1][0])
-        res['d2_pt'] = list(autovalores[1][-1][0])
+        res['coord_d1_pt'] = list(autovalores[0][-1][0])
+        res['coord_d2_pt'] = list(autovalores[1][-1][0])
     else:
         raise Exception("No se ha podido calcular los autovectores")
+    res['d1_pt'] = res['coord_d1_pt'][0]*res['du_pt'] + res['coord_d1_pt'][1]*res['dv_pt']
+    res['d2_pt'] = res['coord_d2_pt'][0]*res['du_pt'] + res['coord_d2_pt'][1]*res['dv_pt']
     clasicPt_uv(res)
     return res
     

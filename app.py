@@ -33,14 +33,23 @@ def procesar_solicitud(func: callable, func_pt_uv: callable, func_pt_xyz: callab
     func_pt_xyz         funcion a ejecutar con punto especifico en función de x, y, z
     dict2latex          funcion que convierte el resultado a latex
     """
+    #TODO: manera de devolve los resultados
+    dict2latex = aLatex
+
     #Se obtiene los parametros de la solicitud
     var1 = request.args.get('var1', None)
-    dom_var1_str = request.args.get('dom_var1', None)
     var2 = request.args.get('var2', None)
-    dom_var2_str = request.args.get('dom_var2', None)
     superficie_str  = request.args.get('superficie', None)
     const_str = request.args.getlist('const')
     func_str = request.args.getlist('func')
+    cond_str = request.args.get('cond', None)
+    dom_var1_str = request.args.get('dom_var1', None)
+    dom_var2_str = request.args.get('dom_var2', None)
+    u0 = request.args.get('u0', None)
+    v0 = request.args.get('v0', None)
+    x0 = request.args.get('x0', None)
+    y0 = request.args.get('y0', None)
+    z0 = request.args.get('z0', None)
     
     if not superficie_str:
         # TODO: Devolver teoría
@@ -48,11 +57,11 @@ def procesar_solicitud(func: callable, func_pt_uv: callable, func_pt_xyz: callab
 
     #Se consigue la parametrización de la superficie convertida a objeto sympy
     try:
-        superficie, u, v = normaliza_parametrizacion(var1, var2, superficie_str, const_str, func_str)
+        superficie, u, v, cond = normaliza_parametrizacion(var1, var2, superficie_str, const_str, func_str, cond_str)
     except Exception as e:
         # TODO: ¿Qué hacer si hay un error?
         raise e
-    
+
     #Se extraen los dominios de las variables
     dom_u = extrae_dominio(dom_var1_str)
     dom_v = extrae_dominio(dom_var2_str)
@@ -60,25 +69,29 @@ def procesar_solicitud(func: callable, func_pt_uv: callable, func_pt_xyz: callab
     resultados = {
         'sup' : superficie,
         'u' : u,
-        'v' : v
+        'v' : v,
+        'dom_u' : dom_u,
+        'dom_v' : dom_v
     }
+    if cond != None:
+        resultados['cond'] = cond
     
     #Se comprueba si la superficie es regular
-    if not utils.esRegular(superficie, u, v, dom_u, dom_v, resultados):
+    if not utils.esRegular(resultados):
         raise Exception("La superficie parametrizada no es regular")
     
     #Se obtiene el punto a clasificar si hubiese y se devuelve los resultados
-    u0 = obtiene_valor_pt('u0')
-    v0 = obtiene_valor_pt('v0')
+    u0 = obtiene_valor_pt(u0)
+    v0 = obtiene_valor_pt(v0)
     if u0!=None and v0!=None :
         resultados['u0'] = u0
         resultados['v0'] = v0
         func_pt_uv(resultados)
         return dict2latex(resultados)
 
-    x0 = obtiene_valor_pt('x0')
-    y0 = obtiene_valor_pt('y0')
-    z0 = obtiene_valor_pt('z0')
+    x0 = obtiene_valor_pt(x0)
+    y0 = obtiene_valor_pt(y0)
+    z0 = obtiene_valor_pt(z0)
     if x0!=None and y0!=None and z0!=None:
         resultados['x0'] = x0
         resultados['y0'] = y0
@@ -92,7 +105,7 @@ def procesar_solicitud(func: callable, func_pt_uv: callable, func_pt_xyz: callab
     func(resultados)
     return dict2latex(resultados)
 
-def normaliza_parametrizacion(var1: str, var2: str, sup: str, consts: list, funcs: list) -> tuple:
+def normaliza_parametrizacion(var1: str, var2: str, sup: str, consts: list, funcs: list, cond: str) -> tuple:
     """
     Transforma la parametrización de una superficie a una expresion sympy con sus variable correspondientes
     No se hacen comprobaciones de tipo
@@ -103,6 +116,7 @@ def normaliza_parametrizacion(var1: str, var2: str, sup: str, consts: list, func
     sup                 string con la parametrización de la superficie
     consts              lista de strings con constantes y su descripción
     func                lista de strings con funciones y su descripción
+    cond                string con la condición de las variables de la parametrización
     """
     variables = {}
 
@@ -155,7 +169,7 @@ def normaliza_parametrizacion(var1: str, var2: str, sup: str, consts: list, func
     superficie = sup.strip('[] ').split(',')
     if len(superficie) == 3:
         try:
-            return sp.Matrix([sp.sympify(elem, locals=variables) for elem in superficie]), u, v
+            return sp.Matrix([sp.sympify(elem, locals=variables) for elem in superficie]), u, v, sp.sympify(cond, locals=variables) if cond else None
         except Exception as e:
             raise Exception(f"Error al procesar la superficie: {e}")
     else:
@@ -239,35 +253,30 @@ def normaliza_implicita(var1: str, var2: str, var3: str, sup: str, consts: list,
 
 def extrae_dominio(dom_var) -> tuple:
     """
-    Extrae el dominio de una variable
+    Extrae el dominio de una variable, si se le pasa algo que no es un string devuelve el dominio de los reales.
+    La entrada debe ser de la forma "(a, b)"
+
     Argumentos:
     dom_var             string con el dominio de la variable
     """
     dominio = sp.S.Reals
-    if dom_var!=None:
-        lista_dom_var = dom_var.replace(' ', '').split(',')
+    if isinstance(dom_var, str):
+        dom_var = dom_var.replace(' ', '')
+        lista_dom_var = dom_var.split(',')
         if len(lista_dom_var) != 2:
             raise Exception(f"Error al procesar el dominio: {dom_var}")
         
-        if '[' in lista_dom_var[0]:
-            if ']' in lista_dom_var[1]:
-                dominio = sp.Interval(sp.sympify(lista_dom_var[0].strip('[]')), sp.sympify(lista_dom_var[1].strip('[]')))
-            elif ')' in lista_dom_var[1]:
-                dominio = sp.Interval.Ropen(sp.sympify(lista_dom_var[0].strip('[]')), sp.sympify(lista_dom_var[1].strip('()')))
-            else:
-                raise Exception(f"Error al procesar el dominio: {dom_var}")
-        elif '(' in lista_dom_var[0]:
-            if ']' in lista_dom_var[1]:
-                dominio = sp.Interval.Lopen(sp.sympify(lista_dom_var[0].replace(' ', '').strip('()')), sp.sympify(lista_dom_var[1].replace(' ', '').strip('[]')))
-            elif ')' in lista_dom_var[1]:
-                dominio = sp.Interval.open(sp.sympify(lista_dom_var[0].replace(' ', '').strip('()')), sp.sympify(lista_dom_var[1].replace(' ', '').strip('()')))
-            else:
-                raise Exception(f"Error al procesar el dominio: {dom_var}")  
+        start = sp.sympify(lista_dom_var[0].strip('()'))
+        end = sp.sympify(lista_dom_var[1].strip('()'))
+        if not start.is_number or not end.is_number:
+            raise Exception(f"Error al procesar el dominio: {dom_var}")
+        dominio = sp.Interval.open(start, end)
     return dominio
 
 def extrae_opciones_var(string: str) -> tuple:
     """
-    Extrae el nombre de una variable y sus opciones
+    Extrae el nombre de una variable y sus opciones. La entrada debe ser de la forma "[nombre, opcion1, opcion2, ...]"
+
     Argumentos:
     string              string con el nombre de la variable y sus opciones
     """
@@ -278,17 +287,20 @@ def extrae_opciones_var(string: str) -> tuple:
             opciones_dict[opcion] = True
     return partes[0], opciones_dict
 
-def obtiene_valor_pt(string: str):
+def obtiene_valor_pt(pt: str):
     """
     Obtiene el valor de un punto pasado a objeto sympy
+
     Argumentos:
-    string              string con el nombre del argumento de la API con el punto
+    pt              string con el nombre del argumento de la API con el punto
     """
-    pt = request.args.get(string, None)
     pt = sp.sympify(pt) if pt else None
     if pt != None and not pt.is_number:
         pt = None
     return pt
+
+def aLatex(res: dict) -> str:
+    return {k: str(v) for k, v in res.items()}
 
 """
 -------------------------------------------------------------------------------

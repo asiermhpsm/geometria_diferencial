@@ -1,34 +1,30 @@
-import utils.toLatex as tx
-import utils.calc_param as calc_param
+import utils.calc_param as calc_imp
 import sympy as sp
 
-a, b, c, d = sp.symbols('a b c d', real=True)
-E = 1 + a**2/c**2
-F = a*b/c**2
-G = 1 + b**2/c**2
-print(sp.simplify(E*G-F**2))
-print(sp.simplify(sp.sqrt(E*G-F**2)))
+u, v = sp.symbols('u v', real=True)
 
-u, v = sp.symbols('u, v', real=True)
-r = sp.Symbol('r', real=True, positive=True)
 res = {
-    'sup': sp.Matrix([u, v, sp.sqrt(1-u**2-v**2)]).T,
+    'sup' : sp.Matrix([u, v, sp.sqrt(1 - u**2 - v**2)]),
     'u' : u,
     'v' : v
 }
 
-res = calc_param.descripccion(res)
+res = calc_imp.descripccion(res)
 
-def sympy2latex(diccionario: dict) -> dict:
-    return {k: sp.latex(v) for k, v in diccionario.items()}
+def simplifica_cond(f, cond: sp.Expr) -> sp.Expr:
+    aux_neg = sp.symbols('aux_neg', negative=True)
+    sust = sp.simplify(f.subs(cond.lhs - cond.rhs, aux_neg).subs(cond.lhs, aux_neg + cond.rhs))
+    return sp.simplify(sust.subs(aux_neg, cond.lhs - cond.rhs))
 
-#res = sympy2latex(res)
+cond = u**2+v**2 < 1
+for k, v in res.items():
+    if not isinstance(v, list):
+        print(k)
+        sp.pprint(v)
+        sp.pprint(simplifica_cond(v, cond))
+        print()
+    else:
+        print(k)
+        print(v)
+        print()
 
-#print(tx.imprime_resultados(tx.res_curv_Gauss(res)))
-
-
-"""from utils.graph import ejemplo_sup, sup_param
-u, v = sp.symbols('u, v', real=True)
-fig = sup_param(sp.Matrix([u, v, sp.sqrt(1-u**2-v**2)]).T, u,v, -1,1,-1,1)
-fig.show()
-#ejemplo_sup()"""

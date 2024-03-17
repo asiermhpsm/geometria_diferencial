@@ -2,7 +2,7 @@ EP-en proceso
 H-Hecho
 
 -TODO-¿cono es superficie de nivel?
--TODO-¿dominios de variables? (union, finiteSet)
+-TODO-¿dominios de variables? (union, finiteSet). solo considerar rectangulos abiertos y discos o elipses abiertas
 
 -TODO:Revisar toda la representación
 -TODO:Dar opción de representar superficie con varios vectores normales
