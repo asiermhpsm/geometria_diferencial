@@ -3,6 +3,10 @@ H-Hecho
 
 -TODO-¿cono es superficie de nivel?
 -TODO-¿dominios de variables? (union, finiteSet). solo considerar rectangulos abiertos y discos o elipses abiertas
+-TODO- Revisar la llamada (los criculos no estan bien): http://127.0.0.1:5000/grafica?superficie=[cos(u),sin(u),v]&dom_var1=(0,2*pi)&dom_var2=(0,3)&u0=0.5&v0=0.5
+-TODO: reparametrizar para que las curvaturas esten normalizadas (no dependa de parametrizacion)
+-TODO: mirar para simplificar abs(cos(u)) si esta en ciertos valores
+-TODO: arreglar direcciones principales (ver cual es mayor y menor) cuando no se da punto
 
 -TODO:Revisar toda la representación
 -TODO:Dar opción de representar superficie con varios vectores normales

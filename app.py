@@ -77,7 +77,7 @@ def procesar_solicitud(func: callable, func_pt_uv: callable, func_pt_xyz: callab
         resultados['cond'] = cond
     
     #Se comprueba si la superficie es regular
-    if not utils.esRegular(resultados):
+    if not resultados['sup'].has(sp.Function) and not calcp.esRegular(resultados):
         raise Exception("La superficie parametrizada no es regular")
     
     #Se obtiene el punto a clasificar si hubiese y se devuelve los resultados
@@ -357,7 +357,7 @@ def direcciones_principales():
 
 @app.route('/description')
 def description():
-    return jsonify(procesar_solicitud(calcp.descripccion, calcp.descripccion_pt_uv, calcp.descripccion_pt_xyz))
+    return jsonify(procesar_solicitud(calcp.descripccion, calcp.descripccion_pt_uv, calcp.descripccion_pt_xyz, aLatex))
 
 @app.route('/grafica')
 def grafica():
@@ -373,18 +373,25 @@ def grafica():
         raise Exception("No se ha encontrado la parametrización de la superficie")
     elif '[' in superficie_str:
         var1 = request.args.get('var1', None)
-        dom_var1_str = request.args.get('dom_var1', None)
         var2 = request.args.get('var2', None)
-        dom_var2_str = request.args.get('dom_var2', None)
+        superficie_str  = request.args.get('superficie', None)
         const_str = request.args.getlist('const')
         func_str = request.args.getlist('func')
+        cond_str = request.args.get('cond', None)
+        dom_var1_str = request.args.get('dom_var1', None)
+        dom_var2_str = request.args.get('dom_var2', None)
+        u0 = request.args.get('u0', None)
+        v0 = request.args.get('v0', None)
+        x0 = request.args.get('x0', None)
+        y0 = request.args.get('y0', None)
+        z0 = request.args.get('z0', None)
         
         if not superficie_str:
             # TODO: Devolver teoría
             raise Exception("No se ha encontrado la parametrización de la superficie")
 
         try:
-            superficie, u, v = normaliza_parametrizacion(var1, var2, superficie_str, const_str, func_str)
+            superficie, u, v, cond = normaliza_parametrizacion(var1, var2, superficie_str, const_str, func_str, cond_str)
         except Exception as e:
             # TODO: ¿Qué hacer si hay un error?
             raise e
@@ -396,21 +403,29 @@ def grafica():
         dom_v = extrae_dominio(dom_var2_str)
         if dom_v==sp.S.Reals or not isinstance(dom_v, sp.Interval):
             dom_v = sp.Interval(-5, 5)
+
+        resultados = {
+            'sup' : superficie,
+            'u' : u,
+            'v' : v,
+            'dom_u' : dom_u,
+            'dom_v' : dom_v
+        }
         
-        if not utils.esRegular(superficie, u, v, dom_u, dom_v, {}):
+        if not calcp.esRegular(resultados):
             raise Exception("La superficie parametrizada no es regular")
 
-        u0 = obtiene_valor_pt('u0')
-        v0 = obtiene_valor_pt('v0')
+        u0 = obtiene_valor_pt(u0)
+        v0 = obtiene_valor_pt(v0)
         if u0!=None and v0!=None :
             fig = graph.param_desc_pt_uv(superficie, u, v, u0, v0,
                                    limite_inf_u=dom_u.start, limite_sup_u=dom_u.end,
                                    limite_inf_v=dom_v.start, limite_sup_v=dom_v.end)
             return fig.to_html(include_mathjax="cdn")
 
-        x0 = obtiene_valor_pt('x0')
-        y0 = obtiene_valor_pt('y0')
-        z0 = obtiene_valor_pt('z0')
+        x0 = obtiene_valor_pt(x0)
+        y0 = obtiene_valor_pt(y0)
+        z0 = obtiene_valor_pt(z0)
         if x0!=None and y0!=None and z0!=None:
             fig = graph.param_desc_pt_xyz(superficie, u, v, x0, y0, z0,
                                    limite_inf_u=dom_u.start, limite_sup_u=dom_u.end,

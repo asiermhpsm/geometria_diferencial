@@ -134,7 +134,7 @@ def param_desc_pt_uv(sup, u, v, u0, v0,
     punto = sup.subs({u:u0, v:v0})
 
     u, v = sp.symbols('u v', real=True)
-    plano = sp.Matrix([u*resultados['du_pt'].normalized() + v*resultados['dv_pt'].normalized() + punto])
+    plano = sp.Matrix([u*resultados['d1_pt'].normalized() + v*resultados['d2_pt'].normalized() + punto])
     fig = sup_param(plano, u, v, 
                     limite_inf_u=-1, limite_sup_u=1, 
                     limite_inf_v=-1, limite_sup_v=1, 
@@ -144,22 +144,22 @@ def param_desc_pt_uv(sup, u, v, u0, v0,
     fig.data[1].update(opacity=0.6)
 
     fig = point(punto, fig=fig, titulo='Punto')
-    fig = vector(punto, resultados['du_pt'], fig, 'blue', r'$\vec{\varphi_u}$')
+    fig = vector(punto, resultados['d1_pt'], fig, 'blue', r'$\vec{d_1}$')
     if resultados['k1_pt'] !=0:
         radio = 1/resultados['k1_pt']
         fig = circulo(punto + radio*resultados['normal_pt'].normalized(), 
                             radio,
                             resultados['normal_pt'],
-                            resultados['du_pt'],
+                            resultados['d1_pt'],
                             fig, 'blue', r'$r=1/k_1$')
     
-    fig = vector(punto, resultados['dv_pt'], fig, 'green', r'$\vec{\varphi_v}$')
+    fig = vector(punto, resultados['d2_pt'], fig, 'green', r'$\vec{d_2}$')
     if resultados['k2_pt'] !=0:
         radio = 1/resultados['k2_pt']
         fig = circulo(punto + radio*resultados['normal_pt'].normalized(), 
                             radio,
                             resultados['normal_pt'],
-                            resultados['dv_pt'],
+                            resultados['d2_pt'],
                             fig, 'green', r'$r=1/k_2$')
     
     fig = vector(punto, tuple(float(comp) for comp in resultados['normal_pt']), fig, 'red', r'$\vec{n}$')
