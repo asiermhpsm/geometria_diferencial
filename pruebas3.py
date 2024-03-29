@@ -1,18 +1,21 @@
 import sympy as sp
 
-# Definir las variables
-x, y, z = sp.symbols('x y z')
+# Definir símbolos
+x, y = sp.symbols('x y')
 
-# Definir una expresión que contenga estas variables
-expresion = x**2 + 2*y
+# Definir expresiones
+expresion1 = x**2
+expresion2 = 2*x + 1
 
-# Obtener las variables libres en la expresión
-variables_libres = expresion.free_symbols
+# Comparar las expresiones
+rel = sp.GreaterThan(expresion1, expresion2)  # Gt significa "Greater Than" (Mayor que)
+print(rel)
 
-# Calcular el número de variables en la expresión
-num_variables = len(variables_libres)
+# Evaluar la relación
+resultado = rel.simplify()
 
-# Imprimir el resultado
-print("La expresión tiene", num_variables, "variable(s):", variables_libres)
-variables_libres.remove(z)
-print(variables_libres)
+# Mostrar el resultado
+if resultado:
+    print("expresion1 es mayor que expresion2")
+else:
+    print("expresion1 NO es mayor que expresion2")

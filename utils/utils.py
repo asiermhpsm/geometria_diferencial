@@ -1,6 +1,11 @@
 import sympy as sp
 import numpy as np
 
+"""
+-------------------------------------------------------------------------------
+CONVERSION DE PUNTOS
+-------------------------------------------------------------------------------
+"""
 def uv_to_xyz(parametrizacion: sp.Matrix, u: sp.Symbol, v: sp.Symbol, u0, v0):
     """
     Sustituye u y v en la superficie parametrizada
@@ -43,6 +48,110 @@ def xyz_to_uv(parametrizacion: sp.Matrix, u: sp.Symbol, v: sp.Symbol, x0, y0, z0
         return soluciones[0]
 
 
+"""
+-------------------------------------------------------------------------------
+METODOS DE SIMPLIFICACIÓN FINAL
+-------------------------------------------------------------------------------
+"""
+def aplica_simplificaciones(res):
+    """
+    Aplica la simplificación trignometrica y de condición a los resultados obtenidos
+    """
+    if 'dom_u' in res and isinstance(res['dom_u'], sp.Interval):
+        simplifica_trig(res, res['u'], res['dom_u'])
+    if 'dom_v' in res and isinstance(res['dom_v'], sp.Interval):
+        simplifica_trig(res, res['v'], res['dom_v'])
+    if 'cond' in res:
+        for k, v in res.items():
+            res[k] = simplifica_cond(v)
+
+def simplifica_trig(res, x, dom) -> dict:
+    """
+    Dada una variable, simplifica trigonométricamente los resultados obtenidos
+    """
+    n = sp.Symbol('n', integer=True)
+    pos = sp.symbols('pos', positive=True)
+    neg = sp.symbols('neg', negative=True)
+
+    #Coseno positivo
+    sol = sp.solve([
+        -sp.pi/2+2*sp.pi*n <= dom.start,
+        dom.end <= sp.pi/2+2*sp.pi*n ], n)
+    if sol != False:
+        for k, v in res.items():
+            try:
+                res[k] = sp.simplify(sp.simplify(sp.simplify(v).subs(sp.cos(x), pos)).subs(pos, sp.cos(x)))
+            except:
+                pass
+    #Coseno negativo
+    sol = sp.solve([
+        sp.pi/2+2*sp.pi*n <= dom.start,
+        dom.end <= 3*sp.pi/2+2*sp.pi*n ], n)
+    if sol != False:
+        for k, v in res.items():
+            try:
+                res[k] = sp.simplify(sp.simplify(sp.simplify(v).subs(sp.cos(x), neg)).subs(neg, sp.cos(x)))
+            except:
+                pass
+    #Seno positivo
+    sol = sp.solve([
+        0+2*sp.pi*n <= dom.start,
+        dom.end <= sp.pi+2*sp.pi*n ], n)
+    if sol != False:
+        for k, v in res.items():
+            try:
+                res[k] = sp.simplify(sp.simplify(sp.simplify(v).subs(sp.sin(x), pos)).subs(pos, sp.sin(x)))
+            except:
+                pass
+    #Seno negativo
+    sol = sp.solve([
+        sp.pi+2*sp.pi*n <= dom.start,
+        dom.end <= 2*sp.pi+2*sp.pi*n ], n)
+    if sol != False:
+        for k, v in res.items():
+            try:
+                res[k] = sp.simplify(sp.simplify(sp.simplify(v).subs(sp.sin(x), neg)).subs(neg, sp.sin(x)))
+            except:
+                pass
+    #Tangente positiva
+    sol = sp.solve([
+        -sp.pi/2+2*sp.pi*n <= dom.start,
+        dom.end <= sp.pi/2+2*sp.pi*n ], n)
+    if sol != False:
+        for k, v in res.items():
+            try:
+                res[k] = sp.simplify(sp.simplify(sp.simplify(v).subs(sp.tan(x), pos)).subs(pos, sp.tan(x)))
+            except:
+                pass
+    #Tangente negativa
+    sol = sp.solve([
+        sp.pi/2+2*sp.pi*n <= dom.start,
+        dom.end <= 3*sp.pi/2+2*sp.pi*n ], n)
+    if sol != False:
+        for k, v in res.items():
+            try:
+                res[k] = sp.simplify(sp.simplify(sp.simplify(v).subs(sp.tan(x), neg)).subs(neg, sp.tan(x)))
+            except:
+                pass
+    return res
+
+def simplifica_cond(f, cond: sp.Expr) -> sp.Expr:
+    """
+    Simplifica f sabiendo que se cumple la condición cond
+    Argumentos:
+    f       función
+    cond    condición de la forma menor que: ... < ...
+    """
+    aux_neg = sp.symbols('aux_neg', negative=True)
+    sust = sp.simplify(f.subs(cond.lhs - cond.rhs, aux_neg).subs(cond.lhs, aux_neg + cond.rhs))
+    return sp.simplify(sust.subs(aux_neg, cond.lhs - cond.rhs))
+
+
+"""
+-------------------------------------------------------------------------------
+METODOS GENERALES
+-------------------------------------------------------------------------------
+"""
 def esSupNivel(f: sp.Expr, x: sp.Symbol, y: sp.Symbol, z: sp.Symbol, res : dict ={}) -> bool:
     """
     Determina si una función es una superficie de nivel
@@ -82,4 +191,3 @@ def genera_malla_elipse(a, b, num_points: int):
     X = a * R * np.cos(T)
     Y = b * R * np.sin(T)
     return X, Y
-

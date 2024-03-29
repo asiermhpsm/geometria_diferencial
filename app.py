@@ -77,7 +77,7 @@ def procesar_solicitud(func: callable, func_pt_uv: callable, func_pt_xyz: callab
         resultados['cond'] = cond
     
     #Se comprueba si la superficie es regular
-    if not resultados['sup'].has(sp.Function) and not calcp.esRegular(resultados):
+    if func_str == [] and not calcp.esRegular(resultados):
         raise Exception("La superficie parametrizada no es regular")
     
     #Se obtiene el punto a clasificar si hubiese y se devuelve los resultados
@@ -87,6 +87,7 @@ def procesar_solicitud(func: callable, func_pt_uv: callable, func_pt_xyz: callab
         resultados['u0'] = u0
         resultados['v0'] = v0
         func_pt_uv(resultados)
+        utils.aplica_simplificaciones(resultados)
         return dict2latex(resultados)
 
     x0 = obtiene_valor_pt(x0)
@@ -97,12 +98,14 @@ def procesar_solicitud(func: callable, func_pt_uv: callable, func_pt_xyz: callab
         resultados['y0'] = y0
         resultados['z0'] = z0
         func_pt_xyz(resultados)
+        utils.aplica_simplificaciones(resultados)
         return dict2latex(resultados)
     
     if func_pt_uv is calcp.clasicPt_uv:
         raise Exception("No se ha definido correctamente el punto a clasificar")
     
     func(resultados)
+    utils.aplica_simplificaciones(resultados)
     return dict2latex(resultados)
 
 def normaliza_parametrizacion(var1: str, var2: str, sup: str, consts: list, funcs: list, cond: str) -> tuple:
@@ -302,9 +305,10 @@ def obtiene_valor_pt(pt: str):
 def aLatex(res: dict) -> str:
     return {k: str(v) for k, v in res.items()}
 
+
 """
 -------------------------------------------------------------------------------
-ENDPOINTS
+ENDPOINTS SUPERFICIE PARAMETRIZADA
 -------------------------------------------------------------------------------
 """
 app = Flask(__name__)

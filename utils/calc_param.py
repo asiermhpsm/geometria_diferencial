@@ -104,53 +104,53 @@ def simplifica_trig(expr, u, dom):
         dom.end <= sp.pi/2+2*sp.pi*n ], n)
     if sol != False:
         aux = sp.symbols('aux', positive=True)
-        expr = sp.simplify(sp.simplify(expr.subs(sp.cos(u), aux)).subs(aux, sp.cos(u)))
+        expr = sp.simplify(sp.simplify(sp.simplify(expr).subs(sp.cos(u), aux)).subs(aux, sp.cos(u)))
     #Coseno negativo
     sol = sp.solve([
         sp.pi/2+2*sp.pi*n <= dom.start,
         dom.end <= 3*sp.pi/2+2*sp.pi*n ], n)
     if sol != False:
         aux = sp.symbols('aux', negative=True)
-        expr = sp.simplify(sp.simplify(expr.subs(sp.cos(u), aux)).subs(aux, sp.cos(u)))
+        expr = sp.simplify(sp.simplify(sp.simplify(expr).subs(sp.cos(u), aux)).subs(aux, sp.cos(u)))
     #Seno positivo
     sol = sp.solve([
         2*sp.pi*n <= dom.start,
         dom.end <= sp.pi+2*sp.pi*n ], n)
     if sol != False:
         aux = sp.symbols('aux', positive=True)
-        expr = sp.simplify(sp.simplify(expr.subs(sp.sin(u), aux)).subs(aux, sp.sin(u)))
+        expr = sp.simplify(sp.simplify(sp.simplify(expr).subs(sp.sin(u), aux)).subs(aux, sp.sin(u)))
     #Seno negativo
     sol = sp.solve([
         sp.pi+2*sp.pi*n <= dom.start,
         dom.end <= 2*sp.pi+2*sp.pi*n ], n)
     if sol != False:
         aux = sp.symbols('aux', negative=True)
-        expr = sp.simplify(sp.simplify(expr.subs(sp.sin(u), aux)).subs(aux, sp.sin(u)))
+        expr = sp.simplify(sp.simplify(sp.simplify(expr).subs(sp.sin(u), aux)).subs(aux, sp.sin(u)))
     #Tangente positiva
     sol = sp.solve([
         0+sp.pi*n <= dom.start,
         dom.end <= sp.pi/2+sp.pi*n ], n)
     if sol != False:
         aux = sp.symbols('aux', positive=True)
-        expr = sp.simplify(sp.simplify(expr.subs(sp.tan(u), aux)).subs(aux, sp.tan(u)))
+        expr = sp.simplify(sp.simplify(sp.simplify(expr).subs(sp.tan(u), aux)).subs(aux, sp.tan(u)))
     #Tangente negativa
     sol = sp.solve([
         -sp.pi/2+sp.pi*n <= dom.start,
         dom.end <= 0+sp.pi*n ], n)
     if sol != False:
         aux = sp.symbols('aux', negative=True)
-        expr = sp.simplify(sp.simplify(expr.subs(sp.tan(u), aux)).subs(aux, sp.tan(u)))
+        expr = sp.simplify(sp.simplify(sp.simplify(expr).subs(sp.tan(u), aux)).subs(aux, sp.tan(u)))
 
     return expr
 
-def simp_trig_uv(expr, res : dict ={}):
-        if isinstance(res['dom_u'], sp.Interval):
+def simp_trig_uv(expr, res : dict) -> sp.Expr:
+        if 'dom_u' in res and isinstance(res['dom_u'], sp.Interval):
             expr = simplifica_trig(expr, res['u'], res['dom_u'])
-        if  isinstance(res['dom_v'], sp.Interval):
+        if  'dom_v' in res and isinstance(res['dom_v'], sp.Interval):
             expr = simplifica_trig(expr, res['v'], res['dom_v'])
         return expr
 
-def simplifica(f, res : dict ={}) -> sp.Expr:
+def simplifica(f, res : dict) -> sp.Expr:
     """
     Simplifica una expresión simbólica o una matriz simbólica
     Argumentos:
@@ -160,10 +160,8 @@ def simplifica(f, res : dict ={}) -> sp.Expr:
     
     if 'cond' in res:
         return sp.simplify(simp_trig_uv(simplifica_cond(f, res['cond']), res))
-    elif 'dom_u' in res or 'dom_v' in res:
-        return sp.simplify(simp_trig_uv(f, res))
     else:
-        return sp.simplify(f)
+        return sp.simplify(simp_trig_uv(f, res))
 
 def esRegular(res: dict) -> bool:
     """
@@ -172,9 +170,9 @@ def esRegular(res: dict) -> bool:
     Arguementos:
     res                 diccionario donde se guardan los resultados intermedios
     """
-    res['du'] = simplifica(sp.diff(res['sup'], res['u']), res)
-    res['dv'] = simplifica(sp.diff(res['sup'], res['v']), res)
-    res['duXdv'] = simplifica(res['du'].cross(res['dv']), res)
+    res['du'] = sp.simplify(sp.diff(res['sup'], res['u']))
+    res['dv'] = sp.simplify(sp.diff(res['sup'], res['v']))
+    res['duXdv'] = sp.simplify(res['du'].cross(res['dv']))
     #NO SE HA PODIDO ENCONTRAR UNA MANERA PARA DETERMINAR SI UNA FUNCION ES DE CLASE INFINITO
 
     #Encuentro las posibles soluciones que harían que la superficie no sea regular e itero sobre ellas
@@ -228,12 +226,12 @@ def normal(res : dict ={}) -> dict:
 
     if 'duXdv' not in res:
         if 'du' not in res:
-            res['du'] = simplifica(sp.diff(res['sup'], res['u']), res)
+            res['du'] = sp.simplify(sp.diff(res['sup'], res['u']))
         if 'dv' not in res:
-            res['dv'] = simplifica(sp.diff(res['sup'], res['v']), res)
-        res['duXdv'] = simplifica(res['du'].cross(res['dv']), res)
-    res['norma'] = simplifica(res['duXdv'].norm(), res)
-    res['normal'] = simplifica(res['duXdv'].normalized(), res)
+            res['dv'] = sp.simplify(sp.diff(res['sup'], res['v']))
+        res['duXdv'] = sp.simplify(res['du'].cross(res['dv']))
+    res['norma'] = sp.simplify(res['duXdv'].norm())
+    res['normal'] = sp.simplify(res['duXdv'].normalized())
     return res
 
 def normal_pt_uv(res : dict ={}) -> dict:
@@ -247,15 +245,15 @@ def normal_pt_uv(res : dict ={}) -> dict:
     if 'duXdv_pt' not in res:
         if not 'du_pt' in res:
             if not 'du' in res:
-                res['du'] = simplifica(sp.diff(res['sup'], res['u']), res)
-            res['du_pt'] = simplifica(res['du'].subs({res['u']:res['u0'], res['v']:res['v0']}), res)
+                res['du'] = sp.simplify(sp.diff(res['sup'], res['u']))
+            res['du_pt'] = sp.simplify(res['du'].subs({res['u']:res['u0'], res['v']:res['v0']}))
         if not 'dv_pt' in res:
             if not 'dv' in res:
-                res['dv'] = simplifica(sp.diff(res['sup'], res['v']), res)
-            res['dv_pt'] = simplifica(res['dv'].subs({res['u']:res['u0'], res['v']:res['v0']}), res)
-        res['duXdv_pt'] = simplifica(res['du_pt'].cross(res['dv_pt']), res)
-    res['norma_pt'] = simplifica(res['duXdv_pt'].norm(), res)
-    res['normal_pt'] = simplifica(res['duXdv_pt'].normalized(), res)
+                res['dv'] = sp.simplify(sp.diff(res['sup'], res['v']), res)
+            res['dv_pt'] = sp.simplify(res['dv'].subs({res['u']:res['u0'], res['v']:res['v0']}))
+        res['duXdv_pt'] = sp.simplify(res['du_pt'].cross(res['dv_pt']))
+    res['norma_pt'] = sp.simplify(res['duXdv_pt'].norm())
+    res['normal_pt'] = sp.simplify(res['duXdv_pt'].normalized())
     return res
 
 def normal_pt_xyz(res : dict ={}) -> dict:
@@ -285,12 +283,12 @@ def planoTangente(res : dict ={}) -> dict:
     """
     if 'duXdv' not in res:
         if 'du' not in res:
-            res['du'] = simplifica(sp.diff(res['sup'], res['u']), res)
+            res['du'] = sp.simplify(sp.diff(res['sup'], res['u']))
         if 'dv' not in res:
-            res['dv'] = simplifica(sp.diff(res['sup'], res['v']), res)
-        res['duXdv'] = simplifica(res['du'].cross(res['dv']), res)
+            res['dv'] = sp.simplify(sp.diff(res['sup'], res['v']))
+        res['duXdv'] = sp.simplify(res['du'].cross(res['dv']))
     x, y, z = sp.symbols('x, y, z')
-    res['tangente'] = simplifica(sp.Eq(res['duXdv'].dot(sp.Matrix([x,y,z])), res['duXdv'].dot(res['sup'])), res)
+    res['tangente'] = sp.simplify(sp.Eq(res['duXdv'].dot(sp.Matrix([x,y,z])), res['duXdv'].dot(res['sup'])))
     return res
 
 def planoTangente_pt_uv(res : dict ={}) -> dict:
@@ -304,16 +302,16 @@ def planoTangente_pt_uv(res : dict ={}) -> dict:
     if 'duXdv_pt' not in res:
         if not 'du_pt' in res:
             if not 'du' in res:
-                res['du'] = simplifica(sp.diff(res['sup'], res['u']), res)
-            res['du_pt'] = simplifica(res['du'].subs({res['u']:res['u0'], res['v']:res['v0']}), res)
+                res['du'] = sp.simplify(sp.diff(res['sup'], res['u']))
+            res['du_pt'] = sp.simplify(res['du'].subs({res['u']:res['u0'], res['v']:res['v0']}))
         if not 'dv_pt' in res:
             if not 'dv' in res:
-                res['dv'] = simplifica(sp.diff(res['sup'], res['v']), res)
-            res['dv_pt'] = simplifica(res['dv'].subs({res['u']:res['u0'], res['v']:res['v0']}), res)
-        res['duXdv_pt'] = simplifica(res['du_pt'].cross(res['dv_pt']), res)
+                res['dv'] = sp.simplify(sp.diff(res['sup'], res['v']))
+            res['dv_pt'] = sp.simplify(res['dv'].subs({res['u']:res['u0'], res['v']:res['v0']}))
+        res['duXdv_pt'] = sp.simplify(res['du_pt'].cross(res['dv_pt']))
 
     x, y, z = sp.symbols('x, y, z', real = True)
-    res['tangente_pt'] = simplifica(sp.Eq(res['duXdv_pt'].dot(sp.Matrix([x,y,z])), res['duXdv_pt'].dot(res['sup'].subs({res['u']:res['u0'], res['v']:res['v0']}))), res)
+    res['tangente_pt'] = sp.simplify(sp.Eq(res['duXdv_pt'].dot(sp.Matrix([x,y,z])), res['duXdv_pt'].dot(res['sup'].subs({res['u']:res['u0'], res['v']:res['v0']}))))
     return res
 
 def planoTangente_pt_xyz(res : dict ={}) -> dict:
@@ -342,13 +340,13 @@ def primeraFormaFundamental(res : dict ={}) -> dict:
     res          diccionario con todos los resultados calculados hasta el momento
     """
     if 'du' not in res:
-        res['du'] = simplifica(sp.diff(res['sup'], res['u']), res)
+        res['du'] = sp.simplify(sp.diff(res['sup'], res['u']))
     if 'dv' not in res:
-        res['dv'] = simplifica(sp.diff(res['sup'], res['v']), res)
+        res['dv'] = sp.simplify(sp.diff(res['sup'], res['v']))
 
-    res['E'] = simplifica(res['du'].dot(res['du']), res)
-    res['F'] = simplifica(res['du'].dot(res['dv']), res)
-    res['G'] = simplifica(res['dv'].dot(res['dv']), res)
+    res['E'] = sp.simplify(res['du'].dot(res['du']))
+    res['F'] = sp.simplify(res['du'].dot(res['dv']))
+    res['G'] = sp.simplify(res['dv'].dot(res['dv']))
 
     return res
 
@@ -362,16 +360,16 @@ def primeraFormaFundamental_pt_uv(res : dict ={}) -> dict:
     """
     if not 'du_pt' in res:
         if not 'du' in res:
-            res['du'] = simplifica(sp.diff(res['sup'], res['u']), res)
-        res['du_pt'] = simplifica(res['du'].subs({res['u']:res['u0'], res['v']:res['v0']}), res)
+            res['du'] = sp.simplify(sp.diff(res['sup'], res['u']))
+        res['du_pt'] = sp.simplify(res['du'].subs({res['u']:res['u0'], res['v']:res['v0']}))
     if not 'dv_pt' in res:
         if not 'dv' in res:
-            res['dv'] = simplifica(sp.diff(res['sup'], res['v']), res)
-        res['dv_pt'] = simplifica(res['dv'].subs({res['u']:res['u0'], res['v']:res['v0']}), res)
+            res['dv'] = sp.simplify(sp.diff(res['sup'], res['v']))
+        res['dv_pt'] = sp.simplify(res['dv'].subs({res['u']:res['u0'], res['v']:res['v0']}))
 
-    res['E_pt'] = simplifica(res['du_pt'].dot(res['du_pt']), res)
-    res['F_pt'] = simplifica(res['du_pt'].dot(res['dv_pt']), res)
-    res['G_pt'] = simplifica(res['dv_pt'].dot(res['dv_pt']), res)
+    res['E_pt'] = sp.simplify(res['du_pt'].dot(res['du_pt']))
+    res['F_pt'] = sp.simplify(res['du_pt'].dot(res['dv_pt']))
+    res['G_pt'] = sp.simplify(res['dv_pt'].dot(res['dv_pt']))
 
     return res
 
@@ -402,21 +400,21 @@ def segundaFormaFundamental(res : dict ={}) -> dict:
     res          diccionario con todos los res calculados hasta el momento
     """
     if 'du' not in res:
-        res['du'] = simplifica(sp.diff(res['sup'], res['u']), res)
+        res['du'] = sp.simplify(sp.diff(res['sup'], res['u']))
     if 'dv' not in res:
-        res['dv'] = simplifica(sp.diff(res['sup'], res['v']), res)
+        res['dv'] = sp.simplify(sp.diff(res['sup'], res['v']))
     if 'duu' not in res:
-        res['duu'] = simplifica(sp.diff(res['du'], res['u']), res)
+        res['duu'] = sp.simplify(sp.diff(res['du'], res['u']))
     if 'duv' not in res:
-        res['duv'] = simplifica(sp.diff(res['du'], res['v']), res)
+        res['duv'] = sp.simplify(sp.diff(res['du'], res['v']))
     if 'dvv' not in res:
-        res['dvv'] = simplifica(sp.diff( res['dv'], res['v']), res)
+        res['dvv'] = sp.simplify(sp.diff( res['dv'], res['v']))
     if 'normal' not in res:
         normal(res)
 
-    res['e'] = simplifica( res['normal'].dot(res['duu']), res)
-    res['f'] = simplifica( res['normal'].dot(res['duv']), res)
-    res['g'] = simplifica( res['normal'].dot(res['dvv']), res)
+    res['e'] = sp.simplify( res['normal'].dot(res['duu']))
+    res['f'] = sp.simplify( res['normal'].dot(res['duv']))
+    res['g'] = sp.simplify( res['normal'].dot(res['dvv']))
     
     return res
 
@@ -429,27 +427,27 @@ def segundaFormaFundamental_pt_uv(res : dict ={}) -> dict:
     res          diccionario con todos los resultados calculados hasta el momento
     """
     if 'du' not in res:
-        res['du'] = simplifica(sp.diff(res['sup'], res['u']), res)
+        res['du'] = sp.simplify(sp.diff(res['sup'], res['u']))
     if 'dv' not in res:
-        res['dv'] = simplifica(sp.diff(res['sup'], res['v']), res)
+        res['dv'] = sp.simplify(sp.diff(res['sup'], res['v']))
     if 'duu_pt' not in res:
         if 'duu' not in res:
-            res['duu'] = simplifica(sp.diff(res['du'], res['u']), res)
-        res['duu_pt'] = simplifica(res['duu'].subs({res['u']:res['u0'], res['v']:res['v0']}), res)
+            res['duu'] = sp.simplify(sp.diff(res['du'], res['u']))
+        res['duu_pt'] = sp.simplify(res['duu'].subs({res['u']:res['u0'], res['v']:res['v0']}))
     if 'duv_pt' not in res:
         if 'duv' not in res:
-            res['duv'] = simplifica(sp.diff(res['du'], res['v']), res)
-        res['duv_pt'] = simplifica(res['duv'].subs({res['u']:res['u0'], res['v']:res['v0']}), res)
+            res['duv'] = sp.simplify(sp.diff(res['du'], res['v']))
+        res['duv_pt'] = sp.simplify(res['duv'].subs({res['u']:res['u0'], res['v']:res['v0']}))
     if 'dvv_pt' not in res:
         if 'dvv' not in res:
-            res['dvv'] = simplifica(sp.diff(res['dv'], res['v']), res)
-        res['dvv_pt'] = simplifica(res['dvv'].subs({res['u']:res['u0'], res['v']:res['v0']}), res)
+            res['dvv'] = sp.simplify(sp.diff(res['dv'], res['v']))
+        res['dvv_pt'] = sp.simplify(res['dvv'].subs({res['u']:res['u0'], res['v']:res['v0']}))
     if 'normal_pt' not in res:
         normal_pt_uv(res)
 
-    res['e_pt'] = simplifica( res['normal_pt'].dot(res['duu_pt']), res)
-    res['f_pt'] = simplifica( res['normal_pt'].dot(res['duv_pt']), res)
-    res['g_pt'] = simplifica( res['normal_pt'].dot(res['dvv_pt']), res)
+    res['e_pt'] = sp.simplify( res['normal_pt'].dot(res['duu_pt']))
+    res['f_pt'] = sp.simplify( res['normal_pt'].dot(res['duv_pt']))
+    res['g_pt'] = sp.simplify( res['normal_pt'].dot(res['dvv_pt']))
     
     return res
 
@@ -483,7 +481,7 @@ def curvaturaGauss(res : dict ={}) -> dict:
         primeraFormaFundamental(res)
     if 'e' not in res:
         segundaFormaFundamental(res)
-    res['K'] = simplifica((res['e']*res['g'] - res['f']**2)/(res['E']*res['G'] - res['F']**2), res)
+    res['K'] = sp.simplify((res['e']*res['g'] - res['f']**2)/(res['E']*res['G'] - res['F']**2))
     return res
 
 def curvaturaGauss_pt_uv(res : dict ={}) -> dict:
@@ -499,7 +497,7 @@ def curvaturaGauss_pt_uv(res : dict ={}) -> dict:
     if 'e_pt' not in res:
         segundaFormaFundamental_pt_uv(res)
 
-    res['K_pt'] = simplifica((res['e_pt']*res['g_pt'] - res['f_pt']**2)/(res['E_pt']*res['G_pt'] - res['F_pt']**2), res)
+    res['K_pt'] = sp.simplify((res['e_pt']*res['g_pt'] - res['f_pt']**2)/(res['E_pt']*res['G_pt'] - res['F_pt']**2))
     return res
 
 def curvaturaGauss_pt_xyz(res : dict ={}) -> dict:
@@ -532,8 +530,8 @@ def curvaturaMedia(res : dict ={}) -> dict:
         primeraFormaFundamental(res)
     if 'e' not in res:
         segundaFormaFundamental(res)
-    res['H'] = simplifica((res['e']*res['G'] + res['g']*res['E'] - 2*res['f']*res['F'])
-                                  /(2*(res['E']*res['G'] - res['F']**2)), res)
+    res['H'] = sp.simplify((res['e']*res['G'] + res['g']*res['E'] - 2*res['f']*res['F'])
+                                  /(2*(res['E']*res['G'] - res['F']**2)))
     return res
 
 def curvaturaMedia_pt_uv(res : dict ={}) -> dict:
@@ -549,8 +547,8 @@ def curvaturaMedia_pt_uv(res : dict ={}) -> dict:
     if 'e_pt' not in res:
         segundaFormaFundamental_pt_uv(res)
     
-    res['H_pt'] = simplifica((res['e_pt']*res['G_pt'] + res['g_pt']*res['E_pt'] - 2*res['f_pt']*res['F_pt'])
-                                     /(2*(res['E_pt']*res['G_pt'] - res['F_pt']**2)), res)
+    res['H_pt'] = sp.simplify((res['e_pt']*res['G_pt'] + res['g_pt']*res['E_pt'] - 2*res['f_pt']*res['F_pt'])
+                                     /(2*(res['E_pt']*res['G_pt'] - res['F_pt']**2)))
     return res
 
 def curvaturaMedia_pt_xyz(res : dict ={}) -> dict:
@@ -583,9 +581,9 @@ def curvaturasPrincipales(res : dict ={}) -> dict:
         curvaturaGauss(res)
     if 'H' not in res:
         curvaturaMedia(res)
-    raiz = simplifica(sp.sqrt(res['H']**2 - res['K']), res)
-    res['k1'] = simplifica(res['H'] + raiz, res)
-    res['k2'] = simplifica(res['H'] - raiz, res)
+    raiz = sp.simplify(sp.sqrt(res['H']**2 - res['K']))
+    res['k1'] = sp.simplify(res['H'] + raiz)
+    res['k2'] = sp.simplify(res['H'] - raiz)
     return res
 
 def curvaturasPrincipales_pt_uv(res : dict ={}) -> dict:
@@ -600,9 +598,9 @@ def curvaturasPrincipales_pt_uv(res : dict ={}) -> dict:
         curvaturaGauss_pt_uv(res)
     if 'H_pt' not in res:
         curvaturaMedia_pt_uv(res)
-    raiz = simplifica(sp.sqrt(res['H_pt']**2 - res['K_pt']), res)
-    res['k1_pt'] = simplifica(res['H_pt'] + raiz, res)
-    res['k2_pt'] = simplifica(res['H_pt'] - raiz, res)
+    raiz = sp.simplify(sp.sqrt(res['H_pt']**2 - res['K_pt']))
+    res['k1_pt'] = sp.simplify(res['H_pt'] + raiz)
+    res['k2_pt'] = sp.simplify(res['H_pt'] - raiz)
     return res
 
 def curvaturasPrincipales_pt_xyz(res : dict ={}) -> dict:
@@ -652,7 +650,7 @@ def clasicPt_uv(res : dict ={}) -> dict:
         elif res['K_pt'] == 0:
             if 'k1_pt' not in res:
                 curvaturasPrincipales_pt_uv(res)
-            if simplifica(res['k1_pt']-res['k2_pt']) == 0:
+            if sp.simplify(res['k1_pt']-res['k2_pt']) == 0:
                 res['clasif_pt'] = 'Planar'
             else:
                 res['clasif_pt'] = 'Parabólico'
@@ -689,11 +687,11 @@ def weingarten(res : dict ={}) -> dict:
     if 'e' not in res:
         segundaFormaFundamental(res)
 
-    denom = simplifica(res['E']*res['G'] - res['F']**2, res)
-    res['W'] = simplifica(sp.Matrix([[res['e']*res['G']-res['f']*res['F'], 
+    denom = sp.simplify(res['E']*res['G'] - res['F']**2)
+    res['W'] = sp.simplify(sp.Matrix([[res['e']*res['G']-res['f']*res['F'], 
                     res['f']*res['G']-res['g']*res['F']], 
                     [res['f']*res['E']-res['e']*res['F'], 
-                    res['g']*res['E']-res['f']*res['F']]])/denom, res)
+                    res['g']*res['E']-res['f']*res['F']]])/denom)
     return res
 
 def weingarten_pt_uv(res : dict ={}) -> dict:
@@ -709,7 +707,7 @@ def weingarten_pt_uv(res : dict ={}) -> dict:
     if 'e_pt' not in res:
         segundaFormaFundamental_pt_uv(res)
 
-    denom = simplifica(res['E_pt']*res['G_pt'] - res['F_pt']**2, res)
+    denom = sp.simplify(res['E_pt']*res['G_pt'] - res['F_pt']**2)
     res['W_pt'] = sp.Matrix([[res['e_pt']*res['G_pt']-res['f_pt']*res['F_pt'], 
                     res['f_pt']*res['G_pt']-res['g_pt']*res['F_pt']], 
                     [res['f_pt']*res['E_pt']-res['e_pt']*res['F_pt'], 
@@ -746,7 +744,6 @@ def dirPrinc(res : dict ={}) -> dict:
         weingarten(res)
 
     autovalores = res['W'].eigenvects(simplify=True)
-
     if autovalores[0][1] == 2:
         res['k1'] = autovalores[0][0]
         res['k2'] = autovalores[0][0]
@@ -760,8 +757,8 @@ def dirPrinc(res : dict ={}) -> dict:
     else:
         raise Exception("No se ha podido calcular los autovectores")
 
-    res['d1'] = simplifica(res['coord_d1'][0]*res['du'] + res['coord_d1'][1]*res['dv'], res)
-    res['d2'] = simplifica(res['coord_d2'][0]*res['du'] + res['coord_d2'][1]*res['dv'], res)
+    res['d1'] = sp.simplify(res['coord_d1'][0]*res['du'] + res['coord_d1'][1]*res['dv'])
+    res['d2'] = sp.simplify(res['coord_d2'][0]*res['du'] + res['coord_d2'][1]*res['dv'])
     return res
     
 def dirPrinc_pt_uv(res : dict ={}) -> dict:
@@ -783,17 +780,16 @@ def dirPrinc_pt_uv(res : dict ={}) -> dict:
         res['coord_d1_pt'] = autovalores[0][-1][0]
         res['coord_d2_pt'] = autovalores[0][-1][1]
     elif autovalores[0][1] == 1:
-        pos_k1 = 0 if autovalores[0][0] >= autovalores[1][0] else 1
-        pos_k2 = 1 if pos_k1 == 0 else 0
-        res['k1_pt'] = autovalores[pos_k1][0]
-        res['k2_pt'] = autovalores[pos_k2][0]
-        res['coord_d1_pt'] = autovalores[pos_k1][-1][0]
-        res['coord_d2_pt'] = autovalores[pos_k2][-1][0]
+        autovalores = sorted(autovalores, key=lambda x: x[0], reverse=True)
+        res['k1_pt'] = autovalores[0][0]
+        res['k2_pt'] = autovalores[1][0]
+        res['coord_d1_pt'] = autovalores[0][-1][0]
+        res['coord_d2_pt'] = autovalores[1][-1][0]
     else:
         raise Exception("No se ha podido calcular los autovectores")
     
-    res['d1_pt'] = simplifica(res['coord_d1_pt'][0]*res['du_pt'] + res['coord_d1_pt'][1]*res['dv_pt'], res)
-    res['d2_pt'] = simplifica(res['coord_d2_pt'][0]*res['du_pt'] + res['coord_d2_pt'][1]*res['dv_pt'], res)
+    res['d1_pt'] = sp.simplify(res['coord_d1_pt'][0]*res['du_pt'] + res['coord_d1_pt'][1]*res['dv_pt'])
+    res['d2_pt'] = sp.simplify(res['coord_d2_pt'][0]*res['du_pt'] + res['coord_d2_pt'][1]*res['dv_pt'])
     return res
 
 def dirPrinc_pt_xyz(res : dict ={}) -> dict:
@@ -868,8 +864,8 @@ def descripccion(res : dict ={}) -> dict:
     curvaturaGauss(res)
     curvaturaMedia(res)
     planoTangente(res)
-    denom = simplifica(res['E']*res['G'] - res['F']**2, res)
-    W = simplifica(sp.Matrix([[res['e']*res['G']-res['f']*res['F'], 
+    denom = sp.simplify(res['E']*res['G'] - res['F']**2)
+    W = sp.simplify(sp.Matrix([[res['e']*res['G']-res['f']*res['F'], 
                     res['f']*res['G']-res['g']*res['F']], 
                     [res['f']*res['E']-res['e']*res['F'], 
                     res['g']*res['E']-res['f']*res['F']]])/denom, res)
@@ -889,8 +885,8 @@ def descripccion(res : dict ={}) -> dict:
     else:
         raise Exception("No se ha podido calcular los autovectores")
     
-    res['d1'] = simplifica(res['coord_d1'][0]*res['du'] + res['coord_d1'][1]*res['dv'], res)
-    res['d2'] = simplifica(res['coord_d2'][0]*res['du'] + res['coord_d2'][1]*res['dv'], res)
+    res['d1'] = sp.simplify(res['coord_d1'][0]*res['du'] + res['coord_d1'][1]*res['dv'])
+    res['d2'] = sp.simplify(res['coord_d2'][0]*res['du'] + res['coord_d2'][1]*res['dv'])
     umbilico(res)
     return res
 
@@ -919,16 +915,15 @@ def descripccion_pt_uv(res : dict ={}) -> dict:
         res['coord_d1_pt'] = autovalores[0][-1][0]
         res['coord_d2_pt'] = autovalores[0][-1][1]
     elif autovalores[0][1] == 1:
-        pos_k1 = 0 if autovalores[0][0] >= autovalores[1][0] else 1
-        pos_k2 = 1 if pos_k1 == 0 else 0
-        res['k1_pt'] = autovalores[pos_k1][0]
-        res['k2_pt'] = autovalores[pos_k2][0]
-        res['coord_d1_pt'] = autovalores[pos_k1][-1][0]
-        res['coord_d2_pt'] = autovalores[pos_k2][-1][0]
+        autovalores = sorted(autovalores, key=lambda x: x[0], reverse=True)
+        res['k1_pt'] = autovalores[0][0]
+        res['k2_pt'] = autovalores[1][0]
+        res['coord_d1_pt'] = autovalores[0][-1][0]
+        res['coord_d2_pt'] = autovalores[1][-1][0]
     else:
         raise Exception("No se ha podido calcular los autovectores")
-    res['d1_pt'] = simplifica(res['coord_d1_pt'][0]*res['du_pt'] + res['coord_d1_pt'][1]*res['dv_pt'], res)
-    res['d2_pt'] = simplifica(res['coord_d2_pt'][0]*res['du_pt'] + res['coord_d2_pt'][1]*res['dv_pt'], res)
+    res['d1_pt'] = sp.simplify(res['coord_d1_pt'][0]*res['du_pt'] + res['coord_d1_pt'][1]*res['dv_pt'])
+    res['d2_pt'] = sp.simplify(res['coord_d2_pt'][0]*res['du_pt'] + res['coord_d2_pt'][1]*res['dv_pt'])
     clasicPt_uv(res)
     umbilico_pt_uv(res)
     return res
