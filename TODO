@@ -1,43 +1,22 @@
 EP-en proceso
 H-Hecho
 
--TODO-¿cono es superficie de nivel?
--TODO-¿dominios de variables? (union, finiteSet). solo considerar rectangulos abiertos y discos o elipses abiertas
--TODO- Revisar la llamada (los criculos no estan bien): http://127.0.0.1:5000/grafica?superficie=[cos(u),sin(u),v]&dom_var1=(0,2*pi)&dom_var2=(0,3)&u0=0.5&v0=0.5
--TODO: reparametrizar para que las curvaturas esten normalizadas (no dependa de parametrizacion)
--TODO: mirar para simplificar abs(cos(u)) si esta en ciertos valores
--TODO: arreglar direcciones principales (ver cual es mayor y menor) cuando no se da punto
 
--TODO:Revisar toda la representación
--TODO:Dar opción de representar superficie con varios vectores normales
--TODO:H-Dar opción de representar superficie junto con direcciones principales.
--TODO:H-Revisar que opciones hay para describir tanto constante como función general.
--TODO:EP-¿Dejar que haya variable infinita?
--TODO:EP-Dar opción de dar valores para u y para v, ademas dejar describirla.
--TODO:Dar opción de describir derivadas de función, no solo de función en si.
--TODO:EP-Comprobar que una superficie es regular y diferenciable. Pag 49
-    -¿compruebo que es inyectiva?
-    -¿Compruebo que es regular en un dominio?
--TODO:Hacer lo que se pueda con superficies de nivel (o implicitas).
--TODO:EP-Comprobar que superficies de nivel es diferenciable. Pag 53
+-TODO: reparametrizar para que las curvaturas esten normalizadas (no dependa de parametrizacion)
+
 -TODO:Poner el ejemplo de parametrizacion de Monge. Pag 62. http://127.0.0.1:5000/plano_tangente?superficie=[u, u, f]&func=[f(u,v)]
 -TODO:Poner ejemplos superficies de revolución. Pag 63
 -TODO:Poner ejemplo toro
 -TODO:Poner ejemplo helicoide. Pag 70
 -TODO:Hacer los ejemplos que puso Juan en el correo
+
 -TODO:¿Área de una superficie? Pag 74
--TODO:Vector unitario normal a superficie de nivel. Pag 81
--TODO:H-¿Aplicación de Weingarten?. Pag 97 -SI
 -TODO:¿Paraboloide osculador?. Pag 102 -No
--TODO:EP-¿Puntos umbílicos?. Pag 107 -Si, dado un punto decir si lo es
 -TODO:¿Curvatura normal?. Pag 109 _ Por el momento no
 -TODO:¿Expresión canónica del paraboloide osculador?. Pag 111
 -TODO:¿Direcciones asintóticas?. Pag 113
 -TODO:¿Símbolos de Christoffel?. Pag 118
 -TODO:¿Superficies regladas?. Pag 125
 -TODO:¿Curva de estricción de superficies regladas?. Pag 133
+
 -TODO:Hacer bien los test
--TODO:Mirar como poder pasarle condiciones y valores a u y v
-
-
-Proxima reunion: curvaturas principales-explicar y ver si funciona bien

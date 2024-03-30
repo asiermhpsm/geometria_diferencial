@@ -92,7 +92,7 @@ def tangente_pt(res: dict={}) -> dict:
     res          diccionario con todos los resultados calculados hasta el momento
     """
     ec_subs = res['sup'].subs({res['x']: res['x0'], res['y']: res['y0'], res['z']: res['z0']})
-    if len(ec_subs.free_symbols)==0 and ec_subs != 0:
+    if len(ec_subs.free_symbols)==0 and abs(ec_subs) > 0.1:
         raise ValueError('El punto no está en la superficie')
     
     if 'dx' not in res:
@@ -147,7 +147,7 @@ def normal_pt(res: dict={}) -> dict:
     res          diccionario con todos los resultados calculados hasta el momento
     """
     ec_subs = res['sup'].subs({res['x']: res['x0'], res['y']: res['y0'], res['z']: res['z0']})
-    if len(ec_subs.free_symbols)==0 and ec_subs != 0:
+    if len(ec_subs.free_symbols)==0 and abs(ec_subs) > 0.1:
         raise ValueError('El punto no está en la superficie')
     
     if 'dx' not in res:

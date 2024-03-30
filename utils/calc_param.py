@@ -841,14 +841,14 @@ def umbilico_pt_uv(res : dict ={}) -> dict:
 
 def umbilico_pt_xyz(res : dict ={}) -> dict:
     """
-    Calcula los puntos umbílicos
+    Calcula si un punto es umbílico
     No se hacen comprobaciones de tipo
 
     Argumentos:
     res          diccionario con todos los res calculados hasta el momento
     """
     res['u0'], res['v0'] = xyz_to_uv(res['sup'], res['u'], res['v'], res['x0'], res['y0'], res['z0'])
-    return dirPrinc_pt_uv(res)
+    return umbilico_pt_uv(res)
 
 """
 -------------------------------------------------------------------------------
@@ -868,12 +868,12 @@ def descripccion(res : dict ={}) -> dict:
     curvaturaMedia(res)
     planoTangente(res)
     denom = sp.simplify(res['E']*res['G'] - res['F']**2)
-    W = sp.simplify(sp.Matrix([[res['e']*res['G']-res['f']*res['F'], 
+    res['W'] = sp.simplify(sp.Matrix([[res['e']*res['G']-res['f']*res['F'], 
                     res['f']*res['G']-res['g']*res['F']], 
                     [res['f']*res['E']-res['e']*res['F'], 
-                    res['g']*res['E']-res['f']*res['F']]])/denom, res)
-    res['W'] = sp.simplify(W)
-    autovalores = W.eigenvects(simplify=True)
+                    res['g']*res['E']-res['f']*res['F']]])/denom)
+
+    autovalores = res['W'].eigenvects(simplify=True)
 
     if autovalores[0][1] == 2:
         res['k1'] = autovalores[0][0]

@@ -263,12 +263,12 @@ def vector_normal():
 @param_surf_bp.route('/clasificacion_punto')
 def clasificacion_punto():
     #TODO- ¿como tranformar a Latex?
-    return jsonify(procesar_solicitud_param(calcp.clasicPt_uv, calcp.clasicPt_uv, calcp.clasicPt_xyz))
+    return jsonify(procesar_solicitud_param(None, calcp.clasicPt_uv, calcp.clasicPt_xyz, aLatex))
 
 @param_surf_bp.route('/punto_umbilico')
 def punto_umbilico():
     #TODO- ¿como tranformar a Latex?
-    return jsonify(procesar_solicitud_param(calcp.umbilico, calcp.umbilico_pt_uv, calcp.umbilico_pt_xyz))
+    return jsonify(procesar_solicitud_param(calcp.umbilico, calcp.umbilico_pt_uv, calcp.umbilico_pt_xyz, aLatex))
 
 @param_surf_bp.route('/plano_tangente')
 def plano_tangente():
@@ -276,7 +276,7 @@ def plano_tangente():
 
 @param_surf_bp.route('/weingarten')
 def weingarten():
-    return jsonify(procesar_solicitud_param(calcp.weingarten, calcp.weingarten_pt_uv, calcp.planoTangenteweingarten_pt_xyzpt_xyz, tx.res_Weingarten))
+    return jsonify(procesar_solicitud_param(calcp.weingarten, calcp.weingarten_pt_uv, calcp.weingarten_pt_xyz, tx.res_Weingarten))
 
 @param_surf_bp.route('/direcciones_principales')
 def direcciones_principales():
