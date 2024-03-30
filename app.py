@@ -1,52 +1,175 @@
-from flask import Flask, request, send_file, jsonify
-import io
-from PIL import Image
+from flask import Flask, request, jsonify, Blueprint
+
 import sympy as sp
-import numpy as np
 import re
 
-from mayavi import mlab
+import plotly.graph_objects as go
 
-from matplotlib.image import imsave
-#from matplotlib import colormaps
-#import matplotlib.colors as mcolors
+import utils.utils as utils
+import utils.calc_param as calcp
+import utils.calc_imp as calci
+import utils.graph as graph
+import utils.toLatex as tx
+from utils.graph import *
 
-from utils import *
-#from utils_graph import *
-
-mlab.options.offscreen = True
+app = Flask(__name__)
 
 """
 -------------------------------------------------------------------------------
 FUNCIONES AUXILIARES Y ATRIBUTOS GENERALES
 -------------------------------------------------------------------------------
 """
+#Opciones que pueden describir a una variable, constante o función
+OPCIONES_VAR = ['infinite', 'finite', 'real', 'extended_real', 'rational', 'irrational', 
+                 'integer', 'noninteger', 'even', 'odd', 'prime', 'composite', 
+                 'zero', 'nonzero', 'extended_nonzero', 'positive', 'nonnegative', 
+                 'negative', 'nonpositive', 'extended_positive', 'extended_nonnegative',
+                 'extended_negative', 'extended_nonpositive']
 
-#colormapas = list(colormaps)
-#colores = list(mcolors.BASE_COLORS.keys())+list(mcolors.TABLEAU_COLORS.keys()) + list(mcolors.CSS4_COLORS.keys()) + list(mcolors.XKCD_COLORS.keys())
+def extrae_dominio(dom_var: str) -> tuple:
+    """
+    Extrae el dominio de una variable, si se le pasa algo que no es un string devuelve el dominio de los reales.
+    La entrada debe ser de la forma "(a, b)"
 
-def procesar_parametrizacion():
+    Argumentos:
+    dom_var             string con el dominio de la variable
+    """
+    dominio = sp.S.Reals
+    if isinstance(dom_var, str):
+        dom_var = dom_var.replace(' ', '')
+        lista_dom_var = dom_var.split(',')
+        if len(lista_dom_var) != 2:
+            raise Exception(f"Error al procesar el dominio: {dom_var}")
+        
+        start = sp.sympify(lista_dom_var[0].strip('()'))
+        end = sp.sympify(lista_dom_var[1].strip('()'))
+        if not start.is_number or not end.is_number:
+            raise Exception(f"Error al procesar el dominio: {dom_var}")
+        dominio = sp.Interval.open(start, end)
+    return dominio
+
+def extrae_opciones_var(string: str) -> tuple:
+    """
+    Extrae el nombre de una variable y sus opciones. La entrada debe ser de la forma "[nombre, opcion1, opcion2, ...]"
+
+    Argumentos:
+    string              string con el nombre de la variable y sus opciones
+    """
+    partes  = string.replace(' ', '').strip('[]').split(',')
+    opciones_dict = {}
+    for opcion in partes[1:]:
+        if opcion in OPCIONES_VAR:
+            opciones_dict[opcion] = True
+    return partes[0], opciones_dict
+
+def obtiene_valor_pt(pt: str):
+    """
+    Obtiene el valor de un punto pasado a objeto sympy
+
+    Argumentos:
+    pt              string con el valor del punto que se quiere obtener
+    """
+    pt = sp.sympify(pt) if pt else None
+    if pt != None and not pt.is_number:
+        pt = None
+    return pt
+
+def aLatex(res: dict) -> str:
+    return {k: str(v) for k, v in res.items()}
+
+
+"""
+-------------------------------------------------------------------------------
+SUPERFICIE PARAMETRIZADA
+-------------------------------------------------------------------------------
+"""
+param_surf_bp = Blueprint('parametrizada', __name__)
+
+#FUNCION AUXILIARES
+def procesar_solicitud_param(func: callable, func_pt_uv: callable, func_pt_xyz: callable, dict2latex: callable) -> dict:
     """
     Procesa una solicitud
+    Argumentos:
+    func                funcion a ejecutar sin punto especifico
+    func_pt_uv          funcion a ejecutar con punto especifico en función de u, v
+    func_pt_xyz         funcion a ejecutar con punto especifico en función de x, y, z
+    dict2latex          funcion que convierte el resultado a latex
     """
-    var1 = request.args.get('var1', None)
-    var2 = request.args.get('var2', None)
-    superficie_str  = request.args.get('superficie')
-    const_str = request.args.getlist('const')
-    func_str = request.args.getlist('func')
-    
+    #TODO: manera de devolver los resultados
+    dict2latex = aLatex
+
+    superficie_str  = request.args.get('superficie', None)
     if not superficie_str:
+        # TODO: Devolver teoría
         raise Exception("No se ha encontrado la parametrización de la superficie")
 
+    #Se consigue la parametrización de la superficie convertida a objeto sympy
+    func_str = request.args.getlist('func')
     try:
-        superficie, u, v = normaliza_parametrizacion(var1, var2, superficie_str, const_str, func_str)
+        superficie, variables = normaliza_parametrizacion(request.args.get('var1', None), 
+                                                          request.args.get('var2', None), 
+                                                          superficie_str, 
+                                                          request.args.getlist('const'), 
+                                                          func_str)
     except Exception as e:
         # TODO: ¿Qué hacer si hay un error?
         raise e
 
-    return superficie, u, v
+    #Se extraen los dominios de las variables
+    dom_u = extrae_dominio(request.args.get('dom_var1', None))
+    dom_v = extrae_dominio(request.args.get('dom_var2', None))
+    
+    resultados = {
+        'sup' : superficie,
+        'u' : variables['u'],
+        'v' : variables['v'],
+        'dom_u' : dom_u,
+        'dom_v' : dom_v
+    }
 
-def normaliza_parametrizacion(var1, var2, sup, consts, func):
+    cond_str = request.args.get('cond', None)
+    if cond_str != None:
+        resultados['cond'] = sp.sympify(cond_str, locals=variables)
+    
+    #Se comprueba si la superficie es regular (solo si se tiene una superficies sin funciones)
+    if func_str == [] and not calcp.esRegular(resultados):
+        raise Exception("La superficie parametrizada no es regular")
+    
+    #Variable para saber si simplificar los valores absolutos de las funciones trigonometricas
+    simp_trig = True if request.args.get('trig', None)!=None else False
+
+    #Se obtiene el punto a clasificar si hubiese y se devuelve los resultados
+    u0 = obtiene_valor_pt(request.args.get('u0', None))
+    v0 = obtiene_valor_pt(request.args.get('v0', None))
+    if u0!=None and v0!=None :
+        resultados['u0'] = u0
+        resultados['v0'] = v0
+        func_pt_uv(resultados)
+        if simp_trig:
+            utils.aplica_simplificaciones(resultados)
+        return dict2latex(resultados)
+
+    x0 = obtiene_valor_pt(request.args.get('x0', None))
+    y0 = obtiene_valor_pt(request.args.get('y0', None))
+    z0 = obtiene_valor_pt(request.args.get('z0', None))
+    if x0!=None and y0!=None and z0!=None:
+        resultados['x0'] = x0
+        resultados['y0'] = y0
+        resultados['z0'] = z0
+        func_pt_xyz(resultados)
+        if simp_trig:
+            utils.aplica_simplificaciones(resultados)
+        return dict2latex(resultados)
+    
+    if func_pt_uv is calcp.clasicPt_uv:
+        raise Exception("No se ha definido correctamente el punto a clasificar")
+    
+    func(resultados)
+    if simp_trig:
+        utils.aplica_simplificaciones(resultados)
+    return dict2latex(resultados)
+
+def normaliza_parametrizacion(var1: str, var2: str, sup: str, consts: list, funcs: list) -> tuple:
     """
     Transforma la parametrización de una superficie a una expresion sympy con sus variable correspondientes
     No se hacen comprobaciones de tipo
@@ -60,365 +183,387 @@ def normaliza_parametrizacion(var1, var2, sup, consts, func):
     """
     variables = {}
 
-    if not var1:
-        var1='u'
-    u = sp.symbols(var1, real=True)
+    #Se obtiene la primera variable de la parametrización, por defecto es 'u'. Siempre real
+    opciones = {}
+    if not var1: var1='u'
+    elif ',' in var1: var1, opciones = extrae_opciones_var(var1)
+    opciones['real'] = True
+    u = sp.symbols(var1, **opciones)
     variables[var1] = u
 
-    if not var2:
-        var2='v'
-    v = sp.symbols(var2, real=True)
+    #Se obtiene la segunda variable de la parametrización, por defecto es 'v'. Siempre real
+    opciones = {}
+    if not var2: var2='v'
+    elif ',' in var2: var2, opciones = extrae_opciones_var(var2)
+    opciones['real'] = True
+    v = sp.symbols(var2, **opciones)
     variables[var2] = v
 
-    #https://docs.sympy.org/latest/guides/assumptions.html#predicates
-    #https://docs.sympy.org/latest/modules/core.html#module-sympy.core.assumptions
-    if consts:
-        for elem in consts:
-            partes  = elem.strip('[]').split(',')
-            nombre_variable = partes[0].strip()
-            opciones = partes[1:]
-            opciones_dict = {}
-            for opcion in opciones:
-                opciones_dict[opcion.strip()] = True
-            opciones_dict['real'] = True
-            variables[nombre_variable] = sp.symbols(nombre_variable, **opciones_dict)
+    #Se obtiene la descripción de las constantes
+    #La lista debe ser de la forma ["[a, positive]", "[b]", "c, real", ...]
+    for const in consts:
+        nombre, opciones = extrae_opciones_var(const)
+        opciones['real'] = True
+        variables[nombre] = sp.symbols(nombre, **opciones)
     
-    if func:
-        for elem in func:
-            elem = elem.replace(' ', '')
-            partes  = elem.strip('[]').split(')')
-            definicion_func = re.split(r'[(),]', partes[0])
-            definicion_func = [elemento.strip() for elemento in definicion_func if elemento.strip() != '']
-            nombre_func = definicion_func[0]
-            variables_func = [variables[var] for var in definicion_func[1:]]
-            descripciones = partes[1].split(',')
-            descripciones_dict = {}
-            for descripcion in descripciones:
-                descripciones_dict[descripcion.strip()] = True
-            descripciones_dict['real'] = True
-            variables[nombre_func] = sp.Function(nombre_func, **descripciones_dict)(*variables_func)
+    #Se obtiene la descripción de las funciones.
+    #La lista debe ser de la forma ["[f(x,y), positive]", "[g(x)]", "h(a,x), real", ...]
+    for func in funcs:
+        if '(' not in func or ')' not in func:
+            raise Exception(f'No se ha podido procesar las variables de las que depende {func}')
+        partes  = func.replace(' ', '').strip('[]').split(')')
+        definicion_func = list(re.split(r'[(),]', partes[0]))
+        nombre_func = definicion_func[0]
+        variables_func = [variables[var] for var in definicion_func[1:]]
+        descripciones = partes[1].split(',')
+        descripciones_dict = {}
+        for descripcion in descripciones:
+            if descripcion in OPCIONES_VAR:
+                descripciones_dict[descripcion] = True
+        descripciones_dict['real'] = True
+        variables[nombre_func] = sp.Function(nombre_func, **descripciones_dict)(*variables_func)
+        sup = re.sub(nombre_func+r'\(([\w,]+)\)', nombre_func, sup)
 
-    elementos_str = sup.strip('[]').split(',')
+    #Se obtiene la superficie parametrizada a expresion sympy
+    superficie = sup.strip('[] ').split(',')
+    if len(superficie) == 3:
+        try:
+            return sp.Matrix([sp.sympify(elem, locals=variables) for elem in superficie]), variables
+        except Exception as e:
+            raise Exception(f"Error al procesar la superficie: {e}")
+    else:
+        raise Exception(f"Error al procesar la superficie: {sup}")
+
+
+#ENDPOINTS
+@param_surf_bp.route('/primera_forma_fundamental')
+def primera_forma_fundamental():
+    return jsonify(procesar_solicitud_param(calcp.primeraFormaFundamental, calcp.primeraFormaFundamental_pt_uv, calcp.primeraFormaFundamental_pt_xyz, tx.res_PFF))
+
+@param_surf_bp.route('/segunda_forma_fundamental')
+def segunda_forma_fundamental():
+    return jsonify(procesar_solicitud_param(calcp.segundaFormaFundamental, calcp.segundaFormaFundamental_pt_uv, calcp.segundaFormaFundamental_pt_xyz, tx.res_SFF))
+
+@param_surf_bp.route('/curvatura_Gauss')
+def curvatura_Gauss():
+    return jsonify(procesar_solicitud_param(calcp.curvaturaGauss, calcp.curvaturaGauss_pt_uv, calcp.curvaturaGauss_pt_xyz, tx.res_curv_Gauss))
+
+@param_surf_bp.route('/curvatura_media')
+def curvatura_media():
+    return jsonify(procesar_solicitud_param(calcp.curvaturaMedia, calcp.curvaturaMedia_pt_uv, calcp.curvaturaMedia_pt_xyz, tx.res_curv_media))
+
+@param_surf_bp.route('/curvaturas_principales')
+def curvaturas_principales():
+    return jsonify(procesar_solicitud_param(calcp.curvaturasPrincipales, calcp.curvaturasPrincipales_pt_uv, calcp.curvaturasPrincipales_pt_xyz, tx.res_curv_media))
+
+@param_surf_bp.route('/vector_normal')
+def vector_normal():
+    return jsonify(procesar_solicitud_param(calcp.normal, calcp.normal_pt_uv, calcp.normal_pt_xyz, tx.res_normal))
+
+@param_surf_bp.route('/clasificacion_punto')
+def clasificacion_punto():
+    #TODO- ¿como tranformar a Latex?
+    return jsonify(procesar_solicitud_param(None, calcp.clasicPt_uv, calcp.clasicPt_xyz, aLatex))
+
+@param_surf_bp.route('/punto_umbilico')
+def punto_umbilico():
+    #TODO- ¿como tranformar a Latex?
+    return jsonify(procesar_solicitud_param(calcp.umbilico, calcp.umbilico_pt_uv, calcp.umbilico_pt_xyz, aLatex))
+
+@param_surf_bp.route('/plano_tangente')
+def plano_tangente():
+    return jsonify(procesar_solicitud_param(calcp.planoTangente, calcp.planoTangente_pt_uv, calcp.planoTangente_pt_xyz, tx.res_tangente))
+
+@param_surf_bp.route('/weingarten')
+def weingarten():
+    return jsonify(procesar_solicitud_param(calcp.weingarten, calcp.weingarten_pt_uv, calcp.weingarten_pt_xyz, tx.res_Weingarten))
+
+@param_surf_bp.route('/direcciones_principales')
+def direcciones_principales():
+    return jsonify(procesar_solicitud_param(calcp.dirPrinc, calcp.dirPrinc_pt_uv, calcp.dirPrinc_pt_xyz, tx.res_dirs_princ))
+
+@param_surf_bp.route('/description')
+def description():
+    return jsonify(procesar_solicitud_param(calcp.descripccion, calcp.descripccion_pt_uv, calcp.descripccion_pt_xyz, aLatex))
+
+@param_surf_bp.route('/grafica')
+def grafica():
+    superficie_str  = request.args.get('superficie', None)
+    #Ejemplo: 
+    # http://127.0.0.1:5000/grafica?superficie=[cos(u)*cos(v),%20cos(u)*sin(v),%20sin(u)]&dom_var1=(-pi/2,pi/2)&dom_var2=(0,2*pi)
+    # http://127.0.0.1:5000/grafica?superficie=[cos(u)*cos(v),%20cos(u)*sin(v),%20sin(u)]&dom_var1=(-pi/2,pi/2)&dom_var2=(0,2*pi)&u0=0.5&v0=0.5
+    # http://127.0.0.1:5000/grafica?superficie=x**2-y**2-z**2-1
+    # http://127.0.0.1:5000/grafica?superficie=x**2%2By**2%2Bz**2-1&dom_var1=[-1,1]&dom_var2=[-1,1]&dom_var3=[-1,1]&x0=0&y0=0&z0=1
+
+    if superficie_str == None:
+        #TODO_ Devolver teoría
+        raise Exception("No se ha encontrado la parametrización de la superficie")
+    else:
+        #Se obtienen las variables de la parametrización
+        variables = {}
+
+        opciones = {}
+        var1 = request.args.get('var1', None)
+        if not var1: var1='u'
+        elif ',' in var1: var1, opciones = extrae_opciones_var(var1)
+        opciones['real'] = True
+        u = sp.symbols(var1, **opciones)
+        variables[var1] = u
+
+        opciones = {}
+        var2 = request.args.get('var2', None)
+        if not var2: var2='v'
+        elif ',' in var2: var2, opciones = extrae_opciones_var(var2)
+        opciones['real'] = True
+        v = sp.symbols(var2, **opciones)
+        variables[var2] = v
+
+
+        #Se obtiene la superficie parametrizada a expresion sympy
+        superficie = superficie_str.strip('[] ').split(',')
+        if len(superficie) == 3:
+            try:
+                sup = sp.Matrix([sp.sympify(elem, locals=variables) for elem in superficie])
+            except Exception as e:
+                raise Exception(f"Error al procesar la superficie: {e}")
+        else:
+            raise Exception(f"Error al procesar la superficie: {superficie_str}")
+        
+        if not sup.free_symbols.issubset(set([u, v])):
+            raise Exception("Se han detectado variables no permitidas, solo se permiten u,v")
+
+        #Si el dominio de la variables es de la forma a*u+b*v<r se representa directamente
+        cond_str = request.args.get('cond', None)
+        if cond_str!=None:
+            sy_cond = sp.sympify(cond_str, locals=variables)
+            if sy_cond.free_symbols.issubset(set([u, v])) and isinstance(sy_cond, sp.StrictLessThan):
+                expr = sy_cond.lhs - sy_cond.rhs
+                a = expr.coeff(u**2)
+                b = expr.coeff(v**2)
+                r = expr - a*u**2 - b*v**2
+                if r.is_constant():
+                    a = a/-r
+                    b = b/-r
+                    fig = graph.sup_param_cond_elipse(sup, u, v, a, b)
+                    return fig.to_html(include_mathjax="cdn")
+
+        #Se extraen los dominios de las variables
+        dom_u = extrae_dominio(request.args.get('dom_var1', None))
+        if dom_u==sp.S.Reals or not isinstance(dom_u, sp.Interval):
+            dom_u = sp.Interval(-5, 5)
+        dom_v = extrae_dominio(request.args.get('dom_var2', None))
+        if dom_v==sp.S.Reals or not isinstance(dom_v, sp.Interval):
+            dom_v = sp.Interval(-5, 5)
+
+        resultados = {
+            'sup' : sup,
+            'u' : u,
+            'v' : v,
+            'dom_u' : dom_u,
+            'dom_v' : dom_v
+        }
+
+        if not calcp.esRegular(resultados):
+            raise Exception("La superficie parametrizada no es regular")
+
+        u0 = obtiene_valor_pt(request.args.get('u0', None))
+        v0 = obtiene_valor_pt(request.args.get('v0', None))
+        if u0!=None and v0!=None :
+            fig = graph.param_desc_pt_uv(sup, u, v, u0, v0, dom_u=dom_u, dom_v=dom_v)
+            return fig.to_html(include_mathjax="cdn")
+        
+        x0 = obtiene_valor_pt(request.args.get('x0', None))
+        y0 = obtiene_valor_pt(request.args.get('y0', None))
+        z0 = obtiene_valor_pt(request.args.get('z0', None))
+        if x0!=None and y0!=None and z0!=None:
+            fig = graph.param_desc_pt_xyz(sup, u, v, x0, y0, z0, dom_u=dom_u, dom_v=dom_v)
+            return fig.to_html(include_mathjax="cdn")
+
+        fig = graph.sup_param(sup, u, v, dom_u=dom_u, dom_v=dom_v)
+        return fig.to_html(include_mathjax="cdn")
+    
+
+
+"""
+-------------------------------------------------------------------------------
+ENDPOINTS SUPERFICIE IMPLICITA
+-------------------------------------------------------------------------------
+"""
+imp_surf_bp = Blueprint('implicita', __name__)
+
+#FUNCION AUXILIARES
+def procesar_solicitud_imp(func: callable, func_pt: callable, dict2latex: callable) -> dict:
+    """
+    Procesa una solicitud
+    Argumentos:
+    func                funcion a ejecutar sin punto especifico
+    func_pt             funcion a ejecutar con punto especifico en función de x,y,z
+    dict2latex          funcion que convierte el resultado a latex
+    """
+    #TODO: manera de devolver los resultados
+    dict2latex = aLatex
+
+    #Se obtiene los parametros de la solicitud
+    superficie_str  = request.args.get('superficie', None)
+    func_str = request.args.getlist('func')
+    
+    if not superficie_str:
+        # TODO: Devolver teoría
+        raise Exception("No se ha encontrado la parametrización de la superficie")
+
+    #Se consigue la parametrización de la superficie convertida a objeto sympy
     try:
-        superficie = [sp.sympify(elem, locals=variables) for elem in elementos_str]
+        superficie, x, y, z = normaliza_implicita(superficie_str, request.args.getlist('const'), func_str)
+    except Exception as e:
+        # TODO: ¿Qué hacer si hay un error?
+        raise e
+    
+    resultados = {
+        'sup' : superficie,
+        'x' : x,
+        'y' : y,
+        'z' : z
+    }
+    
+    #Se comprueba si la superficie es regular (solo si se tiene una superficies sin funciones)
+    if func_str == [] and not calci.esSupNivel(resultados):
+        raise Exception("La superficie implicita no es superficie de nivel")
+    
+    #Se obtiene el punto a clasificar si hubiese y se devuelve los resultados
+    x0 = obtiene_valor_pt(request.args.get('x0', None))
+    y0 = obtiene_valor_pt(request.args.get('y0', None))
+    z0 = obtiene_valor_pt(request.args.get('z0', None))
+    if x0!=None and y0!=None and z0!=None:
+        resultados['x0'] = x0
+        resultados['y0'] = y0
+        resultados['z0'] = z0
+        func_pt(resultados)
+        return dict2latex(resultados)
+    
+    func(resultados)
+    return dict2latex(resultados)
+
+def normaliza_implicita(sup: str, consts: list, funcs: list) -> tuple:
+    """
+    Transforma la parametrización de una superficie a una expresion sympy con sus variable correspondientes
+    No se hacen comprobaciones de tipo
+
+    Argumentos:
+    sup                 string con la ecuación de la superficie
+    consts              lista de strings con constantes y su descripción
+    func                lista de strings con funciones y su descripción
+    """
+    x = sp.symbols('x', real=True)
+    y = sp.symbols('y', real=True)
+    z = sp.symbols('z', real=True)
+
+    variables = {'x':x, 'y':y, 'z':z}
+
+    #Se obtiene la descripción de las constantes
+    #La lista debe ser de la forma ["[a, positive]", "[b]", "c, real", ...]
+    for const in consts:
+        nombre, opciones = extrae_opciones_var(const)
+        opciones['real'] = True
+        variables[nombre] = sp.symbols(nombre, **opciones)
+    
+    #Se obtiene la descripción de las funciones.
+    #La lista debe ser de la forma ["[f(x,y), positive]", "[g(x)]", "h(a,x), real", ...]
+    for func in funcs:
+        if '(' not in func or ')' not in func:
+            raise Exception(f'No se ha podido procesar las variables de las que depende {func}')
+        partes  = func.replace(' ', '').strip('[]').split(')')
+        definicion_func = list(re.split(r'[(),]', partes[0]))
+        nombre_func = definicion_func[0]
+        variables_func = [variables[var] for var in definicion_func[1:]]
+        descripciones = partes[1].split(',')
+        descripciones_dict = {}
+        for descripcion in descripciones:
+            if descripcion in OPCIONES_VAR:
+                descripciones_dict[descripcion] = True
+        descripciones_dict['real'] = True
+        variables[nombre_func] = sp.Function(nombre_func, **descripciones_dict)(*variables_func)
+        sup = re.sub(nombre_func+r'\(([\w,]+)\)', nombre_func, sup)
+
+    #Se obtiene la superficie implicita a expresion sympy
+    try:
+        return sp.sympify(sup, locals=variables), x, y, z
     except Exception as e:
         raise Exception(f"Error al procesar la superficie: {e}")
-    if len(superficie) != 3:
-        raise Exception(f"La parametrización de la superficie debe tener 3 elementos pero se han encontrado {len(superficie)}")
-    
-    return sp.Matrix(superficie), u, v
-
-def convertir_a_string(diccionario):
-    def sustituir_derivadas(expr):
-        patrones = [
-            (r'Derivative\((\w+)\(([^),]+)\), (\w+)\)', r"\1'(\2)"),                             #Derivative(f(u), u) -> f'(u)
-            (r'Derivative\((\w+)\(([^),]+)\), \(([^,]+), 2\)\)', r"\1''(\2)"),                   #Derivative(f(u), (u, 2)) -> f''(u)
-            (r'Derivative\((\w+)\(([^,]+), ([^)]+)\), (\w+)\)', r'\1_\4(\2,\3)'),                #Derivative(f(u, v), u) -> f_u(u,v)
-            (r'Derivative\((\w+)\(([^,]+), ([^)]+)\), (\w+), (\w+)\)', r'\1_\4\5(\2,\3)'),       #Derivative(f(u, v), u, v) -> f_uv(u,v)
-            (r'Derivative\((\w+)\(([^,]+), ([^)]+)\), \(([^,]+), 2\)\)', r'\1_\4\4(\2,\3)'),     #Derivative(f(u, v), (u, 2)) -> f_uu(u,v)
-        ]
-        for patron, reemplazo in patrones:
-            expr = re.sub(patron, reemplazo, expr)
-        return expr
-    def convertir_valor(valor):
-        if isinstance(valor, (sp.Matrix, sp.MutableDenseMatrix, sp.ImmutableDenseMatrix)):
-            return sustituir_derivadas(str(tuple(valor)))
-        elif isinstance(valor, sp.Eq):
-            return sustituir_derivadas(str(valor.lhs)) + ' = ' + sustituir_derivadas(str(valor.rhs))
-        else:
-            return sustituir_derivadas(str(valor))
-
-    return {k: convertir_valor(v) for k, v in diccionario.items()}
 
 
-def grafica_sup_param(sup, u, v, limite_inf_u, limite_sup_u, limite_inf_v, limite_sup_v):
-    parametric_surface = sp.lambdify((u, v), sup, 'numpy')
-    u_values = np.linspace(float(limite_inf_u), float(limite_sup_u), 100)
-    v_values = np.linspace(float(limite_inf_v), float(limite_sup_v), 100)
-    u_values, v_values = np.meshgrid(u_values, v_values)
-    x, y, z = parametric_surface(u_values, v_values)
-    mlab.mesh(x, y, z, color=(0.2980392156862745, 0.4470588235294118, 0.6901960784313725))
-    return max(float(np.max(x)), float(np.max(y)), float(np.max(z)))
-
-def grafica_sup_ec(sup, x, y, z, limite_inf_x, limite_sup_x, limite_inf_y, limite_sup_y):
-    parametric_surface = sp.lambdify((x, y, z), sup, 'numpy')
-    x_vals, y_vals, z_vals = np.mgrid[limite_inf_x:limite_sup_x:100j, limite_inf_y:limite_sup_y:100j, -10:10:100j]
-    values = parametric_surface(x_vals, y_vals, z_vals)
-    mlab.contour3d(x_vals, y_vals, z_vals, values, contours=[0])
-
-def grafica_punto(punto):
-    mlab.points3d(*punto, color=(1, 0, 0), scale_factor=0.1, mode='sphere')
-
-def grafica_vector(inicio, vector):
-    mlab.quiver3d(*inicio, *vector, color=(0, 0, 1), scale_factor=1)
-
-
-"""
--------------------------------------------------------------------------------
-ENDPOINTS
--------------------------------------------------------------------------------
-"""
-app = Flask(__name__)
-
-@app.route('/primera_forma_fundamental')
-def primera_forma_fundamental():
-    superficie, u, v = procesar_parametrizacion()
-    resultados = {}
-
-    u0 = request.args.get('u0', None)
-    v0 = request.args.get('v0', None)
-    if u0 and v0:
-        primeraFormaFundamental_pt_uv(superficie, u, v, u0, v0, resultados)
-        return jsonify(convertir_a_string(resultados))
-
-    x0 = request.args.get('x0', None)
-    y0 = request.args.get('y0', None)
-    z0 = request.args.get('z0', None)
-    if x0 and y0 and z0:
-        primeraFormaFundamental_pt_xyz(superficie, u, v, x0, y0, z0, resultados)
-        return jsonify(convertir_a_string(resultados))
-    
-    primeraFormaFundamental(superficie, u, v, resultados)
-    return jsonify(convertir_a_string(resultados))
-
-@app.route('/segunda_forma_fundamental')
-def segunda_forma_fundamental():
-    superficie, u, v = procesar_parametrizacion()
-    resultados = {}
-
-    u0 = request.args.get('u0', None)
-    v0 = request.args.get('v0', None)
-    if u0 and v0:
-        segundaFormaFundamental_pt_uv(superficie, u, v, u0, v0, resultados)
-        return jsonify(convertir_a_string(resultados))
-
-    x0 = request.args.get('x0', None)
-    y0 = request.args.get('y0', None)
-    z0 = request.args.get('z0', None)
-    if x0 and y0 and z0:
-        segundaFormaFundamental_pt_xyz(superficie, u, v, x0, y0, z0, resultados)
-        return jsonify(convertir_a_string(resultados))
-    
-    segundaFormaFundamental(superficie, u, v, resultados)
-    return jsonify(convertir_a_string(resultados))
-
-@app.route('/curvatura_Gauss')
-def curvatura_Gauss():
-    superficie, u, v = procesar_parametrizacion()
-    resultados = {}
-    
-    u0 = request.args.get('u0', None)
-    v0 = request.args.get('v0', None)
-    if u0 and v0:
-        curvaturaGauss_pt_uv(superficie, u, v, u0, v0, resultados)
-        return jsonify(convertir_a_string(resultados))
-
-    x0 = request.args.get('x0', None)
-    y0 = request.args.get('y0', None)
-    z0 = request.args.get('z0', None)
-    if x0 and y0 and z0:
-        curvaturaGauss_pt_xyz(superficie, u, v, x0, y0, z0, resultados)
-        return jsonify(convertir_a_string(resultados))
-    
-    curvaturaGauss(superficie, u, v, resultados)
-    return jsonify(convertir_a_string(resultados))
-
-@app.route('/curvatura_media')
-def curvatura_media():
-    superficie, u, v = procesar_parametrizacion()
-    resultados = {}
-    
-    u0 = request.args.get('u0', None)
-    v0 = request.args.get('v0', None)
-    if u0 and v0:
-        curvaturaMedia_pt_uv(superficie, u, v, u0, v0, resultados)
-        return jsonify(convertir_a_string(resultados))
-
-    x0 = request.args.get('x0', None)
-    y0 = request.args.get('y0', None)
-    z0 = request.args.get('z0', None)
-    if x0 and y0 and z0:
-        curvaturaMedia_pt_xyz(superficie, u, v, x0, y0, z0, resultados)
-        return jsonify(convertir_a_string(resultados))
-    
-    curvaturaMedia(superficie, u, v, resultados)
-    return jsonify(convertir_a_string(resultados))
-
-@app.route('/curvaturas_principales')
-def curvaturas_principales():
-    superficie, u, v = procesar_parametrizacion()
-    resultados = {}
-    
-    u0 = request.args.get('u0', None)
-    v0 = request.args.get('v0', None)
-    if u0 and v0:
-        curvaturasPrincipales_pt_uv(superficie, u, v, u0, v0, resultados)
-        return jsonify(convertir_a_string(resultados))
-
-    x0 = request.args.get('x0', None)
-    y0 = request.args.get('y0', None)
-    z0 = request.args.get('z0', None)
-    if x0 and y0 and z0:
-        curvaturasPrincipales_pt_xyz(superficie, u, v, x0, y0, z0, resultados)
-        return jsonify(convertir_a_string(resultados))
-
-    curvaturasPrincipales(superficie, u, v, resultados)
-    return jsonify(convertir_a_string(resultados))
-
-@app.route('/vector_normal')
+#ENDPOINTS
+@imp_surf_bp.route('/vector_normal')
 def vector_normal():
-    superficie, u, v = procesar_parametrizacion()
-    resultados = {}
+    return jsonify(procesar_solicitud_imp(calci.normal, calci.normal_pt, aLatex))
 
-    u0 = request.args.get('u0', None)
-    v0 = request.args.get('v0', None)
-    if u0 and v0:
-        normal_pt_uv(superficie, u, v, u0, v0, resultados)
-        return jsonify(convertir_a_string(resultados))
-
-    x0 = request.args.get('x0', None)
-    y0 = request.args.get('y0', None)
-    z0 = request.args.get('z0', None)
-    if x0 and y0 and z0:
-        normal_pt_xyz(superficie, u, v, x0, y0, z0, resultados)
-        return jsonify(convertir_a_string(resultados))
-    
-    normal(superficie, u, v, resultados)
-    return jsonify(convertir_a_string(resultados))
-
-@app.route('/clasificacion_punto')
-def clasificacion_punto():
-    superficie, u, v = procesar_parametrizacion()
-    resultados = {}
-    
-    u0 = request.args.get('u0', None)
-    v0 = request.args.get('v0', None)
-    if u0 and v0:
-        return str(clasicPt_uv(superficie, u, v, u0, v0))
-
-    x0 = request.args.get('x0', None)
-    y0 = request.args.get('y0', None)
-    z0 = request.args.get('z0', None)
-    if x0 and y0 and z0:
-        return str(clasicPt_xyz(superficie, u, v, x0, y0, z0))
-    
-    raise Exception("No se ha definido correctamente el punto a clasificar")
-
-@app.route('/plano_tangente')
+@imp_surf_bp.route('/plano_tangente')
 def plano_tangente():
-    superficie, u, v = procesar_parametrizacion()
-    resultados = {}
-    
-    u0 = request.args.get('u0', None)
-    v0 = request.args.get('v0', None)
-    if u0 and v0:
-        planoTangente_pt_uv(superficie, u, v, u0, v0, resultados)
-        return jsonify(convertir_a_string(resultados))
+    return jsonify(procesar_solicitud_imp(calci.tangente, calci.tangente_pt, aLatex))
 
-    x0 = request.args.get('x0', None)
-    y0 = request.args.get('y0', None)
-    z0 = request.args.get('z0', None)
-    if x0 and y0 and z0:
-        planoTangente_pt_xyz(superficie, u, v, x0, y0, z0, resultados)
-        return jsonify(convertir_a_string(resultados))
-    
-    planoTangente(superficie, u, v, resultados)
-    return jsonify(convertir_a_string(resultados))
-
-@app.route('/direcciones_principales')
-def direcciones_principales():
-    superficie, u, v = procesar_parametrizacion()
-    resultados = {}
-    
-    u0 = request.args.get('u0', None)
-    v0 = request.args.get('v0', None)
-    if u0 and v0:
-        dirPrinc_pt_uv(superficie, u, v, u0, v0, resultados)
-        return jsonify(convertir_a_string(resultados))
-
-    x0 = request.args.get('x0', None)
-    y0 = request.args.get('y0', None)
-    z0 = request.args.get('z0', None)
-    if x0 and y0 and z0:
-        dirPrinc_pt_xyz(superficie, u, v, x0, y0, z0, resultados)
-        return jsonify(convertir_a_string(resultados))
-
-    dirPrinc_pt(superficie, u, v, resultados)
-    return jsonify(convertir_a_string(resultados))
-
-    
-"""@app.route('/grafica')
+@imp_surf_bp.route('/grafica')
 def grafica():
-    superficie, u, v = procesar_parametrizacion()
-    resultados = {}
+    superficie_str  = request.args.get('superficie', None)
+    if superficie_str == None:
+        #TODO_ Devolver teoría
+        raise Exception("No se ha encontrado la superficie")
+    else:
+        x = sp.symbols('x', real=True)
+        y = sp.symbols('y', real=True)
+        z = sp.symbols('z', real=True)
 
-    fig = plt.figure()
-    ax = fig.add_subplot(projection='3d')
-    grafica_sup_param(ax,superficie,u,v,-sp.pi/2,sp.pi/2,0,2*sp.pi,{})
-    ax.set_aspect('equal')
-    ax.set_xlabel('Eje X')
-    ax.set_ylabel('Eje Y')
-    ax.set_zlabel('Eje Z')
+        variables = {'x':x, 'y':y, 'z':z}
 
-    buf = io.BytesIO()
-    fig.savefig(buf, format='png')
-    buf.seek(0)
-    #data = base64.b64encode(buf.getbuffer()).decode("ascii")
-    #return f"<img src='data:image/png;base64,{data}'/>"
-    return send_file(io.BytesIO(buf.read()), mimetype='image/png')"""
+        try:
+            superficie = sp.sympify(superficie_str, locals=variables)
+        except Exception as e:
+            # TODO: ¿Qué hacer si hay un error?
+            raise e
+        
+        if not superficie.free_symbols.issubset(set([variables['x'], variables['y'], variables['z']])):
+            raise Exception("Se han detectado variables no permitidas, solo se permiten x, y, z")
+        
+        resultados = {
+            'sup' : superficie,
+            'x' : x,
+            'y' : y,
+            'z' : z
+        }
 
-@app.route('/grafica')
-def grafica():
-    superficie, u, v = procesar_parametrizacion()
-    resultados = {}
-    
-    maximo = grafica_sup_param(superficie,u,v,-sp.pi/2,sp.pi/2,0,2*sp.pi)
-    print(maximo)
+        #Compruebo que es una superficie de nivel
+        if not calci.esSupNivel(resultados):
+            raise Exception("No es superficie de nivel")
 
-    mlab.plot3d([0, maximo], [0, 0], [0, 0], color=(1, 0, 0), tube_radius=None)
-    mlab.plot3d([0, 0], [0, maximo], [0, 0], color=(0, 1, 0), tube_radius=None)
-    mlab.plot3d([0, 0], [0, 0], [0, maximo], color=(0, 0, 1), tube_radius=None)
-    
-    buf1 = io.BytesIO()
-    imsave(buf1, mlab.screenshot(antialiased=True), format='png')
-    buf1.seek(0)
+        #Extraigo el dominio donde se quiere considerar la superficie, si no hay o son los reales de pone [-5, 5]
+        dom_x = extrae_dominio(request.args.get('dom_x', None))
+        if dom_x==sp.S.Reals or not isinstance(dom_x, sp.Interval):
+            dom_x = sp.Interval(-5, 5)
+        dom_y = extrae_dominio(request.args.get('dom_y', None))
+        if dom_y==sp.S.Reals or not isinstance(dom_y, sp.Interval):
+            dom_y = sp.Interval(-5, 5)
+        dom_z = extrae_dominio(request.args.get('dom_z', None))
+        if dom_z==sp.S.Reals or not isinstance(dom_z, sp.Interval):
+            dom_z = sp.Interval(-5, 5)
 
-    mlab.view(azimuth=0, elevation=90, distance='auto')
-    buf2 = io.BytesIO()
-    imsave(buf2, mlab.screenshot(antialiased=True), format='png')
-    buf2.seek(0)
+        x0 = obtiene_valor_pt(request.args.get('x0', None))
+        y0 = obtiene_valor_pt(request.args.get('y0', None))
+        z0 = obtiene_valor_pt(request.args.get('z0', None))
+        if x0!=None and y0!=None and z0!=None:
+            fig = graph.imp_desc_pt(superficie, x, y, z, x0, y0, z0,
+                                   dom_x=dom_x, dom_y=dom_y, dom_z=dom_z)
+            return fig.to_html(include_mathjax="cdn")
+        
+        fig = graph.sup_imp(superficie, x, y, z,
+                            dom_x=dom_x, dom_y=dom_y, dom_z=dom_z,
+                            titulo=r'$'+sp.latex(superficie)+r'=0$')
+        return fig.to_html(include_mathjax="cdn")
 
-    mlab.view(azimuth=90, elevation=0, distance='auto')
-    buf3 = io.BytesIO()
-    imsave(buf3, mlab.screenshot(antialiased=True), format='png')
-    buf3.seek(0)
 
-    mlab.view(azimuth=0, elevation=0, distance='auto')
-    buf4 = io.BytesIO()
-    imsave(buf4, mlab.screenshot(antialiased=True), format='png')
-    buf4.seek(0)
-    
-    mlab.clf()
-    mlab.close()
 
-    image1 = Image.open(buf1)
-    image2 = Image.open(buf2)
-    image3 = Image.open(buf3)
-    image4 = Image.open(buf4)
 
-    width, height = image1.size
-    combined_image = Image.new('RGB', (width * 2, height * 2))
-    combined_image.paste(image1, (0, 0))
-    combined_image.paste(image2, (width, 0))
-    combined_image.paste(image3, (0, height))
-    combined_image.paste(image4, (width, height))
 
-    combined_buf = io.BytesIO()
-    combined_image.save(combined_buf, format='PNG')
-    combined_buf.seek(0)
 
-    return send_file(combined_buf, mimetype='image/png')
-
+app.register_blueprint(param_surf_bp, url_prefix='/param_surf')
+app.register_blueprint(imp_surf_bp, url_prefix='/imp_surf')
 
 if __name__ == '__main__':
     app.run(debug=True)
