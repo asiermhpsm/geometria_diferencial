@@ -3,7 +3,7 @@ import plotly.graph_objects as go
 import sympy as sp
 
 def genera_malla(a, b, num_points):
-    #Esto genera la malla del conjunto a*u^2 + b*v^2 < 1
+    #Genera la malla del conjunto a*u^2 + b*v^2 < 1
     t = np.linspace(0, 2 * np.pi, num_points)
     r = np.linspace(0, 0.98, num_points)
     T, R = np.meshgrid(t, r)

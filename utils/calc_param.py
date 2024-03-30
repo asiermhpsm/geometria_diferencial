@@ -780,7 +780,10 @@ def dirPrinc_pt_uv(res : dict ={}) -> dict:
         res['coord_d1_pt'] = autovalores[0][-1][0]
         res['coord_d2_pt'] = autovalores[0][-1][1]
     elif autovalores[0][1] == 1:
-        autovalores = sorted(autovalores, key=lambda x: x[0], reverse=True)
+        try:
+            autovalores = sorted(autovalores, key=lambda x: x[0], reverse=True)
+        except:
+            pass
         res['k1_pt'] = autovalores[0][0]
         res['k2_pt'] = autovalores[1][0]
         res['coord_d1_pt'] = autovalores[0][-1][0]
@@ -915,7 +918,10 @@ def descripccion_pt_uv(res : dict ={}) -> dict:
         res['coord_d1_pt'] = autovalores[0][-1][0]
         res['coord_d2_pt'] = autovalores[0][-1][1]
     elif autovalores[0][1] == 1:
-        autovalores = sorted(autovalores, key=lambda x: x[0], reverse=True)
+        try:
+            autovalores = sorted(autovalores, key=lambda x: x[0], reverse=True)
+        except:
+            pass
         res['k1_pt'] = autovalores[0][0]
         res['k2_pt'] = autovalores[1][0]
         res['coord_d1_pt'] = autovalores[0][-1][0]

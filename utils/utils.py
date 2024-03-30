@@ -69,6 +69,7 @@ def simplifica_trig(res, x, dom) -> dict:
     """
     Dada una variable, simplifica trigonométricamente los resultados obtenidos
     """
+    #return res
     n = sp.Symbol('n', integer=True)
     pos = sp.symbols('pos', positive=True)
     neg = sp.symbols('neg', negative=True)
@@ -152,31 +153,6 @@ def simplifica_cond(f, cond: sp.Expr) -> sp.Expr:
 METODOS GENERALES
 -------------------------------------------------------------------------------
 """
-def esSupNivel(f: sp.Expr, x: sp.Symbol, y: sp.Symbol, z: sp.Symbol, res : dict ={}) -> bool:
-    """
-    Determina si una función es una superficie de nivel
-    Argumentos:
-    f       función
-    x       primera variable
-    y       segunda variable
-    z       tercera variable
-    res     diccionario donde se guardan los resultados intermedios
-    """
-    res['dx'] = sp.diff(f, x)
-    res['dy'] = sp.diff(f, y)
-    res['dz'] = sp.diff(f, z)
-    try:
-        print(sp.solve([sp.Eq(f, 0), 
-                              sp.Eq(res['dx'], 0), 
-                              sp.Eq(res['dy'], 0), 
-                              sp.Eq(res['dz'], 0)], (x, y, z), set=True))
-        return False if sp.solve([sp.Eq(f, 0), 
-                              sp.Eq(res['dx'], 0), 
-                              sp.Eq(res['dy'], 0), 
-                              sp.Eq(res['dz'], 0)], (x, y, z), set=True)[1] else True
-    except Exception:
-        return False
-
 def genera_malla_elipse(a, b, num_points: int):
     """
     Genera una malla de elipse con semiejes a y b

@@ -31,6 +31,32 @@ res = {
 
 """
 -------------------------------------------------------------------------------
+AUXILIARES
+-------------------------------------------------------------------------------
+"""
+def esSupNivel(res : dict ={}) -> bool:
+    """
+    Determina si una función es una superficie de nivel
+    Argumentos:
+    f       función
+    x       primera variable
+    y       segunda variable
+    z       tercera variable
+    res     diccionario donde se guardan los resultados intermedios
+    """
+    res['dx'] = sp.diff(res['sup'], res['x'])
+    res['dy'] = sp.diff(res['sup'], res['y'])
+    res['dz'] = sp.diff(res['sup'], res['z'])
+    try:
+        return False if sp.solve([sp.Eq(res['sup'], 0), 
+                              sp.Eq(res['dx'], 0), 
+                              sp.Eq(res['dy'], 0), 
+                              sp.Eq(res['dz'], 0)], (res['x'], res['y'], res['z']), set=True)[1] else True
+    except:
+        return False
+
+"""
+-------------------------------------------------------------------------------
 PLANO TANGENTE
 -------------------------------------------------------------------------------
 """
@@ -41,13 +67,13 @@ def tangente(res: dict={}) -> dict:
     res          diccionario con todos los resultados calculados hasta el momento
     """
     if 'dx' not in res:
-        res['dx'] = sp.simplify(sp.diff(res['f'], res['x']))
+        res['dx'] = sp.simplify(sp.diff(res['sup'], res['x']))
 
     if 'dy' not in res:
-        res['dy'] = sp.simplify(sp.diff(res['f'], res['y']))
+        res['dy'] = sp.simplify(sp.diff(res['sup'], res['y']))
 
     if 'dz' not in res:
-        res['dz'] = sp.simplify(sp.diff(res['f'], res['z']))
+        res['dz'] = sp.simplify(sp.diff(res['sup'], res['z']))
 
     if 'laplaciano' not in res:
         res['laplaciano'] = sp.Matrix([res['dx'], res['dy'], res['dz']])
@@ -65,20 +91,20 @@ def tangente_pt(res: dict={}) -> dict:
     Argumentos:
     res          diccionario con todos los resultados calculados hasta el momento
     """
-    ec_subs = res['f'].subs({res['x']: res['x0'], res['y']: res['y0'], res['z']: res['z0']})
+    ec_subs = res['sup'].subs({res['x']: res['x0'], res['y']: res['y0'], res['z']: res['z0']})
     if len(ec_subs.free_symbols)==0 and ec_subs != 0:
         raise ValueError('El punto no está en la superficie')
     
     if 'dx' not in res:
-        res['dx'] = sp.simplify(sp.diff(res['f'], res['x']))
+        res['dx'] = sp.simplify(sp.diff(res['sup'], res['x']))
     res['dx_pt'] = res['dx'].subs({res['x']: res['x0'], res['y']: res['y0'], res['z']: res['z0']})
 
     if 'dy' not in res:
-        res['dy'] = sp.simplify(sp.diff(res['f'], res['y']))
+        res['dy'] = sp.simplify(sp.diff(res['sup'], res['y']))
     res['dy_pt'] = res['dy'].subs({res['x']: res['x0'], res['y']: res['y0'], res['z']: res['z0']})
 
     if 'dz' not in res:
-        res['dz'] = sp.simplify(sp.diff(res['f'], res['z']))
+        res['dz'] = sp.simplify(sp.diff(res['sup'], res['z']))
     res['dz_pt'] = res['dz'].subs({res['x']: res['x0'], res['y']: res['y0'], res['z']: res['z0']})
 
     res['laplaciano_pt'] = sp.Matrix([res['dx_pt'], res['dy_pt'], res['dz_pt']])
@@ -99,13 +125,13 @@ def normal(res: dict={}) -> dict:
     res          diccionario con todos los resultados calculados hasta el momento
     """
     if 'dx' not in res:
-        res['dx'] = sp.simplify(sp.diff(res['f'], res['x']))
+        res['dx'] = sp.simplify(sp.diff(res['sup'], res['x']))
 
     if 'dy' not in res:
-        res['dy'] = sp.simplify(sp.diff(res['f'], res['y']))
+        res['dy'] = sp.simplify(sp.diff(res['sup'], res['y']))
 
     if 'dz' not in res:
-        res['dz'] = sp.simplify(sp.diff(res['f'], res['z']))
+        res['dz'] = sp.simplify(sp.diff(res['sup'], res['z']))
 
     if 'laplaciano' not in res:
         res['laplaciano'] = sp.Matrix([res['dx'], res['dy'], res['dz']])
@@ -120,20 +146,20 @@ def normal_pt(res: dict={}) -> dict:
     Argumentos:
     res          diccionario con todos los resultados calculados hasta el momento
     """
-    ec_subs = res['f'].subs({res['x']: res['x0'], res['y']: res['y0'], res['z']: res['z0']})
+    ec_subs = res['sup'].subs({res['x']: res['x0'], res['y']: res['y0'], res['z']: res['z0']})
     if len(ec_subs.free_symbols)==0 and ec_subs != 0:
         raise ValueError('El punto no está en la superficie')
     
     if 'dx' not in res:
-        res['dx'] = sp.simplify(sp.diff(res['f'], res['x']))
+        res['dx'] = sp.simplify(sp.diff(res['sup'], res['x']))
     res['dx_pt'] = res['dx'].subs({res['x']: res['x0'], res['y']: res['y0'], res['z']: res['z0']})
 
     if 'dy' not in res:
-        res['dy'] = sp.simplify(sp.diff(res['f'], res['y']))
+        res['dy'] = sp.simplify(sp.diff(res['sup'], res['y']))
     res['dy_pt'] = res['dy'].subs({res['x']: res['x0'], res['y']: res['y0'], res['z']: res['z0']})
 
     if 'dz' not in res:
-        res['dz'] = sp.simplify(sp.diff(res['f'], res['z']))
+        res['dz'] = sp.simplify(sp.diff(res['sup'], res['z']))
     res['dz_pt'] = res['dz'].subs({res['x']: res['x0'], res['y']: res['y0'], res['z']: res['z0']})
 
     res['laplaciano_pt'] = sp.Matrix([res['dx_pt'], res['dy_pt'], res['dz_pt']])
