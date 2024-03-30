@@ -147,23 +147,3 @@ def simplifica_cond(f, cond: sp.Expr) -> sp.Expr:
     sust = sp.simplify(f.subs(cond.lhs - cond.rhs, aux_neg).subs(cond.lhs, aux_neg + cond.rhs))
     return sp.simplify(sust.subs(aux_neg, cond.lhs - cond.rhs))
 
-
-"""
--------------------------------------------------------------------------------
-METODOS GENERALES
--------------------------------------------------------------------------------
-"""
-def genera_malla_elipse(a, b, num_points: int):
-    """
-    Genera una malla de elipse con semiejes a y b
-    Argumentos:
-    a           semieje a
-    b           semieje b
-    num_points  resolución de la malla
-    """
-    t = np.linspace(0, 2 * np.pi, num_points)
-    r = np.linspace(0, 0.98, num_points)
-    T, R = np.meshgrid(t, r)
-    X = a * R * np.cos(T)
-    Y = b * R * np.sin(T)
-    return X, Y

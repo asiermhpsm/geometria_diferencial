@@ -334,16 +334,17 @@ def grafica():
 
         #Si el dominio de la variables es de la forma a*u+b*v<r se representa directamente
         cond_str = request.args.get('cond', None)
-        if cond_str:
-            coincidencia = re.match(
-                r"([-+]?\d*[\.,]?\d+|\w+)\*x([-+]\d*[\.,]?\d+|\w+)\*y<([-+]?\d*[\.,]?\d+|\w+)", 
-                cond_str.replace(" ", ""))
-            if coincidencia:
-                a = sp.sympify(coincidencia.group(1))
-                b = sp.sympify(coincidencia.group(2))
-                r = sp.sympify(coincidencia.group(3))
-                if a.is_number and b.is_number and r.is_number:
-                    fig = graph.sup_param_cond_elipse(sup, u, v, a/r, b/r)
+        if cond_str!=None:
+            sy_cond = sp.sympify(cond_str, locals=variables)
+            if sy_cond.free_symbols.issubset(set([u, v])) and isinstance(sy_cond, sp.StrictLessThan):
+                expr = sy_cond.lhs - sy_cond.rhs
+                a = expr.coeff(u**2)
+                b = expr.coeff(v**2)
+                r = expr - a*u**2 - b*v**2
+                if r.is_constant():
+                    a = a/-r
+                    b = b/-r
+                    fig = graph.sup_param_cond_elipse(sup, u, v, a, b)
                     return fig.to_html(include_mathjax="cdn")
 
         #Se extraen los dominios de las variables

@@ -20,7 +20,8 @@ def verificar_y_extraer(expresion):
         return None
 
 # Ejemplo de uso
-expresion = "ab * x + 2.3 * y < 2,2 "
+expresion = "ab * x^2 + 2.3 * y^2 < 2.2 "
+expresion = "1*u^2+2*v^2<3"
 resultado = verificar_y_extraer(expresion)
 if resultado:
     a, b, r = resultado
@@ -29,7 +30,20 @@ else:
     print("La expresión no tiene el formato correcto.")
 
 
-a = sp.pi
-b = 2
-c = a/b
-print(c)
+
+u, v = sp.symbols('u v', real=True)
+sy_expresion = sp.sympify(expresion, locals={'u': u, 'v': v})
+if isinstance(sy_expresion, sp.StrictLessThan):
+    expr = sy_expresion.lhs - sy_expresion.rhs
+    a = expr.coeff(u**2)
+    b = expr.coeff(v**2)
+    r = expr - a*u**2 - b*v**2
+    if r.is_constant():
+        a = a/-r
+        b = b/-r
+        r = 1
+        print(a, b, r)
+
+
+
+

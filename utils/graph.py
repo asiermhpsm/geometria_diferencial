@@ -94,7 +94,7 @@ def circulo(centro, radio, dir1, dir2, fig=None, color='red', titulo='circulo'):
     fig.update_layout(scene=dict(aspectmode='data'))
     return fig
 
-def genera_malla(a, b, num_points):
+def genera_malla_elipse(a, b, num_points):
     """
     Genera la malla del conjunto a*u^2 + b*v^2 < 1
     Argumentos:
@@ -105,8 +105,8 @@ def genera_malla(a, b, num_points):
     t = np.linspace(0, 2 * np.pi, num_points)
     r = np.linspace(0, 0.98, num_points)
     T, R = np.meshgrid(t, r)
-    X = 1/np.sqrt(a) * R * np.cos(T)
-    Y = 1/np.sqrt(b) * R * np.sin(T)
+    X = 1/np.sqrt(float(a)) * R * np.cos(T)
+    Y = 1/np.sqrt(float(b)) * R * np.sin(T)
     return X, Y
 
 
@@ -170,7 +170,6 @@ def param_desc_pt_uv(sup, u, v, u0, v0, dom_u=sp.Interval(-5,5), dom_v=sp.Interv
     fig         figura de plotly donde se añadirá la superficie
     """
     sup = sp.Matrix(sup).T
-
     fig = sup_param(sup, u, v, dom_u, dom_v, fig=fig, titulo=r'$\vec{\varphi}='+sp.latex(sup)+r'$')
     fig.data[0].update(opacity=0.4)
 
@@ -251,13 +250,14 @@ def sup_param_cond_elipse(sup, u, v, a, b ,fig=None, resolucion=100, titulo='Sup
     b           semieje b
     fig         figura de plotly donde se añadirá la superficie
     """
+    sup = list(sup)
     parametric_surface = sp.lambdify((u, v), sup, 'numpy')
-    u_values, v_values = genera_malla(a, b, resolucion)
+    u_values, v_values = genera_malla_elipse(a, b, resolucion)
     X, Y, Z = parametric_surface(u_values, v_values)
     if np.isscalar(X): X = np.full_like(u_values, X)
     if np.isscalar(Y): Y = np.full_like(u_values, Y)
     if np.isscalar(Z): Z = np.full_like(u_values, Z)
-    fig = go.Figure()
+    if not fig: fig = go.Figure()
     fig.add_trace(go.Surface(x=X, y=Y, z=Z))
     fig.update_layout(scene=dict(aspectmode='data'))
     return fig
