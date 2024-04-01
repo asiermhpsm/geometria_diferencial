@@ -20,11 +20,7 @@ FUNCIONES AUXILIARES Y ATRIBUTOS GENERALES
 -------------------------------------------------------------------------------
 """
 #Opciones que pueden describir a una variable, constante o función
-OPCIONES_VAR = ['infinite', 'finite', 'real', 'extended_real', 'rational', 'irrational', 
-                 'integer', 'noninteger', 'even', 'odd', 'prime', 'composite', 
-                 'zero', 'nonzero', 'extended_nonzero', 'positive', 'nonnegative', 
-                 'negative', 'nonpositive', 'extended_positive', 'extended_nonnegative',
-                 'extended_negative', 'extended_nonpositive']
+OPCIONES_VAR = ['positive', 'negative','integer','noninteger','even', 'odd']
 
 def extrae_dominio(dom_var: str) -> tuple:
     """
