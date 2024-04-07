@@ -1,5 +1,22 @@
 import tkinter as tk
 from tkinter import ttk
+from app import app
+import json
+import tempfile
+import webbrowser
+
+"""
+-------------------------------------------------------------------------------
+API
+-------------------------------------------------------------------------------
+"""
+server = app.test_client()
+"""response = server.get('/param_surf/description?superficie=[u, v, 0]')
+print(response.status_code)
+data = json.loads(response.get_data())
+for k, v in data.items():
+    print(k, v)"""
+
 
 """
 -------------------------------------------------------------------------------
@@ -20,10 +37,8 @@ VARIABLES CON LAS SELECCIONES
 
 #Primera variable de la superficie parametrizada
 var1 = tk.StringVar()
-var1.set("u")
 #Segunda variable de la superficie parametrizada
 var2 = tk.StringVar()
-var2.set("v")
 #Primera componente de la superficie parametrizada
 comp1_sup_param = tk.StringVar()
 #Segunda componente de la superficie parametrizada
@@ -59,10 +74,10 @@ desc_var2 = {
 }
 for key in desc_var2:
     desc_var2[key].set(False)
-#Lista con la descripción de las constantes
-desc_ctes = []
-#Lista con la descripción de las funciones
-desc_funcs = []
+#Lista con tuplas de nombre de constante + diccionario con la descripción de la constante
+consts = []
+#Lista con tuplas de nombre de funcion (y variables de dependencia) + diccionario con la descripción de la funcion
+funcs = []
 #valor a del dominio elíptico
 a_dom_elip = tk.StringVar()
 #valor b del dominio elíptico
@@ -130,6 +145,21 @@ for key in cal_imp:
 FUNCIONES AUXILIARES
 -------------------------------------------------------------------------------
 """
+#AUXILIARES
+def nueva_ventana(texto: str, titulo: str):
+    nueva_ventana = tk.Toplevel(root)
+    nueva_ventana.title(titulo)
+    ttk.Label(nueva_ventana, text=texto).pack()
+
+def prepara_var(nombre:str, opciones: dict):
+    aux = ''
+    for k, v in opciones.items():
+        if v.get():
+            aux = aux + f', {k}'
+    return nombre if aux=='' else '['+nombre+aux+']'
+
+
+#Funciones de configuración de la pantalla
 def poner_texto_fondo(entrada, texto_fondo):
     def on_entry_click(event, entry, default_text):
         if entry.get() == default_text and not str(entry.cget("foreground"))=='black':
@@ -146,60 +176,10 @@ def poner_texto_fondo(entrada, texto_fondo):
     entrada.bind("<FocusIn>", lambda event, entry=entrada: on_entry_click(event, entry, texto_fondo))
     entrada.bind("<FocusOut>", lambda event, entry=entrada: on_focus_out(event, entry, texto_fondo))
 
+
 def on_configure(event):
     canva_dom_vars.configure(scrollregion=canva_dom_vars.bbox("all"))
 
-def anadir_cte():
-    desc_cte = {
-        'positive': tk.BooleanVar(),
-        'negative': tk.BooleanVar(),
-        'integer': tk.BooleanVar(),
-        'noninteger': tk.BooleanVar(),
-        'even': tk.BooleanVar(),
-        'odd': tk.BooleanVar()
-    }
-    for key in desc_cte:
-        desc_cte[key].set(False)
-    aux = ttk.Frame(frame_interior_canva)
-    aux.pack(fill="x", pady=10)
-    ttk.Label(aux, text="Constante: ").pack(side="left")
-    ttk.Entry(aux, width=10, justify="center").pack(side="left")
-    aux = ttk.Frame(frame_interior_canva)
-    aux.pack(fill="x")
-    ttk.Checkbutton(aux, text="Positiva", style="small.TCheckbutton", variable=desc_cte["positive"]).pack(side="left", padx=3)
-    ttk.Checkbutton(aux, text="Negativa", style="small.TCheckbutton", variable=desc_cte["negative"]).pack(side="left", padx=3)
-    ttk.Checkbutton(aux, text="Entera", style="small.TCheckbutton", variable=desc_cte["integer"]).pack(side="left", padx=3)
-    ttk.Checkbutton(aux, text="No entera", style="small.TCheckbutton", variable=desc_cte["noninteger"]).pack(side="left", padx=3)
-    ttk.Checkbutton(aux, text="Par", style="small.TCheckbutton", variable=desc_cte["even"]).pack(side="left", padx=3)
-    ttk.Checkbutton(aux, text="Impar", style="small.TCheckbutton", variable=desc_cte["odd"]).pack(side="left", padx=3)
-    desc_ctes.append(desc_cte)
-    frame_interior_canva.update_idletasks()
-
-def anadir_func():
-    desc_func = {
-        'positive': tk.BooleanVar(),
-        'negative': tk.BooleanVar(),
-        'integer': tk.BooleanVar(),
-        'noninteger': tk.BooleanVar(),
-        'even': tk.BooleanVar(),
-        'odd': tk.BooleanVar()
-    }
-    for key in desc_func:
-        desc_func[key].set(False)
-    aux = ttk.Frame(frame_interior_canva)
-    aux.pack(fill="x", pady=10)
-    ttk.Label(aux, text="Funcion: ").pack(side="left")
-    ttk.Entry(aux, width=10, justify="center").pack(side="left")
-    aux = ttk.Frame(frame_interior_canva)
-    aux.pack(fill="x")
-    ttk.Checkbutton(aux, text="Positiva", style="small.TCheckbutton", variable=desc_func["positive"]).pack(side="left", padx=3)
-    ttk.Checkbutton(aux, text="Negativa", style="small.TCheckbutton", variable=desc_func["negative"]).pack(side="left", padx=3)
-    ttk.Checkbutton(aux, text="Entera", style="small.TCheckbutton", variable=desc_func["integer"]).pack(side="left", padx=3)
-    ttk.Checkbutton(aux, text="No entera", style="small.TCheckbutton", variable=desc_func["noninteger"]).pack(side="left", padx=3)
-    ttk.Checkbutton(aux, text="Par", style="small.TCheckbutton", variable=desc_func["even"]).pack(side="left", padx=3)
-    ttk.Checkbutton(aux, text="Impar", style="small.TCheckbutton", variable=desc_func["odd"]).pack(side="left", padx=3)
-    desc_funcs.append(desc_func)
-    frame_interior_canva.update_idletasks()
 
 def poner_resaltado_b_calc_param(event):
     b_calc_param.config(bg="#D4D4D4")
@@ -233,6 +213,162 @@ def quitar_resaltado_b_reset_imp(event):
     b_reset_imp.config(bg=root.cget("bg"))
 
 
+
+
+#Funciones de acciones
+def anadir_cte():
+    nombre = tk.StringVar()
+    desc_cte = {
+        'positive': tk.BooleanVar(),
+        'negative': tk.BooleanVar(),
+        'integer': tk.BooleanVar(),
+        'noninteger': tk.BooleanVar(),
+        'even': tk.BooleanVar(),
+        'odd': tk.BooleanVar()
+    }
+    for key in desc_cte:
+        desc_cte[key].set(False)
+    aux = ttk.Frame(frame_interior_canva)
+    aux.pack(fill="x", pady=10)
+    ttk.Label(aux, text="Constante: ").pack(side="left")
+    aux2 = ttk.Entry(aux, width=10, justify="center", textvariable=nombre)
+    poner_texto_fondo(aux2, 'r')
+    aux2.pack(side="left")
+    aux = ttk.Frame(frame_interior_canva)
+    aux.pack(fill="x")
+    ttk.Checkbutton(aux, text="Positiva", style="small.TCheckbutton", variable=desc_cte["positive"]).pack(side="left", padx=3)
+    ttk.Checkbutton(aux, text="Negativa", style="small.TCheckbutton", variable=desc_cte["negative"]).pack(side="left", padx=3)
+    ttk.Checkbutton(aux, text="Entera", style="small.TCheckbutton", variable=desc_cte["integer"]).pack(side="left", padx=3)
+    ttk.Checkbutton(aux, text="No entera", style="small.TCheckbutton", variable=desc_cte["noninteger"]).pack(side="left", padx=3)
+    ttk.Checkbutton(aux, text="Par", style="small.TCheckbutton", variable=desc_cte["even"]).pack(side="left", padx=3)
+    ttk.Checkbutton(aux, text="Impar", style="small.TCheckbutton", variable=desc_cte["odd"]).pack(side="left", padx=3)
+    consts.append((nombre, desc_cte))
+    frame_interior_canva.update_idletasks()
+
+def anadir_func():
+    nombre = tk.StringVar()
+    desc_func = {
+        'positive': tk.BooleanVar(),
+        'negative': tk.BooleanVar(),
+        'integer': tk.BooleanVar(),
+        'noninteger': tk.BooleanVar(),
+        'even': tk.BooleanVar(),
+        'odd': tk.BooleanVar()
+    }
+    for key in desc_func:
+        desc_func[key].set(False)
+    aux = ttk.Frame(frame_interior_canva)
+    aux.pack(fill="x", pady=10)
+    ttk.Label(aux, text="Funcion: ").pack(side="left")
+    aux2 = ttk.Entry(aux, width=10, justify="center", textvariable=nombre)
+    poner_texto_fondo(aux2, 'f(u,v)')
+    aux2.pack(side="left")
+    aux = ttk.Frame(frame_interior_canva)
+    aux.pack(fill="x")
+    ttk.Checkbutton(aux, text="Positiva", style="small.TCheckbutton", variable=desc_func["positive"]).pack(side="left", padx=3)
+    ttk.Checkbutton(aux, text="Negativa", style="small.TCheckbutton", variable=desc_func["negative"]).pack(side="left", padx=3)
+    ttk.Checkbutton(aux, text="Entera", style="small.TCheckbutton", variable=desc_func["integer"]).pack(side="left", padx=3)
+    ttk.Checkbutton(aux, text="No entera", style="small.TCheckbutton", variable=desc_func["noninteger"]).pack(side="left", padx=3)
+    ttk.Checkbutton(aux, text="Par", style="small.TCheckbutton", variable=desc_func["even"]).pack(side="left", padx=3)
+    ttk.Checkbutton(aux, text="Impar", style="small.TCheckbutton", variable=desc_func["odd"]).pack(side="left", padx=3)
+    funcs.append((nombre, desc_func))
+    frame_interior_canva.update_idletasks()
+
+def cerrar_ventana():
+    root.destroy()
+
+def calcular_sup_param():
+    #Superficie y variables
+    url_vals = f'superficie=[{comp1_sup_param.get()},{comp2_sup_param.get()},{comp3_sup_param.get()}]'
+    if var1.get() != 'u':
+        url_vals = url_vals + f'&var1={var1.get()}'
+    if var2.get() != 'v':
+        url_vals = url_vals + f'&var2={var2.get()}'
+
+    #Dominio de tipo intervalo
+    if tipo_dom_vars.get() == 1:
+        if dom_var1[0].get() != '-\u221E' or dom_var1[1].get() != '\u221E':
+            url_vals = url_vals + f'&dom_var1=({dom_var1[0].get()},{dom_var1[1].get()})'
+        if dom_var2[0].get() != '-\u221E' or dom_var2[1].get() != '\u221E':
+            url_vals = url_vals + f'&dom2_var=({dom_var2[0].get()},{dom_var2[1].get()})'
+        ctes = ''
+        for cte in consts:
+            ctes = ctes + f'&const={prepara_var(cte[0].get(), cte[1])}'
+        if ctes != '': 
+            url_vals = url_vals + ctes
+        funciones = ''
+        for func in funcs:
+            funciones = funciones + f'&func={prepara_var(func[0].get(), func[1])}'
+        if funciones != '': 
+            url_vals = url_vals + funciones
+    #Dominio de tipo elíptico
+    else:
+        url_vals = url_vals + f'&cond={a_dom_elip.get()}*u^2 + {b_dom_elip.get()}*v^2 < {r_dom_elip.get()}'
+
+    #Tipo de punto
+    if opc_punto_param.get() == 2:
+        url_vals = url_vals + f'&u0={comp1_pto_uv_param.get()}&v0={comp2_pto_uv_param.get()}'
+    elif opc_punto_param.get() == 3:
+        url_vals = url_vals + f'&x0={comp1_pto_xyz_param.get()}&y0={comp2_pto_xyz_param.get()}&z0={comp3_pto_xyz_param.get()}'
+
+    url_vals = url_vals.replace('+', r'%2B')
+    for v, k in cal_param.items():
+        if k.get():
+            response = server.get(f'/param_surf/{v}?{url_vals}')
+            if response.status_code == 200:
+                nueva_ventana(str(json.loads(response.get_data())), v)
+                print(json.loads(response.get_data()))
+            else:
+                nueva_ventana(f"Error al calcular {v}", v)
+
+def graficar_sup_param():
+    #Superficie y variables
+    url_vals = f'superficie=[{comp1_sup_param.get()},{comp2_sup_param.get()},{comp3_sup_param.get()}]'
+    if var1.get() != 'u':
+        url_vals = url_vals + f'&var1={var1.get()}'
+    if var2.get() != 'v':
+        url_vals = url_vals + f'&var2={var2.get()}'
+
+    #Dominio de tipo intervalo
+    if tipo_dom_vars.get() == 1:
+        if dom_var1[0].get() != '-\u221E' and dom_var1[1].get() != '\u221E':
+            url_vals = url_vals + f'&dom_var1=({dom_var1[0].get()},{dom_var1[1].get()})'
+        if dom_var2[0].get() != '-\u221E' and dom_var2[1].get() != '\u221E':
+            url_vals = url_vals + f'&dom_var2=({dom_var2[0].get()},{dom_var2[1].get()})'
+        ctes = ''
+        for cte in consts:
+            ctes = ctes + f'&const={prepara_var(cte[0].get(), cte[1])}'
+        if ctes != '': 
+            url_vals = url_vals + ctes
+        funciones = ''
+        for func in funcs:
+            funciones = funciones + f'&func={prepara_var(func[0].get(), func[1])}'
+        if funciones != '': 
+            url_vals = url_vals + funciones
+    #Dominio de tipo elíptico
+    else:
+        url_vals = url_vals + f'&cond={a_dom_elip.get()}*u^2 + {b_dom_elip.get()}*v^2 < {r_dom_elip.get()}'
+
+    #Tipo de punto
+    if opc_punto_param.get() == 2:
+        url_vals = url_vals + f'&u0={comp1_pto_uv_param.get()}&v0={comp2_pto_uv_param.get()}'
+    elif opc_punto_param.get() == 3:
+        url_vals = url_vals + f'&x0={comp1_pto_xyz_param.get()}&y0={comp2_pto_xyz_param.get()}&z0={comp3_pto_xyz_param.get()}'
+
+    url_vals = url_vals.replace('+', r'%2B')
+    response = server.get(f'/param_surf/grafica?{url_vals}')
+    if response.status_code == 200:
+        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.html', encoding='utf-8') as temp_file:
+            temp_file.write(response.data.decode('utf-8'))
+            temp_file_path = temp_file.name
+        webbrowser.open(temp_file_path)
+        pass
+    else:
+        nueva_ventana(f"Error al graficar", "Gráfica")
+
+
+
+
 """
 -------------------------------------------------------------------------------
 SUPERFICIES PARAMETRIZADAS
@@ -260,9 +396,13 @@ cont_altura = cont_altura + aux.winfo_reqheight() + 20
 #Superficie
 aux = ttk.Label(frame_sup_param, text="\u03C6(", font=(None, 12, "italic bold"))
 aux.place(x=5, y=cont_altura)
-ttk.Entry(frame_sup_param, width=5, justify="center", textvariable=var1).place(x=26, y=cont_altura)
+aux2 = ttk.Entry(frame_sup_param, width=5, justify="center", textvariable=var1)
+poner_texto_fondo(aux2, 'u')
+aux2.place(x=26, y=cont_altura)
 ttk.Label(frame_sup_param, text=",", font=(None, 12, "italic bold")).place(x=62, y=cont_altura)
-ttk.Entry(frame_sup_param, width=5, justify="center", textvariable=var2).place(x=70, y=cont_altura)
+aux2 = ttk.Entry(frame_sup_param, width=5, justify="center", textvariable=var2)
+poner_texto_fondo(aux2, 'v')
+aux2.place(x=70, y=cont_altura)
 ttk.Label(frame_sup_param, text=") = (", font=(None, 12, "italic bold")).place(x=106, y=cont_altura)
 aux2 = ttk.Entry(frame_sup_param, width=30, justify="center", textvariable=comp1_sup_param)
 poner_texto_fondo(aux2, "cos(u)")
@@ -365,12 +505,12 @@ aux2 = ttk.Entry(frame_sup_param, width=5, justify="center", textvariable=a_dom_
 poner_texto_fondo(aux2, "1")
 aux2.place(x=543, y=cont_altura + 10)
 ttk.Entry(frame_sup_param, width=5, state="disabled", justify="center", textvariable=var1).place(x=576, y=cont_altura + 10)
-ttk.Label(frame_sup_param, text="^2+").place(x=615, y=cont_altura + 10)
+ttk.Label(frame_sup_param, text="\u00B2 +").place(x=615, y=cont_altura + 10)
 aux2 = ttk.Entry(frame_sup_param, width=5, justify="center", textvariable=b_dom_elip)
 poner_texto_fondo(aux2, "1")
 aux2.place(x=641, y=cont_altura + 10)
 ttk.Entry(frame_sup_param, width=5, state="disabled", justify="center", textvariable=var2).place(x=674, y=cont_altura + 10)
-ttk.Label(frame_sup_param, text="^2 < ").place(x=713, y=cont_altura + 10)
+ttk.Label(frame_sup_param, text="\u00B2 < ").place(x=713, y=cont_altura + 10)
 aux2 = ttk.Entry(frame_sup_param, width=5, justify="center", textvariable=r_dom_elip)
 poner_texto_fondo(aux2, "1")
 aux2.place(x=746, y=cont_altura + 10)
@@ -448,19 +588,19 @@ ttk.Checkbutton(frame_calc, text="Análisis completo", variable=cal_param["descr
 cont_altura = frame_sup_param.winfo_reqheight() - 100
 
 #Botón de calcular
-b_calc_param = tk.Button(frame_sup_param, text="Calcular", command=None, width=10, height=2, font=(None, 12))
+b_calc_param = tk.Button(frame_sup_param, text="Calcular", command=calcular_sup_param, width=10, height=2, font=(None, 12))
 b_calc_param.place(x=375, y=cont_altura)
 b_calc_param.bind("<Enter>", poner_resaltado_b_calc_param)
 b_calc_param.bind("<Leave>", quitar_resaltado_b_calc_param)
 
 #Botón de graficar
-b_graf_param = tk.Button(frame_sup_param, text="Graficar", command=None, width=10, height=2, font=(None, 12))
+b_graf_param = tk.Button(frame_sup_param, text="Graficar", command=graficar_sup_param, width=10, height=2, font=(None, 12))
 b_graf_param.place(x=498, y=cont_altura)
 b_graf_param.bind("<Enter>", poner_resaltado_b_graf_param)
 b_graf_param.bind("<Leave>", quitar_resaltado_b_graf_param)
 
 #Botón de resetar
-b_reset_param = tk.Button(frame_sup_param, text="Reset", command=None, width=10, height=2, font=(None, 12))
+b_reset_param = tk.Button(frame_sup_param, text="Salir", command=cerrar_ventana, width=10, height=2, font=(None, 12))
 b_reset_param.place(x=621, y=cont_altura)
 b_reset_param.bind("<Enter>", poner_resaltado_b_reset_param)
 b_reset_param.bind("<Leave>", quitar_resaltado_b_reset_param)
@@ -569,7 +709,7 @@ b_graf_imp.bind("<Leave>", quitar_resaltado_b_graf_imp)
 cont_ancho = cont_ancho + aux.winfo_reqwidth() + 20
 
 #Botón de resetar
-b_reset_imp = tk.Button(frame_sup_imp, text="Reset", command=None, width=10, height=2, font=(None, 12))
+b_reset_imp = tk.Button(frame_sup_imp, text="Salir", command=cerrar_ventana, width=10, height=2, font=(None, 12))
 b_reset_imp.place(x=cont_ancho, y=cont_altura)
 b_reset_imp.bind("<Enter>", poner_resaltado_b_reset_imp)
 b_reset_imp.bind("<Leave>", quitar_resaltado_b_reset_imp)
