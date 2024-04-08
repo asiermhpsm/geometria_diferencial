@@ -122,6 +122,12 @@ for key in cal_param:
 izq_sup_imp = tk.StringVar()
 #Parte derecha de la ecuación de la superficie implicita
 der_sup_imp = tk.StringVar()
+#Dominio de x
+dom_x = (tk.StringVar(), tk.StringVar())
+#Dominio de y
+dom_y = (tk.StringVar(), tk.StringVar())
+#Dominio de z
+dom_z = (tk.StringVar(), tk.StringVar())
 #Tipo de punto de superficie implicita, 1 para punto genérico, 2 para punto de la forma (x,y,z)
 opc_punto_imp = tk.IntVar()
 opc_punto_imp.set(1)
@@ -366,6 +372,60 @@ def graficar_sup_param():
     else:
         nueva_ventana(f"Error al graficar", "Gráfica")
 
+def calcular_sup_imp():
+    #Superficie y variables
+    url_vals = f'superficie={izq_sup_imp.get()} - {der_sup_imp.get()}'
+    if var1.get() != 'u':
+        url_vals = url_vals + f'&var1={var1.get()}'
+    if var2.get() != 'v':
+        url_vals = url_vals + f'&var2={var2.get()}'
+
+    #TODO: Falta el dominio de variables
+
+    #Tipo de punto
+    if opc_punto_imp.get() == 2:
+        url_vals = url_vals + f'&x0={comp1_pto_xyz_imp.get()}&y0={comp2_pto_xyz_imp.get()}&z0={comp3_pto_xyz_imp.get()}'
+
+    url_vals = url_vals.replace('+', r'%2B')
+    for v, k in cal_imp.items():
+        if k.get():
+            response = server.get(f'/imp_surf/{v}?{url_vals}')
+            if response.status_code == 200:
+                nueva_ventana(str(json.loads(response.get_data())), v)
+                print(json.loads(response.get_data()))
+            else:
+                nueva_ventana(f"Error al calcular {v}", v)
+
+def grafica_sup_imp():
+    #Superficie y variables
+    url_vals = f'superficie={izq_sup_imp.get()} - {der_sup_imp.get()}'
+    if var1.get() != 'u':
+        url_vals = url_vals + f'&var1={var1.get()}'
+    if var2.get() != 'v':
+        url_vals = url_vals + f'&var2={var2.get()}'
+
+    #Dominio de variables
+    if dom_x[0].get() != '-\u221E' and dom_x[1].get() != '\u221E':
+        url_vals = url_vals + f'&dom_x=({dom_x[0].get()},{dom_x[1].get()})'
+    if dom_y[0].get() != '-\u221E' and dom_y[1].get() != '\u221E':
+        url_vals = url_vals + f'&dom_y=({dom_y[0].get()},{dom_y[1].get()})'
+    if dom_z[0].get() != '-\u221E' and dom_z[1].get() != '\u221E':
+        url_vals = url_vals + f'&dom_z=({dom_z[0].get()},{dom_z[1].get()})'
+
+    #Tipo de punto
+    if opc_punto_imp.get() == 2:
+        url_vals = url_vals + f'&x0={comp1_pto_xyz_imp.get()}&y0={comp2_pto_xyz_imp.get()}&z0={comp3_pto_xyz_imp.get()}'
+
+    url_vals = url_vals.replace('+', r'%2B')
+    response = server.get(f'/imp_surf/grafica?{url_vals}')
+    if response.status_code == 200:
+        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.html', encoding='utf-8') as temp_file:
+            temp_file.write(response.data.decode('utf-8'))
+            temp_file_path = temp_file.name
+        webbrowser.open(temp_file_path)
+        pass
+    else:
+        nueva_ventana(f"Error al graficar", "Gráfica")
 
 
 
@@ -627,7 +687,7 @@ cont_altura = 60
 aux = ttk.Label(frame_sup_imp, text="Superficie:", font=(None, 12, "bold"))
 aux.place(x=5, y=cont_altura)
 
-cont_altura = cont_altura + aux.winfo_reqheight() + 20
+cont_altura = cont_altura + aux.winfo_reqheight() + 15
 
 #Superficie
 aux = ttk.Label(frame_sup_imp, text="{(x,y,z): ", font=(None, 12, "italic bold"))
@@ -643,11 +703,52 @@ ttk.Label(frame_sup_imp, text="}", font=(None, 12, "italic bold")).place(x=329, 
 
 cont_altura = cont_altura + aux.winfo_reqheight() + 20
 
+#Sección del dominio
+aux = ttk.Label(frame_sup_imp, text="Dominio:", font=(None, 12, "bold"))
+aux.place(x=5, y=cont_altura)
+
+cont_altura = cont_altura + aux.winfo_reqheight() + 15
+
+#Definición del dominio de variables
+ttk.Label(frame_sup_imp, text="x0 \u03F5 (").place(x=15, y=cont_altura)
+aux2 = ttk.Entry(frame_sup_imp, width=5, justify="center", textvariable=dom_x[0])
+poner_texto_fondo(aux2, "-5")
+aux2.place(x=48, y=cont_altura)
+ttk.Label(frame_sup_imp, text=", ").place(x=84, y=cont_altura)
+aux2 = ttk.Entry(frame_sup_imp, width=5, justify="center", textvariable=dom_x[1])
+poner_texto_fondo(aux2, "5")
+aux2.place(x=94, y=cont_altura)
+ttk.Label(frame_sup_imp, text=")").place(x=130, y=cont_altura)
+cont_altura = cont_altura + aux2.winfo_reqheight() + 5
+
+ttk.Label(frame_sup_imp, text="y0 \u03F5 (").place(x=15, y=cont_altura)
+aux2 = ttk.Entry(frame_sup_imp, width=5, justify="center", textvariable=dom_y[0])
+poner_texto_fondo(aux2, "-5")
+aux2.place(x=48, y=cont_altura)
+ttk.Label(frame_sup_imp, text=", ").place(x=84, y=cont_altura)
+aux2 = ttk.Entry(frame_sup_imp, width=5, justify="center", textvariable=dom_y[1])
+poner_texto_fondo(aux2, "5")
+aux2.place(x=94, y=cont_altura)
+ttk.Label(frame_sup_imp, text=")").place(x=130, y=cont_altura)
+cont_altura = cont_altura + aux2.winfo_reqheight() + 5
+
+ttk.Label(frame_sup_imp, text="z0 \u03F5 (").place(x=15, y=cont_altura)
+aux2 = ttk.Entry(frame_sup_imp, width=5, justify="center", textvariable=dom_z[0])
+poner_texto_fondo(aux2, "-5")
+aux2.place(x=48, y=cont_altura)
+ttk.Label(frame_sup_imp, text=", ").place(x=84, y=cont_altura)
+aux2 = ttk.Entry(frame_sup_imp, width=5, justify="center", textvariable=dom_z[1])
+poner_texto_fondo(aux2, "5")
+aux2.place(x=94, y=cont_altura)
+ttk.Label(frame_sup_imp, text=")").place(x=130, y=cont_altura)
+
+cont_altura = cont_altura + aux.winfo_reqheight() + 20
+
 #Sección del punto
 aux = ttk.Label(frame_sup_imp, text="Punto:", font=(None, 12, "bold"))
 aux.place(x=5, y=cont_altura)
 
-cont_altura = cont_altura + aux.winfo_reqheight() + 20
+cont_altura = cont_altura + aux.winfo_reqheight() + 15
 
 #Radiobutton de punto general
 aux = ttk.Radiobutton(frame_sup_imp, text="Punto genérico", variable=opc_punto_imp, value=1)
@@ -664,11 +765,11 @@ poner_texto_fondo(aux2, "1")
 aux2.place(x=66, y=cont_altura)
 ttk.Label(frame_sup_imp, text=",").place(x=133, y=cont_altura)
 aux2 = ttk.Entry(frame_sup_imp, width=10, justify="center", textvariable=comp2_pto_xyz_imp)
-poner_texto_fondo(aux2, "1")
+poner_texto_fondo(aux2, "0")
 aux2.place(x=140, y=cont_altura)
 ttk.Label(frame_sup_imp, text=",").place(x=207, y=cont_altura)
 aux2 = ttk.Entry(frame_sup_imp, width=10, justify="center", textvariable=comp3_pto_xyz_imp)
-poner_texto_fondo(aux2, "1")
+poner_texto_fondo(aux2, "0")
 aux2.place(x=214, y=cont_altura)
 ttk.Label(frame_sup_imp, text=")").place(x=280, y=cont_altura)
 
@@ -678,7 +779,7 @@ cont_altura = cont_altura + aux.winfo_reqheight() + 20
 aux = ttk.Label(frame_sup_imp, text="Cálculo:", font=(None, 12, "bold"))
 aux.place(x=5, y=cont_altura)
 
-cont_altura = cont_altura + aux.winfo_reqheight() + 20
+cont_altura = cont_altura + aux.winfo_reqheight() + 15
 
 #Checkbutton de vector normal
 aux = ttk.Checkbutton(frame_sup_imp, text="Vector normal", variable=cal_imp["vector_normal"], command=None)
@@ -693,7 +794,7 @@ aux.place(x=5, y=cont_altura)
 cont_altura = frame_sup_imp.winfo_reqheight() - 100
 
 #Botón de calcular
-b_calc_imp = tk.Button(frame_sup_imp, text="Calcular", command=None, width=10, height=2, font=(None, 12))
+b_calc_imp = tk.Button(frame_sup_imp, text="Calcular", command=calcular_sup_imp, width=10, height=2, font=(None, 12))
 b_calc_imp.place(x=30, y=cont_altura)
 b_calc_imp.bind("<Enter>", poner_resaltado_b_calc_imp)
 b_calc_imp.bind("<Leave>", quitar_resaltado_b_calc_imp)
@@ -701,7 +802,7 @@ b_calc_imp.bind("<Leave>", quitar_resaltado_b_calc_imp)
 cont_ancho = 30 + aux.winfo_reqwidth() + 20
 
 #Botón de graficar
-b_graf_imp = tk.Button(frame_sup_imp, text="Graficar", command=None, width=10, height=2, font=(None, 12))
+b_graf_imp = tk.Button(frame_sup_imp, text="Graficar", command=grafica_sup_imp, width=10, height=2, font=(None, 12))
 b_graf_imp.place(x=cont_ancho, y=cont_altura)
 b_graf_imp.bind("<Enter>", poner_resaltado_b_graf_imp)
 b_graf_imp.bind("<Leave>", quitar_resaltado_b_graf_imp)
