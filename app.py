@@ -92,7 +92,7 @@ def procesar_solicitud_param(func: callable, func_pt_uv: callable, func_pt_xyz: 
     dict2latex          funcion que convierte el resultado a latex
     """
     #TODO: manera de devolver los resultados
-    dict2latex = aLatex
+    #dict2latex = aLatex
 
     superficie_str  = request.args.get('superficie', None)
     if not superficie_str:
@@ -185,7 +185,7 @@ def normaliza_parametrizacion(var1: str, var2: str, sup: str, consts: list, func
     elif ',' in var1: var1, opciones = extrae_opciones_var(var1)
     opciones['real'] = True
     u = sp.symbols(var1, **opciones)
-    variables[var1] = u
+    variables['u'] = u
 
     #Se obtiene la segunda variable de la parametrización, por defecto es 'v'. Siempre real
     opciones = {}
@@ -193,7 +193,7 @@ def normaliza_parametrizacion(var1: str, var2: str, sup: str, consts: list, func
     elif ',' in var2: var2, opciones = extrae_opciones_var(var2)
     opciones['real'] = True
     v = sp.symbols(var2, **opciones)
-    variables[var2] = v
+    variables['v'] = v
 
     #Se obtiene la descripción de las constantes
     #La lista debe ser de la forma ["[a, positive]", "[b]", "c, real", ...]
@@ -224,7 +224,7 @@ def normaliza_parametrizacion(var1: str, var2: str, sup: str, consts: list, func
     superficie = sup.strip('[] ').split(',')
     if len(superficie) == 3:
         try:
-            return sp.Matrix([sp.sympify(elem, locals=variables) for elem in superficie]), variables
+            return sp.Matrix([sp.sympify(elem, locals=variables) for elem in superficie]).T, variables
         except Exception as e:
             raise Exception(f"Error al procesar la superficie: {e}")
     else:

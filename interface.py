@@ -11,11 +11,6 @@ API
 -------------------------------------------------------------------------------
 """
 server = app.test_client()
-"""response = server.get('/param_surf/description?superficie=[u, v, 0]')
-print(response.status_code)
-data = json.loads(response.get_data())
-for k, v in data.items():
-    print(k, v)"""
 
 
 """
@@ -417,6 +412,7 @@ def grafica_sup_imp():
         url_vals = url_vals + f'&x0={comp1_pto_xyz_imp.get()}&y0={comp2_pto_xyz_imp.get()}&z0={comp3_pto_xyz_imp.get()}'
 
     url_vals = url_vals.replace('+', r'%2B')
+    print(url_vals)
     response = server.get(f'/imp_surf/grafica?{url_vals}')
     if response.status_code == 200:
         with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.html', encoding='utf-8') as temp_file:
@@ -480,11 +476,11 @@ ttk.Label(frame_sup_param, text=")", font=(None, 12, "italic bold")).place(x=712
 cont_altura = cont_altura + aux.winfo_reqheight() + 20
 
 #Radiobutton de dominio intervalo de variables
-aux = ttk.Radiobutton(frame_sup_param, text="Dominio de variables en forma de intervalo", variable=tipo_dom_vars, value=1)
+aux = ttk.Radiobutton(frame_sup_param, text="El dominio es un rectángulo", variable=tipo_dom_vars, value=1)
 aux.place(x=5, y=cont_altura)
 
 #Radiobutton de dominio eliptico
-aux = ttk.Radiobutton(frame_sup_param, text="Dominio eliptico de variables", variable=tipo_dom_vars, value=2)
+aux = ttk.Radiobutton(frame_sup_param, text="El dominio es una elipse", variable=tipo_dom_vars, value=2)
 aux.place(x=425, y=cont_altura)
 
 cont_altura = cont_altura + aux.winfo_reqheight() + 10
@@ -704,7 +700,7 @@ ttk.Label(frame_sup_imp, text="}", font=(None, 12, "italic bold")).place(x=329, 
 cont_altura = cont_altura + aux.winfo_reqheight() + 20
 
 #Sección del dominio
-aux = ttk.Label(frame_sup_imp, text="Dominio:", font=(None, 12, "bold"))
+aux = ttk.Label(frame_sup_imp, text="Representación:", font=(None, 12, "bold"))
 aux.place(x=5, y=cont_altura)
 
 cont_altura = cont_altura + aux.winfo_reqheight() + 15

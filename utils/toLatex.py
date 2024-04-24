@@ -127,42 +127,6 @@ def imprime_resultados(json):
 
 
 
-
-def res_normal(res) -> dict:
-    pasos = [
-        {
-            "descripcion" : r'Se va a calcular el \textbf{vector normal} de la superficie parametrizada',
-            "paso" : "",
-            "pasoLatex" : r'\varphi='+sp.latex(res['sup'], mat_delim='(')
-        },
-        {
-            "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a ' + str(res['u']) + r'}: El vector $\vec{\varphi_'+str(res['u'])+r'}$ de la superficie es',
-            "paso" : "",
-            "pasoLatex" : r'\varphi_{'+str(res['u'])+r'}='+sp.latex(res['du'], mat_delim='(')
-        },
-        {
-            "descripcion" : r'C\'alculo de la \textbf{derivada parcial de con respecto a ' + str(res['v']) + r'}: El vector $\vec{\varphi_'+str(res['v'])+r'}$ de la superficie es',
-            "paso" : "",
-            "pasoLatex" : r'\varphi_{'+str(res['v'])+r'}='+sp.latex(res['dv'], mat_delim='(')
-        },
-        {
-            "descripcion" : r'C\'alculo del \textbf{producto vectorial de las derivadas parciales}: El vector producto vectorial de las derivadas parciales de la superficie es',
-            "paso" : "",
-            "pasoLatex" : r'\varphi_'+str(res['u'])+r' \times'+r' \varphi_'+str(res['v'])+r'='+sp.latex(res['duXdv'], mat_delim='(')
-        },
-        {
-            "descripcion" : r'C\'alculo de la \textbf{norma del producto vectorial}: La norma del producto vectorial de las derivadas parciales de la superficie es',
-            "paso" : "",
-            "pasoLatex" : r'\|\varphi_'+str(res['u'])+r' \times'+r' \varphi_'+str(res['v'])+r'\|='+sp.latex(res['norma'], mat_delim='(')
-        },
-        {
-            "descripcion" : r'C\'alculo del \textbf{vector normal}: El vector normal de la superficie en un punto genérico es',
-            "paso" : "",
-            "pasoLatex" : r'\vec{n}='+sp.latex(res['normal'], mat_delim='(')
-        }
-    ]
-    return pasos
-
 def res_PFF(res) -> dict:
     pasos = [
         {

@@ -1,22 +1,24 @@
-import tkinter as tk
-from tkinter import ttk
+from app import app
+import json
 
-def abrir_nueva_ventana():
-    # Crear una nueva ventana
-    nueva_ventana = tk.Toplevel(ventana_principal)
-    nueva_ventana.title("Nueva Ventana")
-    
-    # Contenido de la nueva ventana
-    etiqueta = ttk.Label(nueva_ventana, text="¡Esta es una nueva ventana!")
-    etiqueta.pack()
+server = app.test_client()
+#response = server.get('/param_surf/vector_normal?superficie=[u,v,u**2%2Bv^2]')
+response = server.get('/param_surf/vector_normal?superficie=[s,t,s**2%2Bt^2]&var1=s&var2=t')
+res = json.loads(response.data)
 
-# Crear la ventana principal
-ventana_principal = tk.Tk()
-ventana_principal.title("Ventana Principal")
+pasos = r"""\documentclass{article}
+\usepackage{amsmath}
+\begin{document}"""
+for i, paso in enumerate(res):
+    pasos = pasos + f"""
+Paso {i+1}
 
-# Crear un botón para abrir la nueva ventana
-boton_abrir = ttk.Button(ventana_principal, text="Abrir Nueva Ventana", command=abrir_nueva_ventana)
-boton_abrir.pack()
+{paso['descripcion']}
+$${paso['pasoLatex']}$$
 
-# Ejecutar el bucle principal de la interfaz gráfica
-ventana_principal.mainloop()
+"""
+
+pasos = pasos + r"""
+
+\end{document}"""
+print(pasos)
