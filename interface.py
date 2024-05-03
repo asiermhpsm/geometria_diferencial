@@ -159,6 +159,14 @@ def prepara_var(nombre:str, opciones: dict):
             aux = aux + f', {k}'
     return nombre if aux=='' else '['+nombre+aux+']'
 
+def normaliza_respuesta(respuesta: dict):
+    res = ''
+    pasos = respuesta['pasos']
+    for paso in pasos:
+        res += paso['descripcion'] + '\n'
+        res += '$$'+paso['pasoLatex']+'$$\n\n'
+    return res
+
 
 #Funciones de configuración de la pantalla
 def poner_texto_fondo(entrada, texto_fondo):
@@ -317,8 +325,7 @@ def calcular_sup_param():
         if k.get():
             response = server.get(f'/param_surf/{v}?{url_vals}')
             if response.status_code == 200:
-                nueva_ventana(str(json.loads(response.get_data())), v)
-                print(json.loads(response.get_data()))
+                nueva_ventana(normaliza_respuesta(json.loads(response.get_data())), v)
             else:
                 nueva_ventana(f"Error al calcular {v}", v)
 
@@ -386,8 +393,7 @@ def calcular_sup_imp():
         if k.get():
             response = server.get(f'/imp_surf/{v}?{url_vals}')
             if response.status_code == 200:
-                nueva_ventana(str(json.loads(response.get_data())), v)
-                print(json.loads(response.get_data()))
+                nueva_ventana(normaliza_respuesta(json.loads(response.get_data())), v)
             else:
                 nueva_ventana(f"Error al calcular {v}", v)
 
@@ -706,35 +712,35 @@ aux.place(x=5, y=cont_altura)
 cont_altura = cont_altura + aux.winfo_reqheight() + 15
 
 #Definición del dominio de variables
-ttk.Label(frame_sup_imp, text="x0 \u03F5 (").place(x=15, y=cont_altura)
+ttk.Label(frame_sup_imp, text="x \u03F5 (").place(x=15, y=cont_altura)
 aux2 = ttk.Entry(frame_sup_imp, width=5, justify="center", textvariable=dom_x[0])
-poner_texto_fondo(aux2, "-5")
+poner_texto_fondo(aux2, "-1")
 aux2.place(x=48, y=cont_altura)
 ttk.Label(frame_sup_imp, text=", ").place(x=84, y=cont_altura)
 aux2 = ttk.Entry(frame_sup_imp, width=5, justify="center", textvariable=dom_x[1])
-poner_texto_fondo(aux2, "5")
+poner_texto_fondo(aux2, "1")
 aux2.place(x=94, y=cont_altura)
 ttk.Label(frame_sup_imp, text=")").place(x=130, y=cont_altura)
 cont_altura = cont_altura + aux2.winfo_reqheight() + 5
 
-ttk.Label(frame_sup_imp, text="y0 \u03F5 (").place(x=15, y=cont_altura)
+ttk.Label(frame_sup_imp, text="y \u03F5 (").place(x=15, y=cont_altura)
 aux2 = ttk.Entry(frame_sup_imp, width=5, justify="center", textvariable=dom_y[0])
-poner_texto_fondo(aux2, "-5")
+poner_texto_fondo(aux2, "-1")
 aux2.place(x=48, y=cont_altura)
 ttk.Label(frame_sup_imp, text=", ").place(x=84, y=cont_altura)
 aux2 = ttk.Entry(frame_sup_imp, width=5, justify="center", textvariable=dom_y[1])
-poner_texto_fondo(aux2, "5")
+poner_texto_fondo(aux2, "1")
 aux2.place(x=94, y=cont_altura)
 ttk.Label(frame_sup_imp, text=")").place(x=130, y=cont_altura)
 cont_altura = cont_altura + aux2.winfo_reqheight() + 5
 
-ttk.Label(frame_sup_imp, text="z0 \u03F5 (").place(x=15, y=cont_altura)
+ttk.Label(frame_sup_imp, text="z \u03F5 (").place(x=15, y=cont_altura)
 aux2 = ttk.Entry(frame_sup_imp, width=5, justify="center", textvariable=dom_z[0])
-poner_texto_fondo(aux2, "-5")
+poner_texto_fondo(aux2, "-1")
 aux2.place(x=48, y=cont_altura)
 ttk.Label(frame_sup_imp, text=", ").place(x=84, y=cont_altura)
 aux2 = ttk.Entry(frame_sup_imp, width=5, justify="center", textvariable=dom_z[1])
-poner_texto_fondo(aux2, "5")
+poner_texto_fondo(aux2, "1")
 aux2.place(x=94, y=cont_altura)
 ttk.Label(frame_sup_imp, text=")").place(x=130, y=cont_altura)
 

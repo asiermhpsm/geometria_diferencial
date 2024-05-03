@@ -1,4 +1,4 @@
-from formulas import *
+from .formulas import *
 
 
 TH_VEC_NORMAL = r'''Sea $(U, \varphi)$ una superficie regular y $p=(u_0, v_0)\in U$. Se llama \textbf{vector unitario normal} a la superficie en $p$ al vector:

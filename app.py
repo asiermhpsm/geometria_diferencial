@@ -9,8 +9,13 @@ import utils.utils as utils
 import utils.calc_param as calcp
 import utils.calc_imp as calci
 import utils.graph as graph
-import utils.toLatex as tx
-from utils.graph import *
+
+import utils.Latex.sparam.teoria.teoria as txparamth
+import utils.Latex.sparam.resultados.resultados as txparamres
+
+import utils.Latex.simpl.teoria.teoria as txsimplth
+import utils.Latex.simpl.resultados.resultados as txsimplres
+
 
 app = Flask(__name__)
 
@@ -82,7 +87,7 @@ SUPERFICIE PARAMETRIZADA
 param_surf_bp = Blueprint('parametrizada', __name__)
 
 #FUNCION AUXILIARES
-def procesar_solicitud_param(func: callable, func_pt_uv: callable, func_pt_xyz: callable, dict2latex: callable) -> dict:
+def procesar_solicitud_param(func: callable, func_pt_uv: callable, func_pt_xyz: callable, dict2latex: callable, dict2latex_pt: callable, txth: str='') -> dict:
     """
     Procesa una solicitud
     Argumentos:
@@ -90,14 +95,13 @@ def procesar_solicitud_param(func: callable, func_pt_uv: callable, func_pt_xyz: 
     func_pt_uv          funcion a ejecutar con punto especifico en función de u, v
     func_pt_xyz         funcion a ejecutar con punto especifico en función de x, y, z
     dict2latex          funcion que convierte el resultado a latex
+    dict2latex_pt       funcion que convierte el resultado con punto a latex
+    txth                string con la teoría de la función
     """
-    #TODO: manera de devolver los resultados
-    #dict2latex = aLatex
-
     superficie_str  = request.args.get('superficie', None)
     if not superficie_str:
-        # TODO: Devolver teoría
-        raise Exception("No se ha encontrado la parametrización de la superficie")
+        return {'pasos': [{"descripcion": txth, "paso": "", "pasoLatex": "" }]}
+
 
     #Se consigue la parametrización de la superficie convertida a objeto sympy
     func_str = request.args.getlist('func')
@@ -143,7 +147,7 @@ def procesar_solicitud_param(func: callable, func_pt_uv: callable, func_pt_xyz: 
         func_pt_uv(resultados)
         if simp_trig:
             utils.aplica_simplificaciones(resultados)
-        return dict2latex(resultados)
+        return {'pasos': dict2latex_pt(resultados)}
 
     x0 = obtiene_valor_pt(request.args.get('x0', None))
     y0 = obtiene_valor_pt(request.args.get('y0', None))
@@ -155,7 +159,7 @@ def procesar_solicitud_param(func: callable, func_pt_uv: callable, func_pt_xyz: 
         func_pt_xyz(resultados)
         if simp_trig:
             utils.aplica_simplificaciones(resultados)
-        return dict2latex(resultados)
+        return {'pasos': dict2latex_pt(resultados)}
     
     if func_pt_uv is calcp.clasicPt_uv:
         raise Exception("No se ha definido correctamente el punto a clasificar")
@@ -163,7 +167,7 @@ def procesar_solicitud_param(func: callable, func_pt_uv: callable, func_pt_xyz: 
     func(resultados)
     if simp_trig:
         utils.aplica_simplificaciones(resultados)
-    return dict2latex(resultados)
+    return {'pasos': dict2latex(resultados)}
 
 def normaliza_parametrizacion(var1: str, var2: str, sup: str, consts: list, funcs: list) -> tuple:
     """
@@ -234,27 +238,27 @@ def normaliza_parametrizacion(var1: str, var2: str, sup: str, consts: list, func
 #ENDPOINTS
 @param_surf_bp.route('/primera_forma_fundamental')
 def primera_forma_fundamental():
-    return jsonify(procesar_solicitud_param(calcp.primeraFormaFundamental, calcp.primeraFormaFundamental_pt_uv, calcp.primeraFormaFundamental_pt_xyz, tx.res_PFF))
+    return jsonify(procesar_solicitud_param(calcp.primeraFormaFundamental, calcp.primeraFormaFundamental_pt_uv, calcp.primeraFormaFundamental_pt_xyz, txparamres.res_PFF, txparamres.res_PFF_pt, txparamth.TH_PFF))
 
 @param_surf_bp.route('/segunda_forma_fundamental')
 def segunda_forma_fundamental():
-    return jsonify(procesar_solicitud_param(calcp.segundaFormaFundamental, calcp.segundaFormaFundamental_pt_uv, calcp.segundaFormaFundamental_pt_xyz, tx.res_SFF))
+    return jsonify(procesar_solicitud_param(calcp.segundaFormaFundamental, calcp.segundaFormaFundamental_pt_uv, calcp.segundaFormaFundamental_pt_xyz, txparamres.res_SFF, txparamres.res_SFF_pt, txparamth.TH_SFF))
 
 @param_surf_bp.route('/curvatura_Gauss')
 def curvatura_Gauss():
-    return jsonify(procesar_solicitud_param(calcp.curvaturaGauss, calcp.curvaturaGauss_pt_uv, calcp.curvaturaGauss_pt_xyz, tx.res_curv_Gauss))
+    return jsonify(procesar_solicitud_param(calcp.curvaturaGauss, calcp.curvaturaGauss_pt_uv, calcp.curvaturaGauss_pt_xyz, txparamres.res_curv_Gauss, txparamres.res_curv_Gauss_pt, txparamth.TH_CURV_GAUSS))
 
 @param_surf_bp.route('/curvatura_media')
 def curvatura_media():
-    return jsonify(procesar_solicitud_param(calcp.curvaturaMedia, calcp.curvaturaMedia_pt_uv, calcp.curvaturaMedia_pt_xyz, tx.res_curv_media))
+    return jsonify(procesar_solicitud_param(calcp.curvaturaMedia, calcp.curvaturaMedia_pt_uv, calcp.curvaturaMedia_pt_xyz, txparamres.res_curv_media, txparamres.res_curv_media_pt, txparamth.TH_CURV_MEDIA))
 
 @param_surf_bp.route('/curvaturas_principales')
 def curvaturas_principales():
-    return jsonify(procesar_solicitud_param(calcp.curvaturasPrincipales, calcp.curvaturasPrincipales_pt_uv, calcp.curvaturasPrincipales_pt_xyz, tx.res_curv_media))
+    return jsonify(procesar_solicitud_param(calcp.curvaturasPrincipales, calcp.curvaturasPrincipales_pt_uv, calcp.curvaturasPrincipales_pt_xyz, txparamres.res_curvs_principales, txparamres.res_curvs_principales_pt, txparamth.TH_CURVS_PRINCIPALES))
 
 @param_surf_bp.route('/vector_normal')
 def vector_normal():
-    return jsonify(procesar_solicitud_param(calcp.normal, calcp.normal_pt_uv, calcp.normal_pt_xyz, tx.res_normal))
+    return jsonify(procesar_solicitud_param(calcp.normal, calcp.normal_pt_uv, calcp.normal_pt_xyz, txparamres.res_vect_normal, txparamres.res_vect_normal_pt, txparamth.TH_VEC_NORMAL))
 
 @param_surf_bp.route('/clasificacion_punto')
 def clasificacion_punto():
@@ -264,23 +268,23 @@ def clasificacion_punto():
 @param_surf_bp.route('/punto_umbilico')
 def punto_umbilico():
     #TODO- ¿como tranformar a Latex?
-    return jsonify(procesar_solicitud_param(calcp.umbilico, calcp.umbilico_pt_uv, calcp.umbilico_pt_xyz, aLatex))
+    return jsonify(procesar_solicitud_param(calcp.umbilico, calcp.umbilico_pt_uv, calcp.umbilico_pt_xyz, txparamres.res_ptos_umbilicos, txparamres.res_ptos_umbilicos_pt, txparamth.TH_PTS_UMBILICOS))
 
 @param_surf_bp.route('/plano_tangente')
 def plano_tangente():
-    return jsonify(procesar_solicitud_param(calcp.planoTangente, calcp.planoTangente_pt_uv, calcp.planoTangente_pt_xyz, tx.res_tangente))
+    return jsonify(procesar_solicitud_param(calcp.planoTangente, calcp.planoTangente_pt_uv, calcp.planoTangente_pt_xyz, txparamres.res_plano_tangente, txparamres.res_plano_tangente_pt, txparamth.TH_PLANO_TANG))
 
 @param_surf_bp.route('/weingarten')
 def weingarten():
-    return jsonify(procesar_solicitud_param(calcp.weingarten, calcp.weingarten_pt_uv, calcp.weingarten_pt_xyz, tx.res_Weingarten))
+    return jsonify(procesar_solicitud_param(calcp.weingarten, calcp.weingarten_pt_uv, calcp.weingarten_pt_xyz, txparamres.EscribeWeingarten, txparamres.EscribeWeingarten_pt, txparamth.TH_WEINGARTEN))
 
 @param_surf_bp.route('/direcciones_principales')
 def direcciones_principales():
-    return jsonify(procesar_solicitud_param(calcp.dirPrinc, calcp.dirPrinc_pt_uv, calcp.dirPrinc_pt_xyz, tx.res_dirs_princ))
+    return jsonify(procesar_solicitud_param(calcp.dirPrinc, calcp.dirPrinc_pt_uv, calcp.dirPrinc_pt_xyz, txparamres.res_dirs_principales, txparamres.res_dirs_principales_pt, txparamth.TH_DIRS_PRINCIPALES))
 
 @param_surf_bp.route('/description')
 def description():
-    return jsonify(procesar_solicitud_param(calcp.descripccion, calcp.descripccion_pt_uv, calcp.descripccion_pt_xyz, aLatex))
+    return jsonify(procesar_solicitud_param(calcp.descripccion, calcp.descripccion_pt_uv, calcp.descripccion_pt_xyz, txparamres.res_analisis_completo, txparamres.res_analisis_completo_pt, txparamth.TH_ANALISIS))
 
 @param_surf_bp.route('/grafica')
 def grafica():
@@ -388,7 +392,7 @@ ENDPOINTS SUPERFICIE IMPLICITA
 imp_surf_bp = Blueprint('implicita', __name__)
 
 #FUNCION AUXILIARES
-def procesar_solicitud_imp(func: callable, func_pt: callable, dict2latex: callable) -> dict:
+def procesar_solicitud_imp(func: callable, func_pt: callable, dict2latex: callable, dict2latex_pt: callable, txth: str='') -> dict:
     """
     Procesa una solicitud
     Argumentos:
@@ -396,16 +400,12 @@ def procesar_solicitud_imp(func: callable, func_pt: callable, dict2latex: callab
     func_pt             funcion a ejecutar con punto especifico en función de x,y,z
     dict2latex          funcion que convierte el resultado a latex
     """
-    #TODO: manera de devolver los resultados
-    dict2latex = aLatex
-
     #Se obtiene los parametros de la solicitud
     superficie_str  = request.args.get('superficie', None)
     func_str = request.args.getlist('func')
     
     if not superficie_str:
-        # TODO: Devolver teoría
-        raise Exception("No se ha encontrado la parametrización de la superficie")
+        return {'pasos': [{"descripcion": txth, "paso": "", "pasoLatex": "" }]}
 
     #Se consigue la parametrización de la superficie convertida a objeto sympy
     try:
@@ -434,10 +434,10 @@ def procesar_solicitud_imp(func: callable, func_pt: callable, dict2latex: callab
         resultados['y0'] = y0
         resultados['z0'] = z0
         func_pt(resultados)
-        return dict2latex(resultados)
+        return {'pasos': dict2latex_pt(resultados)}
     
     func(resultados)
-    return dict2latex(resultados)
+    return {'pasos': dict2latex(resultados)}
 
 def normaliza_implicita(sup: str, consts: list, funcs: list) -> tuple:
     """
@@ -490,11 +490,11 @@ def normaliza_implicita(sup: str, consts: list, funcs: list) -> tuple:
 #ENDPOINTS
 @imp_surf_bp.route('/vector_normal')
 def vector_normal():
-    return jsonify(procesar_solicitud_imp(calci.normal, calci.normal_pt, aLatex))
+    return jsonify(procesar_solicitud_imp(calci.normal, calci.normal_pt, txsimplres.res_vect_normal, txsimplres.res_vect_normal_pt, txsimplth.TH_VEC_NORMAL))
 
 @imp_surf_bp.route('/plano_tangente')
 def plano_tangente():
-    return jsonify(procesar_solicitud_imp(calci.tangente, calci.tangente_pt, aLatex))
+    return jsonify(procesar_solicitud_imp(calci.tangente, calci.tangente_pt, txsimplres.res_plano_tangente, txsimplres.res_plano_tangente_pt, txsimplth.TH_PLANO_TANG))
 
 @imp_surf_bp.route('/grafica')
 def grafica():

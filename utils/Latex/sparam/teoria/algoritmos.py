@@ -1,4 +1,4 @@
-from formulas import *
+from .formulas import *
 
 
 ALG_WEINGARTEN = [

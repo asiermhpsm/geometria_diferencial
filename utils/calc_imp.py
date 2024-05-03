@@ -16,14 +16,14 @@ res = {
     'dx' : ...             #Derivada de la superficie con respecto a x
     'dy' : ...             #Derivada de la superficie con respecto a y
     'dz' : ...             #Derivada de la superficie con respecto a z
-    'laplaciano' : ...     #Laplaciano de la superficie
+    'gradiente' : ...     #gradiente de la superficie
     'normal' : ...         #Vector normal a la superficie
     'tangente' : ...       #Vector tangente a la superficie
 
     'dx_pt' : ...           #Derivada de la superficie con respecto a x en el punto indicado
     'dy_pt' : ...           #Derivada de la superficie con respecto a y en el punto indicado
     'dz_pt' : ...           #Derivada de la superficie con respecto a z en el punto indicado
-    'laplaciano_pt' : ...     #Laplaciano de la superficie en el punto indicado
+    'gradiente_pt' : ...     #gradiente de la superficie en el punto indicado
     'normal_pt' : ...         #Vector normal a la superficie en el punto indicado
     'tangente_pt' : ...       #Vector tangente a la superficie en el punto indicado
 """
@@ -75,13 +75,13 @@ def tangente(res: dict={}) -> dict:
     if 'dz' not in res:
         res['dz'] = sp.simplify(sp.diff(res['sup'], res['z']))
 
-    if 'laplaciano' not in res:
-        res['laplaciano'] = sp.Matrix([res['dx'], res['dy'], res['dz']])
+    if 'gradiente' not in res:
+        res['gradiente'] = sp.Matrix([res['dx'], res['dy'], res['dz']])
 
     x0, y0, z0 = sp.symbols('x_0 y_0 z_0', real=True)
-    laplaciano_pt = sp.simplify(res['laplaciano'].subs({res['x']: x0, res['y']: y0, res['z']: z0}))
-    res['tangente'] = sp.simplify(sp.Eq(laplaciano_pt.dot(sp.Matrix([res['x'], res['y'], res['z']])), 
-                                        laplaciano_pt.dot(sp.Matrix([x0, y0, z0]))))
+    gradiente_pt = sp.simplify(res['gradiente'].subs({res['x']: x0, res['y']: y0, res['z']: z0}))
+    res['tangente'] = sp.simplify(sp.Eq(gradiente_pt.dot(sp.Matrix([res['x'], res['y'], res['z']])), 
+                                        gradiente_pt.dot(sp.Matrix([x0, y0, z0]))))
 
     return res
 
@@ -107,9 +107,9 @@ def tangente_pt(res: dict={}) -> dict:
         res['dz'] = sp.simplify(sp.diff(res['sup'], res['z']))
     res['dz_pt'] = res['dz'].subs({res['x']: res['x0'], res['y']: res['y0'], res['z']: res['z0']})
 
-    res['laplaciano_pt'] = sp.Matrix([res['dx_pt'], res['dy_pt'], res['dz_pt']])
-    res['tangente_pt'] = sp.simplify(sp.Eq(res['laplaciano_pt'].dot(sp.Matrix([res['x'], res['y'], res['z']])), 
-                                        res['laplaciano_pt'].dot(sp.Matrix([res['x0'], res['y0'], res['z0']]))))
+    res['gradiente_pt'] = sp.Matrix([res['dx_pt'], res['dy_pt'], res['dz_pt']])
+    res['tangente_pt'] = sp.simplify(sp.Eq(res['gradiente_pt'].dot(sp.Matrix([res['x'], res['y'], res['z']])), 
+                                        res['gradiente_pt'].dot(sp.Matrix([res['x0'], res['y0'], res['z0']]))))
     return res
 
 
@@ -133,11 +133,11 @@ def normal(res: dict={}) -> dict:
     if 'dz' not in res:
         res['dz'] = sp.simplify(sp.diff(res['sup'], res['z']))
 
-    if 'laplaciano' not in res:
-        res['laplaciano'] = sp.Matrix([res['dx'], res['dy'], res['dz']])
+    if 'gradiente' not in res:
+        res['gradiente'] = sp.Matrix([res['dx'], res['dy'], res['dz']])
 
     #TODO- Revisar si es normalized
-    res['normal'] = sp.simplify(res['laplaciano'].normalized())
+    res['normal'] = sp.simplify(res['gradiente'].normalized())
     return res
 
 def normal_pt(res: dict={}) -> dict:
@@ -162,6 +162,6 @@ def normal_pt(res: dict={}) -> dict:
         res['dz'] = sp.simplify(sp.diff(res['sup'], res['z']))
     res['dz_pt'] = res['dz'].subs({res['x']: res['x0'], res['y']: res['y0'], res['z']: res['z0']})
 
-    res['laplaciano_pt'] = sp.Matrix([res['dx_pt'], res['dy_pt'], res['dz_pt']])
-    res['normal_pt'] = sp.simplify(res['laplaciano_pt'].normalized())
+    res['gradiente_pt'] = sp.Matrix([res['dx_pt'], res['dy_pt'], res['dz_pt']])
+    res['normal_pt'] = sp.simplify(res['gradiente_pt'].normalized())
     return res
