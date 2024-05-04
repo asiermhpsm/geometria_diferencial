@@ -32,7 +32,7 @@ def EscribeGradiente(res):
         {
             'descripcion' : r'Cálculo del vector gradiente: el vector gradiente es',
             'paso' : '',
-            'pasoLatex' : r'\nabla f = ' + latex(res['gradiente'])
+            'pasoLatex' : r'\nabla f = ' + latex(res['gradiente'], mat_delim='(')
         }
     ]
 
@@ -41,7 +41,7 @@ def EscribeVectNormal(res):
         {
             'descripcion' : r'Cálculo del vector normal: aplicando su fórmula, el vector normal es',
             'paso' : '',
-            'pasoLatex' : r'\vec{n} = ' + latex(res['normal'])
+            'pasoLatex' : r'\vec{n} = ' + latex(res['normal'], mat_delim='(')
         }
     ]
 

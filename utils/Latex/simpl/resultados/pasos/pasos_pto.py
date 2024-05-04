@@ -37,7 +37,7 @@ def EscribeGradiente_pt(res):
         {
             'descripcion' : r'Cálculo del vector gradiente: el vector gradiente en el punto $('+latex(res['x0'])+r', '+latex(res['y0'])+r', '+latex(res['z0'])+r')$ es',
             'paso' : '',
-            'pasoLatex' : r'\nabla f = ' + latex(res['gradiente_pt'])
+            'pasoLatex' : r'\nabla f = ' + latex(res['gradiente_pt'], mat_delim='(')
         }
     ]
 
@@ -46,7 +46,7 @@ def EscribeVectNormal_pt(res):
         {
             'descripcion' : r'Cálculo del vector normal: aplicando su fórmula, el vector normal en el punto $('+latex(res['x0'])+r', '+latex(res['y0'])+r', '+latex(res['z0'])+r')$ es',
             'paso' : '',
-            'pasoLatex' : r'\vec{n} = ' + latex(res['normal_pt'])
+            'pasoLatex' : r'\vec{n} = ' + latex(res['normal_pt'], mat_delim='(')
         }
     ]
 

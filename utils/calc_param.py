@@ -367,6 +367,9 @@ def primeraFormaFundamental_pt_uv(res : dict ={}) -> dict:
             res['dv'] = sp.simplify(sp.diff(res['sup'], res['v']))
         res['dv_pt'] = sp.simplify(res['dv'].subs({res['u']:res['u0'], res['v']:res['v0']}))
 
+    if not 'duXdv_pt' in res:
+        res['duXdv_pt'] = sp.simplify(res['du_pt'].cross(res['dv_pt']))
+
     res['E_pt'] = sp.simplify(res['du_pt'].dot(res['du_pt']))
     res['F_pt'] = sp.simplify(res['du_pt'].dot(res['dv_pt']))
     res['G_pt'] = sp.simplify(res['dv_pt'].dot(res['dv_pt']))

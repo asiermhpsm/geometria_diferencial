@@ -76,7 +76,7 @@ def tangente(res: dict={}) -> dict:
         res['dz'] = sp.simplify(sp.diff(res['sup'], res['z']))
 
     if 'gradiente' not in res:
-        res['gradiente'] = sp.Matrix([res['dx'], res['dy'], res['dz']])
+        res['gradiente'] = sp.Matrix([res['dx'], res['dy'], res['dz']]).T
 
     x0, y0, z0 = sp.symbols('x_0 y_0 z_0', real=True)
     gradiente_pt = sp.simplify(res['gradiente'].subs({res['x']: x0, res['y']: y0, res['z']: z0}))
@@ -107,7 +107,7 @@ def tangente_pt(res: dict={}) -> dict:
         res['dz'] = sp.simplify(sp.diff(res['sup'], res['z']))
     res['dz_pt'] = res['dz'].subs({res['x']: res['x0'], res['y']: res['y0'], res['z']: res['z0']})
 
-    res['gradiente_pt'] = sp.Matrix([res['dx_pt'], res['dy_pt'], res['dz_pt']])
+    res['gradiente_pt'] = sp.Matrix([res['dx_pt'], res['dy_pt'], res['dz_pt']]).T
     res['tangente_pt'] = sp.simplify(sp.Eq(res['gradiente_pt'].dot(sp.Matrix([res['x'], res['y'], res['z']])), 
                                         res['gradiente_pt'].dot(sp.Matrix([res['x0'], res['y0'], res['z0']]))))
     return res
@@ -134,7 +134,7 @@ def normal(res: dict={}) -> dict:
         res['dz'] = sp.simplify(sp.diff(res['sup'], res['z']))
 
     if 'gradiente' not in res:
-        res['gradiente'] = sp.Matrix([res['dx'], res['dy'], res['dz']])
+        res['gradiente'] = sp.Matrix([res['dx'], res['dy'], res['dz']]).T
 
     #TODO- Revisar si es normalized
     res['normal'] = sp.simplify(res['gradiente'].normalized())
@@ -162,6 +162,6 @@ def normal_pt(res: dict={}) -> dict:
         res['dz'] = sp.simplify(sp.diff(res['sup'], res['z']))
     res['dz_pt'] = res['dz'].subs({res['x']: res['x0'], res['y']: res['y0'], res['z']: res['z0']})
 
-    res['gradiente_pt'] = sp.Matrix([res['dx_pt'], res['dy_pt'], res['dz_pt']])
+    res['gradiente_pt'] = sp.Matrix([res['dx_pt'], res['dy_pt'], res['dz_pt']]).T
     res['normal_pt'] = sp.simplify(res['gradiente_pt'].normalized())
     return res

@@ -276,7 +276,7 @@ def plano_tangente():
 
 @param_surf_bp.route('/weingarten')
 def weingarten():
-    return jsonify(procesar_solicitud_param(calcp.weingarten, calcp.weingarten_pt_uv, calcp.weingarten_pt_xyz, txparamres.EscribeWeingarten, txparamres.EscribeWeingarten_pt, txparamth.TH_WEINGARTEN))
+    return jsonify(procesar_solicitud_param(calcp.weingarten, calcp.weingarten_pt_uv, calcp.weingarten_pt_xyz, txparamres.res_Weingarten, txparamres.res_Weingarten_pt, txparamth.TH_WEINGARTEN))
 
 @param_surf_bp.route('/direcciones_principales')
 def direcciones_principales():

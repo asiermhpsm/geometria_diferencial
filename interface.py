@@ -150,6 +150,14 @@ FUNCIONES AUXILIARES
 def nueva_ventana(texto: str, titulo: str):
     nueva_ventana = tk.Toplevel(root)
     nueva_ventana.title(titulo)
+
+    def copiar_texto():
+        root.clipboard_clear()
+        root.clipboard_append(texto)
+
+    boton_copiar = ttk.Button(nueva_ventana, text="Copiar", command=copiar_texto)
+    boton_copiar.pack()
+    
     ttk.Label(nueva_ventana, text=texto).pack()
 
 def prepara_var(nombre:str, opciones: dict):
@@ -162,8 +170,8 @@ def prepara_var(nombre:str, opciones: dict):
 def normaliza_respuesta(respuesta: dict):
     res = ''
     pasos = respuesta['pasos']
-    for paso in pasos:
-        res += paso['descripcion'] + '\n'
+    for i, paso in enumerate(pasos):
+        res += r'\textbf{Paso '+str(i)+r'}: '+paso['descripcion'] + '\n'
         res += '$$'+paso['pasoLatex']+'$$\n\n'
     return res
 

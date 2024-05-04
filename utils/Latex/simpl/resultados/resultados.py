@@ -7,7 +7,7 @@ def res_vect_normal(res):
     return (
         [
             {
-                'descripcion' : r'Enunciado: Se va a calcular el vector normal de la superficie parametrizada',
+                'descripcion' : r'Enunciado: Se va a calcular el vector normal de la superficie implicita',
                 'paso' : '',
                 'pasoLatex' : latex(res['sup']) + r' = 0'
             }
@@ -22,7 +22,7 @@ def res_plano_tangente(res):
     return (
         [
             {
-                'descripcion' : r'Enunciado: Se va a calcular el plano tangente de la superficie parametrizada',
+                'descripcion' : r'Enunciado: Se va a calcular el plano tangente de la superficie implicita',
                 'paso' : '',
                 'pasoLatex' : latex(res['sup']) + r' = 0'
             }
@@ -38,7 +38,7 @@ def res_vect_normal_pt(res):
     return (
         [
             {
-                'descripcion' : r'Enunciado: Se va a calcular el vector normal en el punto $('+latex(res['x0'])+r', '+latex(res['y0'])+r', '+latex(res['z0'])+r')$ de la superficie parametrizada',
+                'descripcion' : r'Enunciado: Se va a calcular el vector normal en el punto $('+latex(res['x0'])+r', '+latex(res['y0'])+r', '+latex(res['z0'])+r')$ de la superficie implicita',
                 'paso' : '',
                 'pasoLatex' : latex(res['sup']) + r' = 0'
             }
@@ -53,7 +53,7 @@ def res_plano_tangente_pt(res):
     return (
         [
             {
-                'descripcion' : r'Enunciado: Se va a calcular el plano tangente en el punto $('+latex(res['x0'])+r', '+latex(res['y0'])+r', '+latex(res['z0'])+r')$ de la superficie parametrizada',
+                'descripcion' : r'Enunciado: Se va a calcular el plano tangente en el punto $('+latex(res['x0'])+r', '+latex(res['y0'])+r', '+latex(res['z0'])+r')$ de la superficie implicita',
                 'paso' : '',
                 'pasoLatex' : latex(res['sup']) + r' = 0'
             }
