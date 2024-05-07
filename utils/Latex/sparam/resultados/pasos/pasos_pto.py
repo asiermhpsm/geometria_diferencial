@@ -188,8 +188,82 @@ def EscribePuntosUmbilicos_pt(res):
         ]
     
 def EscribeClasificacionPt(res):
-    #TODO: Implementar
-    return 
+    if res['clasif_pt'] == 'Eliptico':
+        return [
+            {
+                'descripcion' : r'Clasificación del punto: ya que $\kappa_1 \kappa_2 > 0$, el punto $\varphi('+latex(res['u0'])+r','+latex(res['v0'])+r')$ es un punto elíptico',
+                'paso' : '',
+                'pasoLatex' : ''
+            }
+        ]
+    elif res['clasif_pt'] == 'Hiperbolico':
+        return [
+            {
+                'descripcion' : r'Clasificación del punto: ya que $\kappa_1 \kappa_2 < 0$, el punto $\varphi('+latex(res['u0'])+r','+latex(res['v0'])+r')$ es un punto hiperbólico',
+                'paso' : '',
+                'pasoLatex' : ''
+            }
+        ]
+    elif res['clasif_pt'] == 'Planar':
+        return [
+            {
+                'descripcion' : r'Clasificación del punto: ya que $\kappa_1 \kappa_2 = 0$ y $\kappa_1 = \kappa_2$, el punto $\varphi('+latex(res['u0'])+r','+latex(res['v0'])+r')$ es un punto planar',
+                'paso' : '',
+                'pasoLatex' : ''
+            }
+        ]
+    else:
+        return [
+            {
+                'descripcion' : r'Clasificación del punto: ya que $\kappa_1 \kappa_2 = 0$ y $\kappa_1 \neq \kappa_2$, el punto $\varphi('+latex(res['u0'])+r','+latex(res['v0'])+r')$ es un punto parabólico',
+                'paso' : '',
+                'pasoLatex' : ''
+            }
+        ]
+
+def EscribeDireccionesAsintóticasPt(res):
+    if res['e_pt']==0 and res['f_pt']==0 and res['g_pt']==0:
+        return [
+            {
+                'descripcion' : r'Analizar caso: ya que $e=f=g=0$, estamos ante un punto planar, y por lo tanto \textbf{todas las direcciones son asintóticas}',
+                'paso' : str(res['Dirs_asint']),
+                'pasoLatex' : ''
+            }
+        ]
+    elif res['e_pt']==0:
+        d1 = latex(res['Dirs_asint'][0])
+        d2 = latex(res['Dirs_asint'][1])
+        return [
+            {
+                'descripcion' : r'Analizar caso: ya que $e=0$, se tiene las siguientes direcciones asintóticas',
+                'paso' : str(res['Dirs_asint']),
+                'pasoLatex' : r'\{'+d1+r','+d2+r' \}'
+            }
+        ]
+    elif res['g_pt']==0:
+        return [
+            {
+                'descripcion' : r'Analizar caso: ya que $g=0$, se tiene las siguientes direcciones asintóticas',
+                'paso' : str(res['Dirs_asint']),
+                'pasoLatex' : r'\{'+latex(res['Dirs_asint'][0])+r','+latex(res['Dirs_asint'][1])+r' \}'
+            }
+        ]
+    elif res['f_pt']**2- res['g_pt']*res['e_pt'] < 0:
+        return [
+            {
+                'descripcion' : r'Analizar caso: ya que $e\neq 0, g\neq 0, f^2-eg<0$, no existen direcciones asintóticas',
+                'paso' : str(res['Dirs_asint']),
+                'pasoLatex' : ''
+            }
+        ]
+    else:
+        return [
+            {
+                'descripcion' : r'Analizar caso: ya que $e\neq 0, g\neq 0, f^2-eg\geq0$, se tiene las siguientes direcciones asintóticas',
+                'paso' : str(res['Dirs_asint']),
+                'pasoLatex' : r'\{'+latex(res['Dirs_asint'][0])+r','+latex(res['Dirs_asint'][1])+r' \}'
+            }
+        ]
     
 
 

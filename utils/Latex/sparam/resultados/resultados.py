@@ -449,6 +449,47 @@ def res_Weingarten_pt(res):
         EscribeWeingarten_pt(res)
     )
 
+def res_dirs_asint(res):
+    return (
+        [
+            {
+                'descripcion' : r'Enunciado: Se va a calcular las direcciones asintóticas en el punto $\varphi('+latex(res['u0'])+r','+latex(res['v0'])+r')$ de la superficie parametrizada',
+                'paso' : '',
+                'pasoLatex' : r'\varphi('+latex(res['u'])+r' ,'+latex(res['v'])+r') = '+latex(res['sup'], mat_delim='(')
+            }
+        ] +
+        EscribeDerivadasPrimerOrden_pt(res) +
+        EscribeDerivadasSegundoOrden_pt(res) +
+        EscribeProdVect_pt(res) +
+        EscribeSupRegular(res) +
+        EscribeNormProdVect_pt(res) +
+        EscribeVectNormal_pt(res) +
+        EscribeSFF_pt(res) +
+        EscribeDireccionesAsintóticasPt(res)
+    )
+
+def res_clasif_pt(res):
+    return (
+        [
+            {
+                'descripcion' : r'Enunciado: Se van a clasificar el punto $\varphi('+latex(res['u0'])+r','+latex(res['v0'])+r')$ de la superficie parametrizada',
+                'paso' : '',
+                'pasoLatex' : r'\varphi('+latex(res['u'])+r' ,'+latex(res['v'])+r') = '+latex(res['sup'], mat_delim='(')
+            }
+        ] +
+        EscribeDerivadasPrimerOrden_pt(res) +
+        EscribeDerivadasSegundoOrden_pt(res) +
+        EscribeProdVect_pt(res) +
+        EscribeSupRegular(res) +
+        EscribeNormProdVect_pt(res) +
+        EscribeVectNormal_pt(res) +
+        EscribePFF_pt(res) +
+        EscribeSFF_pt(res) +
+        EscribeCurvGauss_pt(res) +
+        EscribeCurvMedia_pt(res) +
+        EscribeCurvsPrincipales_pt(res) +
+        EscribeClasificacionPt(res)
+    )
 
 
 

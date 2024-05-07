@@ -639,7 +639,7 @@ def clasicPt_uv(res : dict ={}) -> dict:
         elif K < 0:
             res['clasif_pt'] = 'Hiperbólitco'
         elif K == 0:
-            if sp.simplify(res['k1_pt']-res['k2_pt']) == 0:
+            if res['k1_pt'] == res['k2_pt']:
                 return 'Planar'
             else:
                 return 'Parabólico'
@@ -814,22 +814,6 @@ def dirPrinc_pt_xyz(res : dict ={}) -> dict:
 PUNTOS UMBÍLICOS
 -------------------------------------------------------------------------------
 """
-def umbilico(res : dict ={}) -> dict:
-    """
-    Calcula los puntos umbílicos
-    No se hacen comprobaciones de tipo
-
-    Argumentos:
-    res          diccionario con todos los res calculados hasta el momento
-    """
-    res = curvaturasPrincipales(res)
-    if res['k1'] == res['k2']:
-        res['umbilico'] = set([(res['u'], res['v'])])
-    else:
-        soluciones = sp.solve(sp.Eq(res['k1'], res['k2']), (res['u'], res['v']))
-        res['umbilico'] = set([(sp.re(sol[0]), sp.re(sol[1])) for sol in soluciones])
-    return res
-
 def umbilico_pt_uv(res : dict ={}) -> dict:
     """
     Calcula si un punto es umbílico
@@ -852,6 +836,49 @@ def umbilico_pt_xyz(res : dict ={}) -> dict:
     """
     res['u0'], res['v0'] = xyz_to_uv(res['sup'], res['u'], res['v'], res['x0'], res['y0'], res['z0'])
     return umbilico_pt_uv(res)
+
+"""
+-------------------------------------------------------------------------------
+DIRECCIONES ASINTÓTICAS
+-------------------------------------------------------------------------------
+"""
+def dirAsin_pt_uv(res):
+    """
+    Calcula las direcciones asintóticas en un punto
+    No se hacen comprobaciones de tipo
+
+    Argumentos:
+    res          diccionario con todos los resultados calculados hasta el momento
+    """
+    if 'e_pt' not in res:
+        segundaFormaFundamental_pt_uv(res)
+
+    if res['e_pt']==0 and res['f_pt']==0 and res['g_pt']==0:
+        w1, w2 = sp.symbols('w_1, w_2', real=True)
+        res['Dirs_asint'] = [sp.Matrix([w1, w2]).T]
+    elif res['e_pt']==0:
+        res['Dirs_asint'] = [sp.Matrix([1, 0]).T, sp.Matrix([-res['g_pt'], 2*res['f_pt']]).T]
+    elif res['g_pt']==0:
+        res['Dirs_asint'] = [sp.Matrix([0, 1]).T, sp.Matrix([-2*res['f_pt'], -res['e_pt'], ]).T]
+    elif res['f_pt']**2- res['g_pt']*res['e_pt'] < 0:
+        res['Dirs_asint'] = []
+    else:
+        raiz = sp.sqrt(res['f_pt']**2- res['g_pt']*res['e_pt'])
+        res['Dirs_asint'] = [sp.Matrix([res['g_pt'], -res['f_pt']+raiz]).T, sp.Matrix([res['g_pt'], -res['f_pt']-raiz]).T]
+    return res
+
+def dirAsin_pt_xyz(res):
+    """
+    Calcula las direcciones asintóticas en un punto
+    No se hacen comprobaciones de tipo
+
+    Argumentos:
+    res          diccionario con todos los resultados calculados hasta el momento
+    """
+
+    res['u0'], res['v0'] = xyz_to_uv(res['sup'], res['u'], res['v'], res['x0'], res['y0'], res['z0'])
+    return dirAsin_pt_uv(res)
+
 
 """
 -------------------------------------------------------------------------------
@@ -893,7 +920,6 @@ def descripccion(res : dict ={}) -> dict:
     
     res['d1'] = sp.simplify(res['coord_d1'][0]*res['du'] + res['coord_d1'][1]*res['dv'])
     res['d2'] = sp.simplify(res['coord_d2'][0]*res['du'] + res['coord_d2'][1]*res['dv'])
-    umbilico(res)
     return res
 
 def descripccion_pt_uv(res : dict ={}) -> dict:
@@ -935,6 +961,7 @@ def descripccion_pt_uv(res : dict ={}) -> dict:
     res['d2_pt'] = sp.simplify(res['coord_d2_pt'][0]*res['du_pt'] + res['coord_d2_pt'][1]*res['dv_pt'])
     clasicPt_uv(res)
     umbilico_pt_uv(res)
+    dirAsin_pt_uv(res)
     return res
     
 def descripccion_pt_xyz(res : dict ={}) -> dict:

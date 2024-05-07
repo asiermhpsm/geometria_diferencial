@@ -75,10 +75,6 @@ def obtiene_valor_pt(pt: str):
         pt = None
     return pt
 
-def aLatex(res: dict) -> str:
-    return {k: str(v) for k, v in res.items()}
-
-
 """
 -------------------------------------------------------------------------------
 SUPERFICIE PARAMETRIZADA
@@ -161,8 +157,8 @@ def procesar_solicitud_param(func: callable, func_pt_uv: callable, func_pt_xyz: 
             utils.aplica_simplificaciones(resultados)
         return {'pasos': dict2latex_pt(resultados)}
     
-    if func_pt_uv is calcp.clasicPt_uv:
-        raise Exception("No se ha definido correctamente el punto a clasificar")
+    if func==None:
+        raise Exception("No se ha definido correctamente el punto")
     
     func(resultados)
     if simp_trig:
@@ -262,13 +258,15 @@ def vector_normal():
 
 @param_surf_bp.route('/clasificacion_punto')
 def clasificacion_punto():
-    #TODO- ¿como tranformar a Latex?
-    return jsonify(procesar_solicitud_param(None, calcp.clasicPt_uv, calcp.clasicPt_xyz, aLatex))
+    return jsonify(procesar_solicitud_param(None, calcp.clasicPt_uv, calcp.clasicPt_xyz, None, txparamres.res_clasif_pt, txparamth.TH_CLASIFICACION_PTOS))
 
 @param_surf_bp.route('/punto_umbilico')
 def punto_umbilico():
-    #TODO- ¿como tranformar a Latex?
-    return jsonify(procesar_solicitud_param(calcp.umbilico, calcp.umbilico_pt_uv, calcp.umbilico_pt_xyz, txparamres.res_ptos_umbilicos, txparamres.res_ptos_umbilicos_pt, txparamth.TH_PTS_UMBILICOS))
+    return jsonify(procesar_solicitud_param(None, calcp.umbilico_pt_uv, calcp.umbilico_pt_xyz, txparamres.res_ptos_umbilicos, txparamres.res_ptos_umbilicos_pt, txparamth.TH_PTS_UMBILICOS))
+
+@param_surf_bp.route('/direccion_asintotica')
+def direccion_asintotica():
+    return jsonify(procesar_solicitud_param(None, calcp.dirAsin_pt_uv, calcp.dirAsin_pt_xyz, None, txparamres.res_dirs_asint, txparamth.TH_DIRS_ASINTOTICAS))
 
 @param_surf_bp.route('/plano_tangente')
 def plano_tangente():

@@ -76,5 +76,9 @@ TH_CLASIFICACION_PTOS = r'''Sea $(U, \varphi)$ una superficie orientada, $p\in U
     \item Si $\kappa_1=\kappa_2=0$ se dice que $p$ es un \textbf{punto planar}.
 \end{enumerate}'''
 
+TH_DIRS_ASINTOTICAS = r'''
+Dada una superficie regular $S=(U, \varphi)$ y un punto $p$ de $S$, una dirección $\vec{w}=(x, y)$ se denomina \textbf{asintótica} si la curva contenida en $S$ que pasa por $p$ y tiene dirección $w$ tiene curvatura $0$; o lo que es lo mismo si
+$$II_p(\vec{w}, \vec{w}) = \left(\begin{matrix}x & y\end{matrix}\right) \left(\begin{matrix}e & f \\ f & g\end{matrix}\right) \left(\begin{matrix}x \\ y\end{matrix}\right)=0$$'''
+
 TH_ANALISIS = r'''La forma y el comportamiento de una superficie diferenciable y orientada se puede mediante varias de sus características, entre las que destacan, su vector nomal, su primera y segunda forma fundamental, su cruvatura de Gauss y media o sus curvaturas y direcciones principales. Todas estas características nos ayudan a conocer localmente el comportamiento de una superficie.'''
 
