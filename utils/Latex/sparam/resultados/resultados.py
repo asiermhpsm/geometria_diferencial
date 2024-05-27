@@ -31,8 +31,7 @@ def res_analisis_completo(res):
         EscribeWeingarten(res) +
         EscribeDirsPrincipales(res) +
         EscribeCurvGauss(res) +
-        EscribeCurvMedia(res) +
-        EscribePuntosUmbilicos(res)
+        EscribeCurvMedia(res)
     )
 
 def res_curv_Gauss(res):
@@ -255,7 +254,9 @@ def res_analisis_completo_pt(res):
         EscribeDirsPrincipales_pt(res) +
         EscribeCurvGauss_pt(res) +
         EscribeCurvMedia_pt(res) +
-        EscribePuntosUmbilicos_pt(res)
+        EscribePuntosUmbilicos_pt(res) +
+        EscribeClasificacionPt(res) +
+        EscribeDireccionesAsintóticasPt(res)
     )
 
 def res_curv_Gauss_pt(res):

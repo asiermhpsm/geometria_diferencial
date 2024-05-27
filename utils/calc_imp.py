@@ -48,12 +48,62 @@ def esSupNivel(res : dict ={}) -> bool:
     res['dy'] = sp.diff(res['sup'], res['y'])
     res['dz'] = sp.diff(res['sup'], res['z'])
     try:
-        return False if sp.solve([sp.Eq(res['sup'], 0), 
-                              sp.Eq(res['dx'], 0), 
-                              sp.Eq(res['dy'], 0), 
-                              sp.Eq(res['dz'], 0)], (res['x'], res['y'], res['z']), set=True)[1] else True
+        return not sp.solve([sp.Eq(res['sup'], 0), sp.Eq(res['dx'], 0), sp.Eq(res['dy'], 0), sp.Eq(res['dz'], 0)], (res['x'], res['y'], res['z']), set=True)[1]
     except:
-        return False
+        return True
+
+"""
+-------------------------------------------------------------------------------
+VECTOR NORMAL
+-------------------------------------------------------------------------------
+"""
+def normal(res: dict={}) -> dict:
+    """
+    Calcula el vector normal a la superficie en un punto genérico.
+    Argumentos:
+    res          diccionario con todos los resultados calculados hasta el momento
+    """
+    if 'dx' not in res:
+        res['dx'] = sp.simplify(sp.diff(res['sup'], res['x']))
+
+    if 'dy' not in res:
+        res['dy'] = sp.simplify(sp.diff(res['sup'], res['y']))
+
+    if 'dz' not in res:
+        res['dz'] = sp.simplify(sp.diff(res['sup'], res['z']))
+
+    if 'gradiente' not in res:
+        res['gradiente'] = sp.Matrix([res['dx'], res['dy'], res['dz']]).T
+
+    res['normal'] = sp.simplify(res['gradiente'].normalized())
+    return res
+
+def normal_pt(res: dict={}) -> dict:
+    """
+    Calcula el vector normal a la superficie en un punto.
+    Argumentos:
+    res          diccionario con todos los resultados calculados hasta el momento
+    """
+    ec_subs = res['sup'].subs({res['x']: res['x0'], res['y']: res['y0'], res['z']: res['z0']})
+    if len(ec_subs.free_symbols)==0 and abs(ec_subs) > 0.1:
+        raise ValueError('El punto no está en la superficie')
+    
+    if 'dx' not in res:
+        res['dx'] = sp.simplify(sp.diff(res['sup'], res['x']))
+    res['dx_pt'] = res['dx'].subs({res['x']: res['x0'], res['y']: res['y0'], res['z']: res['z0']})
+
+    if 'dy' not in res:
+        res['dy'] = sp.simplify(sp.diff(res['sup'], res['y']))
+    res['dy_pt'] = res['dy'].subs({res['x']: res['x0'], res['y']: res['y0'], res['z']: res['z0']})
+
+    if 'dz' not in res:
+        res['dz'] = sp.simplify(sp.diff(res['sup'], res['z']))
+    res['dz_pt'] = res['dz'].subs({res['x']: res['x0'], res['y']: res['y0'], res['z']: res['z0']})
+
+    res['gradiente_pt'] = sp.Matrix([res['dx_pt'], res['dy_pt'], res['dz_pt']]).T
+    res['normal_pt'] = sp.simplify(res['gradiente_pt'].normalized())
+    return res
+
 
 """
 -------------------------------------------------------------------------------
@@ -115,53 +165,32 @@ def tangente_pt(res: dict={}) -> dict:
 
 """
 -------------------------------------------------------------------------------
-VECTOR NORMAL
+ANÁLISIS COMPLETO
 -------------------------------------------------------------------------------
 """
-def normal(res: dict={}) -> dict:
+
+def descripccion(res: dict={}) -> dict:
     """
-    Calcula el vector normal a la superficie en un punto genérico.
+    Hace un cálculo general de todo lo que pueda
+    No se hacen comprobaciones de tipo
+
     Argumentos:
-    res          diccionario con todos los resultados calculados hasta el momento
+    
+    res          diccionario con todos los res calculados hasta el momento
     """
-    if 'dx' not in res:
-        res['dx'] = sp.simplify(sp.diff(res['sup'], res['x']))
-
-    if 'dy' not in res:
-        res['dy'] = sp.simplify(sp.diff(res['sup'], res['y']))
-
-    if 'dz' not in res:
-        res['dz'] = sp.simplify(sp.diff(res['sup'], res['z']))
-
-    if 'gradiente' not in res:
-        res['gradiente'] = sp.Matrix([res['dx'], res['dy'], res['dz']]).T
-
-    #TODO- Revisar si es normalized
-    res['normal'] = sp.simplify(res['gradiente'].normalized())
+    normal(res)
+    tangente(res)
     return res
 
-def normal_pt(res: dict={}) -> dict:
+def descripccion_pt_uv(res: dict={}) -> dict:
     """
-    Calcula el vector normal a la superficie en un punto.
+    Hace un cálculo general de todo lo que pueda
+    No se hacen comprobaciones de tipo
+
     Argumentos:
-    res          diccionario con todos los resultados calculados hasta el momento
-    """
-    ec_subs = res['sup'].subs({res['x']: res['x0'], res['y']: res['y0'], res['z']: res['z0']})
-    if len(ec_subs.free_symbols)==0 and abs(ec_subs) > 0.1:
-        raise ValueError('El punto no está en la superficie')
     
-    if 'dx' not in res:
-        res['dx'] = sp.simplify(sp.diff(res['sup'], res['x']))
-    res['dx_pt'] = res['dx'].subs({res['x']: res['x0'], res['y']: res['y0'], res['z']: res['z0']})
-
-    if 'dy' not in res:
-        res['dy'] = sp.simplify(sp.diff(res['sup'], res['y']))
-    res['dy_pt'] = res['dy'].subs({res['x']: res['x0'], res['y']: res['y0'], res['z']: res['z0']})
-
-    if 'dz' not in res:
-        res['dz'] = sp.simplify(sp.diff(res['sup'], res['z']))
-    res['dz_pt'] = res['dz'].subs({res['x']: res['x0'], res['y']: res['y0'], res['z']: res['z0']})
-
-    res['gradiente_pt'] = sp.Matrix([res['dx_pt'], res['dy_pt'], res['dz_pt']]).T
-    res['normal_pt'] = sp.simplify(res['gradiente_pt'].normalized())
+    res          diccionario con todos los res calculados hasta el momento
+    """
+    normal_pt(res)
+    tangente_pt(res)
     return res

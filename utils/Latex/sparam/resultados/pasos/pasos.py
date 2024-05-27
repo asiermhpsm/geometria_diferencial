@@ -49,7 +49,6 @@ def EscribeSupRegular(res):
         }
     ]
 
-
 def EscribeNormProdVect(res):
     return [
         {
@@ -134,9 +133,9 @@ def EscribeWeingarten(res):
 def EscribeDirsPrincipales(res):
     return [
         {
-            'descripcion' : r'Cálculo de las curvaturas principales: aplicando su fórmula, las curvaturas principales son',
+            'descripcion' : r'Cálculo de las curvaturas principales: calculando los autovalores de la matriz de Weingarten, las curvaturas principales son',
             'paso' : '(' + str(res['k1']) + ', ' + str(res['k2']) + ')',
-            'pasoLatex' : r'\left(\begin{matrix}'+latex(res['k1'])+r' & '+latex(res['k2'])+r'\end{matrix}\right)'
+            'pasoLatex' : r'(\kappa_1, \kappa_2)=\left(\begin{matrix}'+latex(res['k1'])+r' & '+latex(res['k2'])+r'\end{matrix}\right)'
         },{
             'descripcion' : r'Cálculo del primer autovector: usando el primer autovector, se tiene que el espacio propio asociado a $\kappa_1$ es',
             'paso' : str(res['coord_d1']),

@@ -222,36 +222,30 @@ def EscribeClasificacionPt(res):
         ]
 
 def EscribeDireccionesAsintóticasPt(res):
+    dirs = ''
+    for dir in res['Dirs_asint']:
+        dirs += latex(dir, mat_delim='(') + r', '
+    dirs = dirs.strip(', ')
     if res['e_pt']==0 and res['f_pt']==0 and res['g_pt']==0:
         return [
             {
-                'descripcion' : r'Analizar caso: ya que $e=f=g=0$, estamos ante un punto planar, y por lo tanto \textbf{todas las direcciones son asintóticas}',
+                'descripcion' : r'Calcular las direcciones principales: buscando los vectores que cumplan que $II( \vec{w}, \vec{w})=0$ se tiene que \textbf{todas las direcciones son asintóticas}',
                 'paso' : str(res['Dirs_asint']),
                 'pasoLatex' : ''
             }
         ]
-    elif res['e_pt']==0:
-        d1 = latex(res['Dirs_asint'][0])
-        d2 = latex(res['Dirs_asint'][1])
+    elif res['e_pt']==0 or res['g_pt']==0:
         return [
             {
-                'descripcion' : r'Analizar caso: ya que $e=0$, se tiene las siguientes direcciones asintóticas',
+                'descripcion' : r'Calcular las direcciones principales: buscando los vectores que cumplan que $II( \vec{w}, \vec{w})=0$ se tiene que las direcciones asintóticas son',
                 'paso' : str(res['Dirs_asint']),
-                'pasoLatex' : r'\{'+d1+r','+d2+r' \}'
-            }
-        ]
-    elif res['g_pt']==0:
-        return [
-            {
-                'descripcion' : r'Analizar caso: ya que $g=0$, se tiene las siguientes direcciones asintóticas',
-                'paso' : str(res['Dirs_asint']),
-                'pasoLatex' : r'\{'+latex(res['Dirs_asint'][0])+r','+latex(res['Dirs_asint'][1])+r' \}'
+                'pasoLatex' : r'\{'+dirs+r' \}'
             }
         ]
     elif res['f_pt']**2- res['g_pt']*res['e_pt'] < 0:
         return [
             {
-                'descripcion' : r'Analizar caso: ya que $e\neq 0, g\neq 0, f^2-eg<0$, no existen direcciones asintóticas',
+                'descripcion' : r'Calcular las direcciones principales: buscando los vectores que cumplan que $II( \vec{w}, \vec{w})=0$ se tiene que no existen direcciones asintóticas',
                 'paso' : str(res['Dirs_asint']),
                 'pasoLatex' : ''
             }
@@ -259,9 +253,9 @@ def EscribeDireccionesAsintóticasPt(res):
     else:
         return [
             {
-                'descripcion' : r'Analizar caso: ya que $e\neq 0, g\neq 0, f^2-eg\geq0$, se tiene las siguientes direcciones asintóticas',
+                'descripcion' : r'Calcular las direcciones principales: buscando los vectores que cumplan que $II( \vec{w}, \vec{w})=0$ se tiene que las direcciones asintóticas son',
                 'paso' : str(res['Dirs_asint']),
-                'pasoLatex' : r'\{'+latex(res['Dirs_asint'][0])+r','+latex(res['Dirs_asint'][1])+r' \}'
+                'pasoLatex' : r'\{'+dirs+r' \}'
             }
         ]
     

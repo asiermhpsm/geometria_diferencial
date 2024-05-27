@@ -105,6 +105,7 @@ cal_param = {
     'weingarten': tk.BooleanVar(),
     'clasificacion_punto': tk.BooleanVar(),
     'punto_umbilico': tk.BooleanVar(),
+    'direccion_asintotica': tk.BooleanVar(),
     'description': tk.BooleanVar(),
 }
 for key in cal_param:
@@ -307,7 +308,7 @@ def calcular_sup_param():
         if dom_var1[0].get() != '-\u221E' or dom_var1[1].get() != '\u221E':
             url_vals = url_vals + f'&dom_var1=({dom_var1[0].get()},{dom_var1[1].get()})'
         if dom_var2[0].get() != '-\u221E' or dom_var2[1].get() != '\u221E':
-            url_vals = url_vals + f'&dom2_var=({dom_var2[0].get()},{dom_var2[1].get()})'
+            url_vals = url_vals + f'&dom_var2=({dom_var2[0].get()},{dom_var2[1].get()})'
         ctes = ''
         for cte in consts:
             ctes = ctes + f'&const={prepara_var(cte[0].get(), cte[1])}'
@@ -328,10 +329,12 @@ def calcular_sup_param():
     elif opc_punto_param.get() == 3:
         url_vals = url_vals + f'&x0={comp1_pto_xyz_param.get()}&y0={comp2_pto_xyz_param.get()}&z0={comp3_pto_xyz_param.get()}'
 
+    url_vals = url_vals + '&trig=true'
     url_vals = url_vals.replace('+', r'%2B')
     for v, k in cal_param.items():
         if k.get():
             response = server.get(f'/param_surf/{v}?{url_vals}')
+            print(f'/param_surf/{v}?{url_vals}')
             if response.status_code == 200:
                 nueva_ventana(normaliza_respuesta(json.loads(response.get_data())), v)
             else:
@@ -373,6 +376,7 @@ def graficar_sup_param():
 
     url_vals = url_vals.replace('+', r'%2B')
     response = server.get(f'/param_surf/grafica?{url_vals}')
+    print(f'/param_surf/grafica?{url_vals}')
     if response.status_code == 200:
         with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.html', encoding='utf-8') as temp_file:
             temp_file.write(response.data.decode('utf-8'))
@@ -390,8 +394,6 @@ def calcular_sup_imp():
     if var2.get() != 'v':
         url_vals = url_vals + f'&var2={var2.get()}'
 
-    #TODO: Falta el dominio de variables
-
     #Tipo de punto
     if opc_punto_imp.get() == 2:
         url_vals = url_vals + f'&x0={comp1_pto_xyz_imp.get()}&y0={comp2_pto_xyz_imp.get()}&z0={comp3_pto_xyz_imp.get()}'
@@ -400,6 +402,7 @@ def calcular_sup_imp():
     for v, k in cal_imp.items():
         if k.get():
             response = server.get(f'/imp_surf/{v}?{url_vals}')
+            print(f'/imp_surf/{v}?{url_vals}')
             if response.status_code == 200:
                 nueva_ventana(normaliza_respuesta(json.loads(response.get_data())), v)
             else:
@@ -428,6 +431,7 @@ def grafica_sup_imp():
     url_vals = url_vals.replace('+', r'%2B')
     print(url_vals)
     response = server.get(f'/imp_surf/grafica?{url_vals}')
+    print(f'/imp_surf/grafica?{url_vals}')
     if response.status_code == 200:
         with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.html', encoding='utf-8') as temp_file:
             temp_file.write(response.data.decode('utf-8'))
@@ -653,7 +657,8 @@ ttk.Checkbutton(frame_calc, text="Dirs principales", variable=cal_param["direcci
 ttk.Checkbutton(frame_calc, text="Matriz Weingarten", variable=cal_param["weingarten"]).grid(row=2, column=2, padx=15, sticky="w")
 ttk.Checkbutton(frame_calc, text="Clasificación pto", variable=cal_param["clasificacion_punto"]).grid(row=3, column=0, padx=15, sticky="w")
 ttk.Checkbutton(frame_calc, text="Punto umbílico", variable=cal_param["punto_umbilico"]).grid(row=3, column=1, padx=15, sticky="w")
-ttk.Checkbutton(frame_calc, text="Análisis completo", variable=cal_param["description"]).grid(row=3, column=2, padx=15, sticky="w")
+ttk.Checkbutton(frame_calc, text="Dirs asintóticas", variable=cal_param["direccion_asintotica"]).grid(row=3, column=2, padx=15, sticky="w")
+ttk.Checkbutton(frame_calc, text="Análisis completo", variable=cal_param["description"]).grid(row=4, column=0, padx=15, sticky="w")
 
 cont_altura = frame_sup_param.winfo_reqheight() - 100
 

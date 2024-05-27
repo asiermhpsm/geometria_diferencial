@@ -1,5 +1,4 @@
 import sympy as sp
-from .utils import xyz_to_uv
 
 """
 Todos los calculos se guardarán en un diccionario de resultados para evitar cálculos repetidos y para centralizar la información.
@@ -86,82 +85,97 @@ def simplifica_cond(f, cond: sp.Expr) -> sp.Expr:
     sust = sp.simplify(f.subs(cond.lhs - cond.rhs, aux_neg).subs(cond.lhs, aux_neg + cond.rhs))
     return sp.simplify(sust.subs(aux_neg, cond.lhs - cond.rhs))
 
-def simplifica_trig(expr, u, dom):
+def simplifica_resultados_cond(res : dict) -> dict:
     """
-    Simplifica una expresión trigonométrica dado un dominio de una variable. Solo simplifica senos, cosenos y tangentes simples
+    Simplifica todos los resultados sabiendo que se cumple la condición cond
     Argumentos:
-    expr        expresión
-    u           variable
-    dom         dominio de la variable
+    res     diccionario con todos los resultados calculados hasta el momento
     """
-    if not isinstance(dom, sp.Interval):
-        return expr
+    for k, v in res.items():
+        if k!='cond':
+            try:
+                res[k] = simplifica_cond(v, res['cond'])
+            except: pass
+
+def simplifica_resultados_trig(res):
+    """
+    Aplica la simplificación trignometrica a los resultados obtenidos
+    """
+    if 'dom_u' in res and isinstance(res['dom_u'], sp.Interval):
+        simplifica_trig(res, res['u'], res['dom_u'])
+    if 'dom_v' in res and isinstance(res['dom_v'], sp.Interval):
+        simplifica_trig(res, res['v'], res['dom_v'])
+
+def simplifica_trig(res, x, dom) -> dict:
+    """
+    Dada una variable, simplifica trigonométricamente los resultados obtenidos
+    """
     n = sp.Symbol('n', integer=True)
+    pos = sp.symbols('pos', positive=True)
+    neg = sp.symbols('neg', negative=True)
 
     #Coseno positivo
     sol = sp.solve([
         -sp.pi/2+2*sp.pi*n <= dom.start,
         dom.end <= sp.pi/2+2*sp.pi*n ], n)
     if sol != False:
-        aux = sp.symbols('aux', positive=True)
-        expr = sp.simplify(sp.simplify(sp.simplify(expr).subs(sp.cos(u), aux)).subs(aux, sp.cos(u)))
+        for k, v in res.items():
+            try:
+                res[k] = sp.simplify(sp.simplify(v.subs(sp.cos(x), pos)).subs(pos, sp.cos(x)))
+            except:
+                pass
     #Coseno negativo
     sol = sp.solve([
         sp.pi/2+2*sp.pi*n <= dom.start,
         dom.end <= 3*sp.pi/2+2*sp.pi*n ], n)
     if sol != False:
-        aux = sp.symbols('aux', negative=True)
-        expr = sp.simplify(sp.simplify(sp.simplify(expr).subs(sp.cos(u), aux)).subs(aux, sp.cos(u)))
+        for k, v in res.items():
+            try:
+                res[k] = sp.simplify(sp.simplify(v.subs(sp.cos(x), neg)).subs(neg, sp.cos(x)))
+            except:
+                pass
     #Seno positivo
     sol = sp.solve([
-        2*sp.pi*n <= dom.start,
+        0+2*sp.pi*n <= dom.start,
         dom.end <= sp.pi+2*sp.pi*n ], n)
     if sol != False:
-        aux = sp.symbols('aux', positive=True)
-        expr = sp.simplify(sp.simplify(sp.simplify(expr).subs(sp.sin(u), aux)).subs(aux, sp.sin(u)))
+        for k, v in res.items():
+            try:
+                res[k] = sp.simplify(sp.simplify(v.subs(sp.sin(x), pos)).subs(pos, sp.sin(x)))
+            except:
+                pass
     #Seno negativo
     sol = sp.solve([
         sp.pi+2*sp.pi*n <= dom.start,
         dom.end <= 2*sp.pi+2*sp.pi*n ], n)
     if sol != False:
-        aux = sp.symbols('aux', negative=True)
-        expr = sp.simplify(sp.simplify(sp.simplify(expr).subs(sp.sin(u), aux)).subs(aux, sp.sin(u)))
+        for k, v in res.items():
+            try:
+                res[k] = sp.simplify(sp.simplify(v.subs(sp.sin(x), neg)).subs(neg, sp.sin(x)))
+            except:
+                pass
     #Tangente positiva
     sol = sp.solve([
-        0+sp.pi*n <= dom.start,
-        dom.end <= sp.pi/2+sp.pi*n ], n)
+        -sp.pi/2+2*sp.pi*n <= dom.start,
+        dom.end <= sp.pi/2+2*sp.pi*n ], n)
     if sol != False:
-        aux = sp.symbols('aux', positive=True)
-        expr = sp.simplify(sp.simplify(sp.simplify(expr).subs(sp.tan(u), aux)).subs(aux, sp.tan(u)))
+        for k, v in res.items():
+            try:
+                res[k] = sp.simplify(sp.simplify(v.subs(sp.tan(x), pos)).subs(pos, sp.tan(x)))
+            except:
+                pass
     #Tangente negativa
     sol = sp.solve([
-        -sp.pi/2+sp.pi*n <= dom.start,
-        dom.end <= 0+sp.pi*n ], n)
+        sp.pi/2+2*sp.pi*n <= dom.start,
+        dom.end <= 3*sp.pi/2+2*sp.pi*n ], n)
     if sol != False:
-        aux = sp.symbols('aux', negative=True)
-        expr = sp.simplify(sp.simplify(sp.simplify(expr).subs(sp.tan(u), aux)).subs(aux, sp.tan(u)))
+        for k, v in res.items():
+            try:
+                res[k] = sp.simplify(sp.simplify(v.subs(sp.tan(x), neg)).subs(neg, sp.tan(x)))
+            except:
+                pass
+    return res
 
-    return expr
-
-def simp_trig_uv(expr, res : dict) -> sp.Expr:
-        if 'dom_u' in res and isinstance(res['dom_u'], sp.Interval):
-            expr = simplifica_trig(expr, res['u'], res['dom_u'])
-        if  'dom_v' in res and isinstance(res['dom_v'], sp.Interval):
-            expr = simplifica_trig(expr, res['v'], res['dom_v'])
-        return expr
-
-def simplifica(f, res : dict) -> sp.Expr:
-    """
-    Simplifica una expresión simbólica o una matriz simbólica
-    Argumentos:
-    f       función
-    res     diccionario con todos los resultados calculados hasta el momento
-    """
-    
-    if 'cond' in res:
-        return sp.simplify(simp_trig_uv(simplifica_cond(f, res['cond']), res))
-    else:
-        return sp.simplify(simp_trig_uv(f, res))
 
 def esRegular(res: dict) -> bool:
     """
@@ -175,38 +189,43 @@ def esRegular(res: dict) -> bool:
     res['duXdv'] = sp.simplify(res['du'].cross(res['dv']))
     #NO SE HA PODIDO ENCONTRAR UNA MANERA PARA DETERMINAR SI UNA FUNCION ES DE CLASE INFINITO
 
-    #Encuentro las posibles soluciones que harían que la superficie no sea regular e itero sobre ellas
-    soluciones = sp.solve(sp.Eq(res['duXdv'], sp.Matrix([0, 0, 0])), (res['u'],res['v']), set=True)
-    for sol in soluciones[1]:
-        #Si la solucion son ambos símbolos, entonces estan en el dominio y la superficie no es regular
-        if isinstance(sol[0], sp.Symbol) and isinstance(sol[1], sp.Symbol):
-            return False
-        #Si el primero es un símbolo, entonces busco las soluciones que hagan que solo considere la parte real 
-        #de la solución que no es un símbolo y miro si estan en el dominio
-        elif isinstance(sol[0], sp.Symbol):
-            if sol[1].has(sp.I):
-                sols_im = sp.solve( sp.Eq(sp.im(sol[1]), 0), sol[0], set=True)
-                for sol_im in sols_im[1]:
-                    if sol[1].subs({sol[0]: sol_im[0]}) in res['dom_v'] and sol[0].subs({sol[0]: sol_im[0]}) in res['dom_u']:
-                        return False
-            elif sol[1].is_number:
-                return not sol[1] in res['dom_v']
-        #Si el segundo es un símbolo, entonces busco las soluciones que hagan que solo considere la parte real 
-        #de la solución que no es un símbolo y miro si estan en el dominio
-        elif isinstance(sol[1], sp.Symbol):
-            if sol[0].has(sp.I):
-                sols_im = sp.solve( sp.Eq(sp.im(sol[0]), 0), sol[1], set=True)
-                for sol_im in sols_im[1]:
-                    if sol[0].subs({sol[1]: sol_im[0]}) in res['dom_u'] and sol[1].subs({sol[1]: sol_im[0]}) in res['dom_v']:
-                        return False
-            elif sol[0].is_number:
-                return not sol[0] in res['dom_u']
-        #Si ambos son números, miro si estan en el dominio
-        elif sol[0].is_number and sol[1].is_number:
-            return sol[0] in res['dom_u'] and sol[1] in res['dom_v']
-        #Si no es ninguno de los casos anteriores, entonces es demasiado complicado y no se puede determinar si la superficie es regular
-        else:
-            return False
+    #Se intentan buscar valores que hagan que la superficie no sea regular, 
+    #si salta una excepción, es demasiado complejo y se asume regular
+    try:
+        #Encuentro las posibles soluciones que harían que la superficie no sea regular e itero sobre ellas
+        soluciones = sp.solve(sp.Eq(res['duXdv'], sp.Matrix([0, 0, 0]).T), (res['u'],res['v']), set=True)
+        for sol in soluciones[1]:
+            #Si la solucion son ambos símbolos, entonces estan en el dominio y la superficie no es regular
+            if isinstance(sol[0], sp.Symbol) and isinstance(sol[1], sp.Symbol):
+                return False
+            #Si el primero es un símbolo, entonces busco las soluciones que hagan que solo considere la parte real 
+            #de la solución que no es un símbolo y miro si estan en el dominio
+            elif isinstance(sol[0], sp.Symbol):
+                if sol[1].has(sp.I):
+                    sols_im = sp.solve( sp.Eq(sp.im(sol[1]), 0), sol[0], set=True)
+                    for sol_im in sols_im[1]:
+                        if sol[1].subs({sol[0]: sol_im[0]}) in res['dom_v'] and sol[0].subs({sol[0]: sol_im[0]}) in res['dom_u']:
+                            return False
+                elif sol[1].is_number:
+                    return not sol[1] in res['dom_v']
+            #Si el segundo es un símbolo, entonces busco las soluciones que hagan que solo considere la parte real 
+            #de la solución que no es un símbolo y miro si estan en el dominio
+            elif isinstance(sol[1], sp.Symbol):
+                if sol[0].has(sp.I):
+                    sols_im = sp.solve( sp.Eq(sp.im(sol[0]), 0), sol[1], set=True)
+                    for sol_im in sols_im[1]:
+                        if sol[0].subs({sol[1]: sol_im[0]}) in res['dom_u'] and sol[1].subs({sol[1]: sol_im[0]}) in res['dom_v']:
+                            return False
+                elif sol[0].is_number:
+                    return not sol[0] in res['dom_u']
+            #Si ambos son números, miro si estan en el dominio
+            elif sol[0].is_number and sol[1].is_number:
+                return sol[0] in res['dom_u'] and sol[1] in res['dom_v']
+            #Si no es ninguno de los casos anteriores, entonces es demasiado complicado y no se puede determinar si la superficie es regular
+            else:
+                return True
+    except:
+        return True
     return True
 
 
@@ -256,18 +275,6 @@ def normal_pt_uv(res : dict ={}) -> dict:
     res['normal_pt'] = sp.simplify(res['duXdv_pt'].normalized())
     return res
 
-def normal_pt_xyz(res : dict ={}) -> dict:
-    """
-    Retorna el vector normal de una superficie en un punto descrito por x, y, z
-    No se hacen comprobaciones de tipo
-
-    Argumentos:
-    res          diccionario con todos los resultados calculados hasta el momento
-    """
-    res['u0'], res['v0'] = xyz_to_uv(res['sup'], res['u'], res['v'], res['x0'], res['y0'], res['z0'])
-    return normal_pt_uv(res)
-
-
 """
 -------------------------------------------------------------------------------
 PLANO TANGENTE
@@ -313,18 +320,6 @@ def planoTangente_pt_uv(res : dict ={}) -> dict:
     x, y, z = sp.symbols('x, y, z', real = True)
     res['tangente_pt'] = sp.simplify(sp.Eq(res['duXdv_pt'].dot(sp.Matrix([x,y,z])), res['duXdv_pt'].dot(res['sup'].subs({res['u']:res['u0'], res['v']:res['v0']}))))
     return res
-
-def planoTangente_pt_xyz(res : dict ={}) -> dict:
-    """
-    Retorna el plano tangente (sin igualar a cero) de una superficie parametrizada en un punto descrito con u, v
-    No se hacen comprobaciones de tipo
-
-    Argumentos:
-    res          diccionario con todos los resultados calculados hasta el momento
-    """
-    res['u0'], res['v0'] = xyz_to_uv(res['sup'], res['u'], res['v'], res['x0'], res['y0'], res['z0'])
-    return planoTangente_pt_uv(res)
-
 
 """
 -------------------------------------------------------------------------------
@@ -375,18 +370,6 @@ def primeraFormaFundamental_pt_uv(res : dict ={}) -> dict:
     res['G_pt'] = sp.simplify(res['dv_pt'].dot(res['dv_pt']))
 
     return res
-
-def primeraFormaFundamental_pt_xyz( res : dict ={}) -> dict:
-    """
-    Retorna en forma de Matrix(E, F, G) la primera forma fundamental en un punto  descrito por x, y, z
-    No se hacen comprobaciones de tipo
-
-    Argumentos:
-    res          diccionario con todos los resultados calculados hasta el momento
-    """
-    res['u0'], res['v0'] = xyz_to_uv(res['sup'], res['u'], res['v'], res['x0'], res['y0'], res['z0'])
-    return primeraFormaFundamental_pt_uv(res)
-
 
 """
 -------------------------------------------------------------------------------
@@ -454,18 +437,6 @@ def segundaFormaFundamental_pt_uv(res : dict ={}) -> dict:
     
     return res
 
-def segundaFormaFundamental_pt_xyz(res : dict ={}) -> dict:
-    """
-    Retorna en forma de Matrix(e, f, g) la segunda forma fundamental en un punto  descrito por x, y, z
-    No se hacen comprobaciones de tipo
-
-    Argumentos:
-    res          diccionario con todos los resultados calculados hasta el momento
-    """
-    res['u0'], res['v0'] = xyz_to_uv(res['sup'], res['u'], res['v'], res['x0'], res['y0'], res['z0'])
-    return segundaFormaFundamental_pt_uv(res)
-
-
 """
 -------------------------------------------------------------------------------
 CURVATURA DE GAUSS
@@ -502,18 +473,6 @@ def curvaturaGauss_pt_uv(res : dict ={}) -> dict:
 
     res['K_pt'] = sp.simplify((res['e_pt']*res['g_pt'] - res['f_pt']**2)/(res['E_pt']*res['G_pt'] - res['F_pt']**2))
     return res
-
-def curvaturaGauss_pt_xyz(res : dict ={}) -> dict:
-    """
-    Retorna la curvatura de Gauss en un punto descrito por x, y, z
-    No se hacen comprobaciones de tipo
-
-    Argumentos:
-    res          diccionario con todos los resultados calculados hasta el momento
-    """
-    res['u0'], res['v0'] = xyz_to_uv(res['sup'], res['u'], res['v'], res['x0'], res['y0'], res['z0'])
-    return curvaturaGauss_pt_uv(res)
-
 
 """
 -------------------------------------------------------------------------------
@@ -553,18 +512,6 @@ def curvaturaMedia_pt_uv(res : dict ={}) -> dict:
     res['H_pt'] = sp.simplify((res['e_pt']*res['G_pt'] + res['g_pt']*res['E_pt'] - 2*res['f_pt']*res['F_pt'])
                                      /(2*(res['E_pt']*res['G_pt'] - res['F_pt']**2)))
     return res
-
-def curvaturaMedia_pt_xyz(res : dict ={}) -> dict:
-    """
-    Retorna la curvatura media en un punto descrito por x, y, z
-    No se hacen comprobaciones de tipo
-
-    Argumentos:
-    res          diccionario con todos los resultados calculados hasta el momento
-    """
-    res['u0'], res['v0'] = xyz_to_uv(res['sup'], res['u'], res['v'], res['x0'], res['y0'], res['z0'])
-    return curvaturaMedia_pt_uv(res)
-
 
 """
 -------------------------------------------------------------------------------
@@ -606,18 +553,6 @@ def curvaturasPrincipales_pt_uv(res : dict ={}) -> dict:
     res['k2_pt'] = sp.simplify(res['H_pt'] - raiz)
     return res
 
-def curvaturasPrincipales_pt_xyz(res : dict ={}) -> dict:
-    """
-    Retorna como tupla las curvaturas principales en un punto descrito como x, y, z
-    No se hacen comprobaciones de tipo
-
-    Argumentos:
-    res          diccionario con todos los resultados calculados hasta el momento
-    """
-    res['u0'], res['v0'] = xyz_to_uv(res['sup'], res['u'], res['v'], res['x0'], res['y0'], res['z0'])
-    return curvaturasPrincipales_pt_uv(res)
-
-
 """
 -------------------------------------------------------------------------------
 CLASIFICACION DE UN PUNTO
@@ -640,9 +575,9 @@ def clasicPt_uv(res : dict ={}) -> dict:
             res['clasif_pt'] = 'Hiperbólitco'
         elif K == 0:
             if res['k1_pt'] == res['k2_pt']:
-                return 'Planar'
+                res['clasif_pt'] = 'Planar'
             else:
-                return 'Parabólico'
+                res['clasif_pt'] = 'Parabólico'
     else:
         if 'K_pt' not in res:
             curvaturaGauss_pt_uv(res)
@@ -658,18 +593,6 @@ def clasicPt_uv(res : dict ={}) -> dict:
             else:
                 res['clasif_pt'] = 'Parabólico'
     return res
-    
-def clasicPt_xyz(res : dict ={}) -> dict:
-    """
-    Imprime la clasificacion de una superficie en un punto descrito con x, y, z
-    No se hacen comprobaciones de tipo
-
-    Argumentos:
-    res          diccionario con todos los resultados calculados hasta el momento
-    """
-    res['u0'], res['v0'] = xyz_to_uv(res['sup'], res['u'], res['v'], res['x0'], res['y0'], res['z0'])
-    return clasicPt_uv(res)
-
 
 """
 -------------------------------------------------------------------------------
@@ -716,18 +639,6 @@ def weingarten_pt_uv(res : dict ={}) -> dict:
                     [res['f_pt']*res['E_pt']-res['e_pt']*res['F_pt'], 
                     res['g_pt']*res['E_pt']-res['f_pt']*res['F_pt']]])/denom
     return res
-
-def weingarten_pt_xyz(res : dict ={}) -> dict:
-    """
-    Devuelve la matriz de weingarten en un punto
-    No se hacen comprobaciones de tipo
-
-    Argumentos:
-    res          diccionario con todos los resultados calculados hasta el momento
-    """
-    res['u0'], res['v0'] = xyz_to_uv(res['sup'], res['u'], res['v'], res['x0'], res['y0'], res['z0'])
-    return weingarten_pt_uv(res)
-
 
 """
 -------------------------------------------------------------------------------
@@ -798,17 +709,6 @@ def dirPrinc_pt_uv(res : dict ={}) -> dict:
     res['d2_pt'] = sp.simplify(res['coord_d2_pt'][0]*res['du_pt'] + res['coord_d2_pt'][1]*res['dv_pt'])
     return res
 
-def dirPrinc_pt_xyz(res : dict ={}) -> dict:
-    """
-    Calcula las direcciones principales en un punto
-    No se hacen comprobaciones de tipo
-
-    Argumentos:
-    res          diccionario con todos los resultados calculados hasta el momento
-    """
-    res['u0'], res['v0'] = xyz_to_uv(res['sup'], res['u'], res['v'], res['x0'], res['y0'], res['z0'])
-    return dirPrinc_pt_uv(res)
-
 """
 -------------------------------------------------------------------------------
 PUNTOS UMBÍLICOS
@@ -825,17 +725,6 @@ def umbilico_pt_uv(res : dict ={}) -> dict:
     res = curvaturasPrincipales_pt_uv(res)
     res['umbilico_pt'] = res['k1_pt']== res['k2_pt']
     return res
-
-def umbilico_pt_xyz(res : dict ={}) -> dict:
-    """
-    Calcula si un punto es umbílico
-    No se hacen comprobaciones de tipo
-
-    Argumentos:
-    res          diccionario con todos los res calculados hasta el momento
-    """
-    res['u0'], res['v0'] = xyz_to_uv(res['sup'], res['u'], res['v'], res['x0'], res['y0'], res['z0'])
-    return umbilico_pt_uv(res)
 
 """
 -------------------------------------------------------------------------------
@@ -858,27 +747,17 @@ def dirAsin_pt_uv(res):
         res['Dirs_asint'] = [sp.Matrix([w1, w2]).T]
     elif res['e_pt']==0:
         res['Dirs_asint'] = [sp.Matrix([1, 0]).T, sp.Matrix([-res['g_pt'], 2*res['f_pt']]).T]
+        if res['Dirs_asint'][0] == res['Dirs_asint'][1]: del res['Dirs_asint'][1]
     elif res['g_pt']==0:
         res['Dirs_asint'] = [sp.Matrix([0, 1]).T, sp.Matrix([-2*res['f_pt'], -res['e_pt'], ]).T]
+        if res['Dirs_asint'][0] == res['Dirs_asint'][1]: del res['Dirs_asint'][1]
     elif res['f_pt']**2- res['g_pt']*res['e_pt'] < 0:
         res['Dirs_asint'] = []
     else:
         raiz = sp.sqrt(res['f_pt']**2- res['g_pt']*res['e_pt'])
         res['Dirs_asint'] = [sp.Matrix([res['g_pt'], -res['f_pt']+raiz]).T, sp.Matrix([res['g_pt'], -res['f_pt']-raiz]).T]
+        if res['Dirs_asint'][0] == res['Dirs_asint'][1]: del res['Dirs_asint'][1]
     return res
-
-def dirAsin_pt_xyz(res):
-    """
-    Calcula las direcciones asintóticas en un punto
-    No se hacen comprobaciones de tipo
-
-    Argumentos:
-    res          diccionario con todos los resultados calculados hasta el momento
-    """
-
-    res['u0'], res['v0'] = xyz_to_uv(res['sup'], res['u'], res['v'], res['x0'], res['y0'], res['z0'])
-    return dirAsin_pt_uv(res)
-
 
 """
 -------------------------------------------------------------------------------
@@ -963,14 +842,3 @@ def descripccion_pt_uv(res : dict ={}) -> dict:
     umbilico_pt_uv(res)
     dirAsin_pt_uv(res)
     return res
-    
-def descripccion_pt_xyz(res : dict ={}) -> dict:
-    """
-    Hace un cálculo general de todo lo que pueda
-    No se hacen comprobaciones de tipo
-
-    Argumentos:
-    res          diccionario con todos los resultados calculados hasta el momento
-    """
-    res['u0'], res['v0'] = xyz_to_uv(res['sup'], res['u'], res['v'], res['x0'], res['y0'], res['z0'])
-    return descripccion_pt_uv(res)

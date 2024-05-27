@@ -13,3 +13,5 @@ y el plano afín tangente a $S$ en $P$ tiene por ecuación:
 $$\nabla f(P)\left(\begin{matrix}x-x_0 \\ y-y_0 \\ z-z_0\end{matrix}\right) = 0$$
 es decir,
 $$f_x(P)(x-x_0) + f_y(P)(y-y_0) + f_z(P)(z-z_0)=0$$'''
+
+TH_ANALISIS = r'''Las superficies de son aquellas descritas por una ecuación cartesianas de la forma $F(x,y,z)=0$. Ha y algunos elementos que se pueden calcular en estas superficies, como el vector normal o el plano tangente. Para calcular el vector normal a la superficie en un punto $(x_0, y_0, z_0)$, se puede usar la fórmula'''
