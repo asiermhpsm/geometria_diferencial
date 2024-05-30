@@ -1,6 +1,9 @@
 from flask import Flask, request, jsonify, Blueprint, Response
-from flask_cors import CORS, cross_origin
 import flask
+
+from flask_cors import CORS
+
+from flasgger import Swagger
 
 import sympy as sp
 import re
@@ -17,6 +20,13 @@ import utils.Latex.simpl.resultados.resultados as txsimplres
 
 
 app = Flask(__name__)
+
+app.config['SWAGGER'] = {
+    'title': 'Superficies Geometría Diferencial API'
+}
+
+CORS(app)
+Swagger(app)
 
 """
 -------------------------------------------------------------------------------
@@ -97,7 +107,6 @@ def procesar_solicitud_param(func: callable, func_pt_uv: callable, dict2latex: c
     Argumentos:
     func                funcion a ejecutar sin punto especifico
     func_pt_uv          funcion a ejecutar con punto especifico en función de u, v
-    func_pt_xyz         funcion a ejecutar con punto especifico en función de x, y, z
     dict2latex          funcion que convierte el resultado a latex
     dict2latex_pt       funcion que convierte el resultado con punto a latex
     txth                string con la teoría de la función
@@ -255,58 +264,1510 @@ def normaliza_parametrizacion(var1: str, var2: str, sup: str, consts: list, func
 #ENDPOINTS
 @param_surf_bp.route('/vector_normal')
 def vector_normal():
+    """Vector normal a una superficie parametrizada
+    Método que devuelve el vector normal a una superficie parametrizada. Si se indica un punto se devuelve el vector normal en ese punto.
+
+    ---
+    tags:
+        - Superficie parametrizada
+    parameters:
+        - name: superficie
+          in: query
+          required: true
+          description: superficie parametrizada que se quiere analizar. Si no se proporciona se devuelve la teoría y algoritmos asociados.
+          schema:
+            type: string
+            example: "[cos(u), sin(u), v]"
+
+        - name: var1
+          in: query
+          required: false
+          description: primera variable de dependencia de la superficie. 
+          default: "u"
+          schema:
+            type: string
+            example: "u"
+
+        - name: var2
+          in: query
+          required: false
+          description: segunda variable de dependencia de la superficie. 
+          default: "v"
+          schema:
+            type: string
+            example: "v"
+
+        - name: dom_var1
+          in: query
+          required: false
+          description: dominio de la primera variable de dependencia.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(0,pi/2)"
+
+        - name: dom_var2
+          in: query
+          required: false
+          description: dominio de la segunda variable de dependencia.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(-1,1)"
+
+        - name: cond
+          in: query
+          required: false
+          description: dominio en forma de elipse de la superficie. Debe ser una desigualdad estricta.
+          schema:
+            type: string
+            example: "u^2+v^2<1"
+
+        - name: u0
+          in: query
+          required: false
+          description: valor de la primera variable de la superficie del punto donde evaluar.
+          schema:
+            type: string
+            example: "pi"
+
+        - name: v0
+          in: query
+          required: false
+          description: valor de la segunda variable de la superficie del punto donde evaluar.
+          schema:
+            type: string
+            example: "0"
+
+        - name: const
+          in: query
+          required: false
+          description: definición de un constante, sus posible definiciones son 'positive', 'negative','integer','noninteger','even', 'odd'. Para añadir más de una se debe añadir el parámetro varias veces.
+          schema:
+            type: string
+            example: "[r, positive, integer]"
+
+        - name: func
+          in: query
+          required: false
+          description: definición de un función indefinida, sus posible definiciones son 'positive', 'negative','integer','noninteger','even', 'odd'. Para añadir más de una se debe añadir el parámetro varias veces.
+          schema:
+            type: string
+            example: "[f(u,v), positive, integer]"
+
+        - name: trig
+          in: query
+          required: false
+          
+          description: Flag que indica si realizar un simplificación más profunda de expresiones trigonométricas. Se tarda considerablemente más tiempo. Para activarla basta con poner cualquier valor.
+          default: ""
+          schema:
+            type: string
+            example: "True"
+
+    responses:
+        200:
+            description: Si se proporcionan los datos necesarios para los cálculos, se devuelve un JSON con los pasos a seguir. Si no se proporciona la superficie se devuelve la teoría y algoritmos asociados.
+        400:
+            description: Parámetros incorrectos.
+
+    """
     return procesar_solicitud_param(calcp.normal, calcp.normal_pt_uv, txparamres.res_vect_normal, txparamres.res_vect_normal_pt, txparamth.TH_VEC_NORMAL)
 
 @param_surf_bp.route('/plano_tangente')
 def plano_tangente():
+    """Plano tangente a una superficie parametrizada
+    Método que devuelve el plano tangente a una superficie parametrizada. Si se indica un punto se devuelve el plano tangente en ese punto.
+
+    ---
+    tags:
+        - Superficie parametrizada
+    parameters:
+        - name: superficie
+          in: query
+          required: true
+          description: superficie parametrizada que se quiere analizar. Si no se proporciona se devuelve la teoría y algoritmos asociados.
+          schema:
+            type: string
+            example: "[cos(u), sin(u), v]"
+
+        - name: var1
+          in: query
+          required: false
+          description: primera variable de dependencia de la superficie. 
+          default: "u"
+          schema:
+            type: string
+            example: "u"
+
+        - name: var2
+          in: query
+          required: false
+          description: segunda variable de dependencia de la superficie. 
+          default: "v"
+          schema:
+            type: string
+            example: "v"
+
+        - name: dom_var1
+          in: query
+          required: false
+          description: dominio de la primera variable de dependencia.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(0,pi/2)"
+
+        - name: dom_var2
+          in: query
+          required: false
+          description: dominio de la segunda variable de dependencia.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(-1,1)"
+
+        - name: cond
+          in: query
+          required: false
+          description: dominio en forma de elipse de la superficie. Debe ser una desigualdad estricta.
+          schema:
+            type: string
+            example: "u^2+v^2<1"
+
+        - name: u0
+          in: query
+          required: false
+          description: valor de la primera variable de la superficie del punto donde evaluar.
+          schema:
+            type: string
+            example: "pi"
+
+        - name: v0
+          in: query
+          required: false
+          description: valor de la segunda variable de la superficie del punto donde evaluar.
+          schema:
+            type: string
+            example: "0"
+
+        - name: const
+          in: query
+          required: false
+          description: definición de un constante, sus posible definiciones son 'positive', 'negative','integer','noninteger','even', 'odd'. Para añadir más de una se debe añadir el parámetro varias veces.
+          schema:
+            type: string
+            example: "[r, positive, integer]"
+
+        - name: func
+          in: query
+          required: false
+          description: definición de un función indefinida, sus posible definiciones son 'positive', 'negative','integer','noninteger','even', 'odd'. Para añadir más de una se debe añadir el parámetro varias veces.
+          schema:
+            type: string
+            example: "[f(u,v), positive, integer]"
+
+        - name: trig
+          in: query
+          required: false
+          
+          description: Flag que indica si realizar un simplificación más profunda de expresiones trigonométricas. Se tarda considerablemente más tiempo. Para activarla basta con poner cualquier valor.
+          default: ""
+          schema:
+            type: string
+            example: "True"
+
+    responses:
+        200:
+            description: Si se proporcionan los datos necesarios para los cálculos, se devuelve un JSON con los pasos a seguir. Si no se proporciona la superficie se devuelve la teoría y algoritmos asociados.
+        400:
+            description: Parámetros incorrectos.
+
+    """
     return procesar_solicitud_param(calcp.planoTangente, calcp.planoTangente_pt_uv, txparamres.res_plano_tangente, txparamres.res_plano_tangente_pt, txparamth.TH_PLANO_TANG)
 
 @param_surf_bp.route('/primera_forma_fundamental')
 def primera_forma_fundamental():
+    """Primera Forma Fundamental de una superficie parametrizada
+    Método que devuelve la Primera Forma Fundamental de una superficie parametrizada. Si se indica un punto se devuelve la Primera Forma Fundamental en ese punto.
+
+    ---
+    tags:
+        - Superficie parametrizada
+    parameters:
+        - name: superficie
+          in: query
+          required: true
+          description: superficie parametrizada que se quiere analizar. Si no se proporciona se devuelve la teoría y algoritmos asociados.
+          schema:
+            type: string
+            example: "[cos(u), sin(u), v]"
+
+        - name: var1
+          in: query
+          required: false
+          description: primera variable de dependencia de la superficie. 
+          default: "u"
+          schema:
+            type: string
+            example: "u"
+
+        - name: var2
+          in: query
+          required: false
+          description: segunda variable de dependencia de la superficie. 
+          default: "v"
+          schema:
+            type: string
+            example: "v"
+
+        - name: dom_var1
+          in: query
+          required: false
+          description: dominio de la primera variable de dependencia.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(0,pi/2)"
+
+        - name: dom_var2
+          in: query
+          required: false
+          description: dominio de la segunda variable de dependencia.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(-1,1)"
+
+        - name: cond
+          in: query
+          required: false
+          description: dominio en forma de elipse de la superficie. Debe ser una desigualdad estricta.
+          schema:
+            type: string
+            example: "u^2+v^2<1"
+
+        - name: u0
+          in: query
+          required: false
+          description: valor de la primera variable de la superficie del punto donde evaluar.
+          schema:
+            type: string
+            example: "pi"
+
+        - name: v0
+          in: query
+          required: false
+          description: valor de la segunda variable de la superficie del punto donde evaluar.
+          schema:
+            type: string
+            example: "0"
+
+        - name: const
+          in: query
+          required: false
+          description: definición de un constante, sus posible definiciones son 'positive', 'negative','integer','noninteger','even', 'odd'. Para añadir más de una se debe añadir el parámetro varias veces.
+          schema:
+            type: string
+            example: "[r, positive, integer]"
+
+        - name: func
+          in: query
+          required: false
+          description: definición de un función indefinida, sus posible definiciones son 'positive', 'negative','integer','noninteger','even', 'odd'. Para añadir más de una se debe añadir el parámetro varias veces.
+          schema:
+            type: string
+            example: "[f(u,v), positive, integer]"
+
+        - name: trig
+          in: query
+          required: false
+          
+          description: Flag que indica si realizar un simplificación más profunda de expresiones trigonométricas. Se tarda considerablemente más tiempo. Para activarla basta con poner cualquier valor.
+          default: ""
+          schema:
+            type: string
+            example: "True"
+
+    responses:
+        200:
+            description: Si se proporcionan los datos necesarios para los cálculos, se devuelve un JSON con los pasos a seguir. Si no se proporciona la superficie se devuelve la teoría y algoritmos asociados.
+        400:
+            description: Parámetros incorrectos.
+
+    """
     return procesar_solicitud_param(calcp.primeraFormaFundamental, calcp.primeraFormaFundamental_pt_uv, txparamres.res_PFF, txparamres.res_PFF_pt, txparamth.TH_PFF)
 
 @param_surf_bp.route('/segunda_forma_fundamental')
 def segunda_forma_fundamental():
+    """Segunda Forma Fundamental de una superficie parametrizada
+    Método que devuelve la Segunda Forma Fundamental de una superficie parametrizada. Si se indica un punto se devuelve la Segunda Forma Fundamental en ese punto.
+
+    ---
+    tags:
+        - Superficie parametrizada
+    parameters:
+        - name: superficie
+          in: query
+          required: true
+          description: superficie parametrizada que se quiere analizar. Si no se proporciona se devuelve la teoría y algoritmos asociados.
+          schema:
+            type: string
+            example: "[cos(u), sin(u), v]"
+
+        - name: var1
+          in: query
+          required: false
+          description: primera variable de dependencia de la superficie. 
+          default: "u"
+          schema:
+            type: string
+            example: "u"
+
+        - name: var2
+          in: query
+          required: false
+          description: segunda variable de dependencia de la superficie. 
+          default: "v"
+          schema:
+            type: string
+            example: "v"
+
+        - name: dom_var1
+          in: query
+          required: false
+          description: dominio de la primera variable de dependencia.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(0,pi/2)"
+
+        - name: dom_var2
+          in: query
+          required: false
+          description: dominio de la segunda variable de dependencia.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(-1,1)"
+
+        - name: cond
+          in: query
+          required: false
+          description: dominio en forma de elipse de la superficie. Debe ser una desigualdad estricta.
+          schema:
+            type: string
+            example: "u^2+v^2<1"
+
+        - name: u0
+          in: query
+          required: false
+          description: valor de la primera variable de la superficie del punto donde evaluar.
+          schema:
+            type: string
+            example: "pi"
+
+        - name: v0
+          in: query
+          required: false
+          description: valor de la segunda variable de la superficie del punto donde evaluar.
+          schema:
+            type: string
+            example: "0"
+
+        - name: const
+          in: query
+          required: false
+          description: definición de un constante, sus posible definiciones son 'positive', 'negative','integer','noninteger','even', 'odd'. Para añadir más de una se debe añadir el parámetro varias veces.
+          schema:
+            type: string
+            example: "[r, positive, integer]"
+
+        - name: func
+          in: query
+          required: false
+          description: definición de un función indefinida, sus posible definiciones son 'positive', 'negative','integer','noninteger','even', 'odd'. Para añadir más de una se debe añadir el parámetro varias veces.
+          schema:
+            type: string
+            example: "[f(u,v), positive, integer]"
+
+        - name: trig
+          in: query
+          required: false
+          
+          description: Flag que indica si realizar un simplificación más profunda de expresiones trigonométricas. Se tarda considerablemente más tiempo. Para activarla basta con poner cualquier valor.
+          default: ""
+          schema:
+            type: string
+            example: "True"
+
+    responses:
+        200:
+            description: Si se proporcionan los datos necesarios para los cálculos, se devuelve un JSON con los pasos a seguir. Si no se proporciona la superficie se devuelve la teoría y algoritmos asociados.
+        400:
+            description: Parámetros incorrectos.
+
+    """
     return procesar_solicitud_param(calcp.segundaFormaFundamental, calcp.segundaFormaFundamental_pt_uv, txparamres.res_SFF, txparamres.res_SFF_pt, txparamth.TH_SFF)
 
 @param_surf_bp.route('/weingarten')
 def weingarten():
+    """Matriz de Weingarten de una superficie parametrizada
+    Método que devuelve la matriz de Weingarten de una superficie parametrizada. Si se indica un punto se devuelve la matriz de Weingarten en ese punto.
+
+    ---
+    tags:
+        - Superficie parametrizada
+    parameters:
+        - name: superficie
+          in: query
+          required: true
+          description: superficie parametrizada que se quiere analizar. Si no se proporciona se devuelve la teoría y algoritmos asociados.
+          schema:
+            type: string
+            example: "[cos(u), sin(u), v]"
+
+        - name: var1
+          in: query
+          required: false
+          description: primera variable de dependencia de la superficie. 
+          default: "u"
+          schema:
+            type: string
+            example: "u"
+
+        - name: var2
+          in: query
+          required: false
+          description: segunda variable de dependencia de la superficie. 
+          default: "v"
+          schema:
+            type: string
+            example: "v"
+
+        - name: dom_var1
+          in: query
+          required: false
+          description: dominio de la primera variable de dependencia.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(0,pi/2)"
+
+        - name: dom_var2
+          in: query
+          required: false
+          description: dominio de la segunda variable de dependencia.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(-1,1)"
+
+        - name: cond
+          in: query
+          required: false
+          description: dominio en forma de elipse de la superficie. Debe ser una desigualdad estricta.
+          schema:
+            type: string
+            example: "u^2+v^2<1"
+
+        - name: u0
+          in: query
+          required: false
+          description: valor de la primera variable de la superficie del punto donde evaluar.
+          schema:
+            type: string
+            example: "pi"
+
+        - name: v0
+          in: query
+          required: false
+          description: valor de la segunda variable de la superficie del punto donde evaluar.
+          schema:
+            type: string
+            example: "0"
+
+        - name: const
+          in: query
+          required: false
+          description: definición de un constante, sus posible definiciones son 'positive', 'negative','integer','noninteger','even', 'odd'. Para añadir más de una se debe añadir el parámetro varias veces.
+          schema:
+            type: string
+            example: "[r, positive, integer]"
+
+        - name: func
+          in: query
+          required: false
+          description: definición de un función indefinida, sus posible definiciones son 'positive', 'negative','integer','noninteger','even', 'odd'. Para añadir más de una se debe añadir el parámetro varias veces.
+          schema:
+            type: string
+            example: "[f(u,v), positive, integer]"
+
+        - name: trig
+          in: query
+          required: false
+          
+          description: Flag que indica si realizar un simplificación más profunda de expresiones trigonométricas. Se tarda considerablemente más tiempo. Para activarla basta con poner cualquier valor.
+          default: ""
+          schema:
+            type: string
+            example: "True"
+
+    responses:
+        200:
+            description: Si se proporcionan los datos necesarios para los cálculos, se devuelve un JSON con los pasos a seguir. Si no se proporciona la superficie se devuelve la teoría y algoritmos asociados.
+        400:
+            description: Parámetros incorrectos.
+
+    """
     return procesar_solicitud_param(calcp.weingarten, calcp.weingarten_pt_uv, txparamres.res_Weingarten, txparamres.res_Weingarten_pt, txparamth.TH_WEINGARTEN)
 
 @param_surf_bp.route('/curvatura_Gauss')
 def curvatura_Gauss():
+    """Curvatura de Gauss de una superficie parametrizada
+    Método que devuelve la curvatura de Gauss de una superficie parametrizada. Si se indica un punto se devuelve la curvatura de Gauss en ese punto.
+
+    ---
+    tags:
+        - Superficie parametrizada
+    parameters:
+        - name: superficie
+          in: query
+          required: true
+          description: superficie parametrizada que se quiere analizar. Si no se proporciona se devuelve la teoría y algoritmos asociados.
+          schema:
+            type: string
+            example: "[cos(u), sin(u), v]"
+
+        - name: var1
+          in: query
+          required: false
+          description: primera variable de dependencia de la superficie. 
+          default: "u"
+          schema:
+            type: string
+            example: "u"
+
+        - name: var2
+          in: query
+          required: false
+          description: segunda variable de dependencia de la superficie. 
+          default: "v"
+          schema:
+            type: string
+            example: "v"
+
+        - name: dom_var1
+          in: query
+          required: false
+          description: dominio de la primera variable de dependencia.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(0,pi/2)"
+
+        - name: dom_var2
+          in: query
+          required: false
+          description: dominio de la segunda variable de dependencia.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(-1,1)"
+
+        - name: cond
+          in: query
+          required: false
+          description: dominio en forma de elipse de la superficie. Debe ser una desigualdad estricta.
+          schema:
+            type: string
+            example: "u^2+v^2<1"
+
+        - name: u0
+          in: query
+          required: false
+          description: valor de la primera variable de la superficie del punto donde evaluar.
+          schema:
+            type: string
+            example: "pi"
+
+        - name: v0
+          in: query
+          required: false
+          description: valor de la segunda variable de la superficie del punto donde evaluar.
+          schema:
+            type: string
+            example: "0"
+
+        - name: const
+          in: query
+          required: false
+          description: definición de un constante, sus posible definiciones son 'positive', 'negative','integer','noninteger','even', 'odd'. Para añadir más de una se debe añadir el parámetro varias veces.
+          schema:
+            type: string
+            example: "[r, positive, integer]"
+
+        - name: func
+          in: query
+          required: false
+          description: definición de un función indefinida, sus posible definiciones son 'positive', 'negative','integer','noninteger','even', 'odd'. Para añadir más de una se debe añadir el parámetro varias veces.
+          schema:
+            type: string
+            example: "[f(u,v), positive, integer]"
+
+        - name: trig
+          in: query
+          required: false
+          
+          description: Flag que indica si realizar un simplificación más profunda de expresiones trigonométricas. Se tarda considerablemente más tiempo. Para activarla basta con poner cualquier valor.
+          default: ""
+          schema:
+            type: string
+            example: "True"
+
+    responses:
+        200:
+            description: Si se proporcionan los datos necesarios para los cálculos, se devuelve un JSON con los pasos a seguir. Si no se proporciona la superficie se devuelve la teoría y algoritmos asociados.
+        400:
+            description: Parámetros incorrectos.
+
+    """
     return procesar_solicitud_param(calcp.curvaturaGauss, calcp.curvaturaGauss_pt_uv, txparamres.res_curv_Gauss, txparamres.res_curv_Gauss_pt, txparamth.TH_CURV_GAUSS)
 
 @param_surf_bp.route('/curvatura_media')
 def curvatura_media():
+    """Curvatura media de una superficie parametrizada
+    Método que devuelve la curvatura media de una superficie parametrizada. Si se indica un punto se devuelve la curvatura media en ese punto.
+
+    ---
+    tags:
+        - Superficie parametrizada
+    parameters:
+        - name: superficie
+          in: query
+          required: true
+          description: superficie parametrizada que se quiere analizar. Si no se proporciona se devuelve la teoría y algoritmos asociados.
+          schema:
+            type: string
+            example: "[cos(u), sin(u), v]"
+
+        - name: var1
+          in: query
+          required: false
+          description: primera variable de dependencia de la superficie. 
+          default: "u"
+          schema:
+            type: string
+            example: "u"
+
+        - name: var2
+          in: query
+          required: false
+          description: segunda variable de dependencia de la superficie. 
+          default: "v"
+          schema:
+            type: string
+            example: "v"
+
+        - name: dom_var1
+          in: query
+          required: false
+          description: dominio de la primera variable de dependencia.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(0,pi/2)"
+
+        - name: dom_var2
+          in: query
+          required: false
+          description: dominio de la segunda variable de dependencia.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(-1,1)"
+
+        - name: cond
+          in: query
+          required: false
+          description: dominio en forma de elipse de la superficie. Debe ser una desigualdad estricta.
+          schema:
+            type: string
+            example: "u^2+v^2<1"
+
+        - name: u0
+          in: query
+          required: false
+          description: valor de la primera variable de la superficie del punto donde evaluar.
+          schema:
+            type: string
+            example: "pi"
+
+        - name: v0
+          in: query
+          required: false
+          description: valor de la segunda variable de la superficie del punto donde evaluar.
+          schema:
+            type: string
+            example: "0"
+
+        - name: const
+          in: query
+          required: false
+          description: definición de un constante, sus posible definiciones son 'positive', 'negative','integer','noninteger','even', 'odd'. Para añadir más de una se debe añadir el parámetro varias veces.
+          schema:
+            type: string
+            example: "[r, positive, integer]"
+
+        - name: func
+          in: query
+          required: false
+          description: definición de un función indefinida, sus posible definiciones son 'positive', 'negative','integer','noninteger','even', 'odd'. Para añadir más de una se debe añadir el parámetro varias veces.
+          schema:
+            type: string
+            example: "[f(u,v), positive, integer]"
+
+        - name: trig
+          in: query
+          required: false
+          
+          description: Flag que indica si realizar un simplificación más profunda de expresiones trigonométricas. Se tarda considerablemente más tiempo. Para activarla basta con poner cualquier valor.
+          default: ""
+          schema:
+            type: string
+            example: "True"
+
+    responses:
+        200:
+            description: Si se proporcionan los datos necesarios para los cálculos, se devuelve un JSON con los pasos a seguir. Si no se proporciona la superficie se devuelve la teoría y algoritmos asociados.
+        400:
+            description: Parámetros incorrectos.
+
+    """
     return procesar_solicitud_param(calcp.curvaturaMedia, calcp.curvaturaMedia_pt_uv, txparamres.res_curv_media, txparamres.res_curv_media_pt, txparamth.TH_CURV_MEDIA)
 
 @param_surf_bp.route('/curvaturas_principales')
 def curvaturas_principales():
+    """Curvaturas principales de una superficie parametrizada
+    Método que devuelve las curvaturas principales de una superficie parametrizada. Si se indica un punto se devuelve las curvaturas principales en ese punto.
+
+    ---
+    tags:
+        - Superficie parametrizada
+    parameters:
+        - name: superficie
+          in: query
+          required: true
+          description: superficie parametrizada que se quiere analizar. Si no se proporciona se devuelve la teoría y algoritmos asociados.
+          schema:
+            type: string
+            example: "[cos(u), sin(u), v]"
+
+        - name: var1
+          in: query
+          required: false
+          description: primera variable de dependencia de la superficie. 
+          default: "u"
+          schema:
+            type: string
+            example: "u"
+
+        - name: var2
+          in: query
+          required: false
+          description: segunda variable de dependencia de la superficie. 
+          default: "v"
+          schema:
+            type: string
+            example: "v"
+
+        - name: dom_var1
+          in: query
+          required: false
+          description: dominio de la primera variable de dependencia.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(0,pi/2)"
+
+        - name: dom_var2
+          in: query
+          required: false
+          description: dominio de la segunda variable de dependencia.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(-1,1)"
+
+        - name: cond
+          in: query
+          required: false
+          description: dominio en forma de elipse de la superficie. Debe ser una desigualdad estricta.
+          schema:
+            type: string
+            example: "u^2+v^2<1"
+
+        - name: u0
+          in: query
+          required: false
+          description: valor de la primera variable de la superficie del punto donde evaluar.
+          schema:
+            type: string
+            example: "pi"
+
+        - name: v0
+          in: query
+          required: false
+          description: valor de la segunda variable de la superficie del punto donde evaluar.
+          schema:
+            type: string
+            example: "0"
+
+        - name: const
+          in: query
+          required: false
+          description: definición de un constante, sus posible definiciones son 'positive', 'negative','integer','noninteger','even', 'odd'. Para añadir más de una se debe añadir el parámetro varias veces.
+          schema:
+            type: string
+            example: "[r, positive, integer]"
+
+        - name: func
+          in: query
+          required: false
+          description: definición de un función indefinida, sus posible definiciones son 'positive', 'negative','integer','noninteger','even', 'odd'. Para añadir más de una se debe añadir el parámetro varias veces.
+          schema:
+            type: string
+            example: "[f(u,v), positive, integer]"
+
+        - name: trig
+          in: query
+          required: false
+          
+          description: Flag que indica si realizar un simplificación más profunda de expresiones trigonométricas. Se tarda considerablemente más tiempo. Para activarla basta con poner cualquier valor.
+          default: ""
+          schema:
+            type: string
+            example: "True"
+
+    responses:
+        200:
+            description: Si se proporcionan los datos necesarios para los cálculos, se devuelve un JSON con los pasos a seguir. Si no se proporciona la superficie se devuelve la teoría y algoritmos asociados.
+        400:
+            description: Parámetros incorrectos.
+
+    """
     return procesar_solicitud_param(calcp.curvaturasPrincipales, calcp.curvaturasPrincipales_pt_uv, txparamres.res_curvs_principales, txparamres.res_curvs_principales_pt, txparamth.TH_CURVS_PRINCIPALES)
 
 @param_surf_bp.route('/direcciones_principales')
 def direcciones_principales():
+    """Direcciones principales de una superficie parametrizada
+    Método que devuelve las direcciones principales de una superficie parametrizada. Si se indica un punto se devuelve las direcciones principales en ese punto.
+
+    ---
+    tags:
+        - Superficie parametrizada
+    parameters:
+        - name: superficie
+          in: query
+          required: true
+          description: superficie parametrizada que se quiere analizar. Si no se proporciona se devuelve la teoría y algoritmos asociados.
+          schema:
+            type: string
+            example: "[cos(u), sin(u), v]"
+
+        - name: var1
+          in: query
+          required: false
+          description: primera variable de dependencia de la superficie. 
+          default: "u"
+          schema:
+            type: string
+            example: "u"
+
+        - name: var2
+          in: query
+          required: false
+          description: segunda variable de dependencia de la superficie. 
+          default: "v"
+          schema:
+            type: string
+            example: "v"
+
+        - name: dom_var1
+          in: query
+          required: false
+          description: dominio de la primera variable de dependencia.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(0,pi/2)"
+
+        - name: dom_var2
+          in: query
+          required: false
+          description: dominio de la segunda variable de dependencia.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(-1,1)"
+
+        - name: cond
+          in: query
+          required: false
+          description: dominio en forma de elipse de la superficie. Debe ser una desigualdad estricta.
+          schema:
+            type: string
+            example: "u^2+v^2<1"
+
+        - name: u0
+          in: query
+          required: false
+          description: valor de la primera variable de la superficie del punto donde evaluar.
+          schema:
+            type: string
+            example: "pi"
+
+        - name: v0
+          in: query
+          required: false
+          description: valor de la segunda variable de la superficie del punto donde evaluar.
+          schema:
+            type: string
+            example: "0"
+
+        - name: const
+          in: query
+          required: false
+          description: definición de un constante, sus posible definiciones son 'positive', 'negative','integer','noninteger','even', 'odd'. Para añadir más de una se debe añadir el parámetro varias veces.
+          schema:
+            type: string
+            example: "[r, positive, integer]"
+
+        - name: func
+          in: query
+          required: false
+          description: definición de un función indefinida, sus posible definiciones son 'positive', 'negative','integer','noninteger','even', 'odd'. Para añadir más de una se debe añadir el parámetro varias veces.
+          schema:
+            type: string
+            example: "[f(u,v), positive, integer]"
+
+        - name: trig
+          in: query
+          required: false
+          
+          description: Flag que indica si realizar un simplificación más profunda de expresiones trigonométricas. Se tarda considerablemente más tiempo. Para activarla basta con poner cualquier valor.
+          default: ""
+          schema:
+            type: string
+            example: "True"
+
+    responses:
+        200:
+            description: Si se proporcionan los datos necesarios para los cálculos, se devuelve un JSON con los pasos a seguir. Si no se proporciona la superficie se devuelve la teoría y algoritmos asociados.
+        400:
+            description: Parámetros incorrectos.
+
+    """
     return procesar_solicitud_param(calcp.dirPrinc, calcp.dirPrinc_pt_uv, txparamres.res_dirs_principales, txparamres.res_dirs_principales_pt, txparamth.TH_DIRS_PRINCIPALES)
 
 @param_surf_bp.route('/punto_umbilico')
 def punto_umbilico():
+    """Comprobación de punto umbílico de una superficie parametrizada
+    Método que comprueba si un punto de una superficie parametrizada es umbílico.
+
+    ---
+    tags:
+        - Superficie parametrizada
+    parameters:
+        - name: superficie
+          in: query
+          required: true
+          description: superficie parametrizada que se quiere analizar. Si no se proporciona se devuelve la teoría y algoritmos asociados.
+          schema:
+            type: string
+            example: "[cos(u), sin(u), v]"
+
+        - name: u0
+          in: query
+          required: true
+          description: valor de la primera variable de la superficie del punto donde evaluar.
+          schema:
+            type: string
+            example: "pi"
+
+        - name: v0
+          in: query
+          required: true
+          description: valor de la segunda variable de la superficie del punto donde evaluar.
+          schema:
+            type: string
+            example: "0"
+
+        - name: var1
+          in: query
+          required: false
+          description: primera variable de dependencia de la superficie. 
+          default: "u"
+          schema:
+            type: string
+            example: "u"
+
+        - name: var2
+          in: query
+          required: false
+          description: segunda variable de dependencia de la superficie. 
+          default: "v"
+          schema:
+            type: string
+            example: "v"
+
+        - name: dom_var1
+          in: query
+          required: false
+          description: dominio de la primera variable de dependencia.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(0,pi/2)"
+
+        - name: dom_var2
+          in: query
+          required: false
+          description: dominio de la segunda variable de dependencia.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(-1,1)"
+
+        - name: cond
+          in: query
+          required: false
+          description: dominio en forma de elipse de la superficie. Debe ser una desigualdad estricta.
+          schema:
+            type: string
+            example: "u^2+v^2<1"
+
+    responses:
+        200:
+            description: Si se proporcionan los datos necesarios para los cálculos, se devuelve un JSON con los pasos a seguir. Si no se proporciona la superficie se devuelve la teoría y algoritmos asociados.
+        400:
+            description: Parámetros incorrectos.
+
+    """
     return procesar_solicitud_param(None, calcp.umbilico_pt_uv, txparamres.res_ptos_umbilicos, txparamres.res_ptos_umbilicos_pt, txparamth.TH_PTS_UMBILICOS)
 
 @param_surf_bp.route('/clasificacion_punto')
 def clasificacion_punto():
-    return procesar_solicitud_param(None, calcp.clasicPt_uv, calcp.clasicPt_xyz, None, txparamres.res_clasif_pt, txparamth.TH_CLASIFICACION_PTOS)
+    """Clasificación de punto de una superficie parametrizada
+    Clasifica un punto de una superficie parametrizada.
+
+    ---
+    tags:
+        - Superficie parametrizada
+    parameters:
+        - name: superficie
+          in: query
+          required: true
+          description: superficie parametrizada que se quiere analizar. Si no se proporciona se devuelve la teoría y algoritmos asociados.
+          schema:
+            type: string
+            example: "[cos(u), sin(u), v]"
+
+        - name: u0
+          in: query
+          required: true
+          description: valor de la primera variable de la superficie del punto donde evaluar.
+          schema:
+            type: string
+            example: "pi"
+
+        - name: v0
+          in: query
+          required: true
+          description: valor de la segunda variable de la superficie del punto donde evaluar.
+          schema:
+            type: string
+            example: "0"
+
+        - name: var1
+          in: query
+          required: false
+          description: primera variable de dependencia de la superficie. 
+          default: "u"
+          schema:
+            type: string
+            example: "u"
+
+        - name: var2
+          in: query
+          required: false
+          description: segunda variable de dependencia de la superficie. 
+          default: "v"
+          schema:
+            type: string
+            example: "v"
+
+        - name: dom_var1
+          in: query
+          required: false
+          description: dominio de la primera variable de dependencia.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(0,pi/2)"
+
+        - name: dom_var2
+          in: query
+          required: false
+          description: dominio de la segunda variable de dependencia.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(-1,1)"
+
+        - name: cond
+          in: query
+          required: false
+          description: dominio en forma de elipse de la superficie. Debe ser una desigualdad estricta.
+          schema:
+            type: string
+            example: "u^2+v^2<1"
+
+    responses:
+        200:
+            description: Si se proporcionan los datos necesarios para los cálculos, se devuelve un JSON con los pasos a seguir. Si no se proporciona la superficie se devuelve la teoría y algoritmos asociados.
+        400:
+            description: Parámetros incorrectos.
+
+    """
+    return procesar_solicitud_param(None, calcp.clasicPt_uv, None, txparamres.res_clasif_pt, txparamth.TH_CLASIFICACION_PTOS)
 
 @param_surf_bp.route('/direccion_asintotica')
 def direccion_asintotica():
+    """Direcciones asintóticas de una superficie parametrizada
+    Calcula las direcciones asintóticas en un punto de una superficie parametrizada.
+
+    ---
+    tags:
+        - Superficie parametrizada
+    parameters:
+        - name: superficie
+          in: query
+          required: true
+          description: superficie parametrizada que se quiere analizar. Si no se proporciona se devuelve la teoría y algoritmos asociados.
+          schema:
+            type: string
+            example: "[cos(u), sin(u), v]"
+
+        - name: u0
+          in: query
+          required: true
+          description: valor de la primera variable de la superficie del punto donde evaluar.
+          schema:
+            type: string
+            example: "pi"
+
+        - name: v0
+          in: query
+          required: true
+          description: valor de la segunda variable de la superficie del punto donde evaluar.
+          schema:
+            type: string
+            example: "0"
+
+        - name: var1
+          in: query
+          required: false
+          description: primera variable de dependencia de la superficie. 
+          default: "u"
+          schema:
+            type: string
+            example: "u"
+
+        - name: var2
+          in: query
+          required: false
+          description: segunda variable de dependencia de la superficie. 
+          default: "v"
+          schema:
+            type: string
+            example: "v"
+
+        - name: dom_var1
+          in: query
+          required: false
+          description: dominio de la primera variable de dependencia.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(0,pi/2)"
+
+        - name: dom_var2
+          in: query
+          required: false
+          description: dominio de la segunda variable de dependencia.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(-1,1)"
+
+        - name: cond
+          in: query
+          required: false
+          description: dominio en forma de elipse de la superficie. Debe ser una desigualdad estricta.
+          schema:
+            type: string
+            example: "u^2+v^2<1"
+
+    responses:
+        200:
+            description: Si se proporcionan los datos necesarios para los cálculos, se devuelve un JSON con los pasos a seguir. Si no se proporciona la superficie se devuelve la teoría y algoritmos asociados.
+        400:
+            description: Parámetros incorrectos.
+
+    """
     return procesar_solicitud_param(None, calcp.dirAsin_pt_uv, None, txparamres.res_dirs_asint, txparamth.TH_DIRS_ASINTOTICAS)
 
 @param_surf_bp.route('/description')
 def description():
+    """Análisis completo de una superficie parametrizada
+    Método que devuelve el análisis completo de una superficie parametrizada. Si se indica un punto se devuelve el análisis completo principales en ese punto.
+
+    ---
+    tags:
+        - Superficie parametrizada
+    parameters:
+        - name: superficie
+          in: query
+          required: true
+          description: superficie parametrizada que se quiere analizar.
+          schema:
+            type: string
+            example: "[cos(u), sin(u), v]"
+
+        - name: var1
+          in: query
+          required: false
+          description: primera variable de dependencia de la superficie. 
+          default: "u"
+          schema:
+            type: string
+            example: "u"
+
+        - name: var2
+          in: query
+          required: false
+          description: segunda variable de dependencia de la superficie. 
+          default: "v"
+          schema:
+            type: string
+            example: "v"
+
+        - name: dom_var1
+          in: query
+          required: false
+          description: dominio de la primera variable de dependencia.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(0,pi/2)"
+
+        - name: dom_var2
+          in: query
+          required: false
+          description: dominio de la segunda variable de dependencia.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(-1,1)"
+
+        - name: cond
+          in: query
+          required: false
+          description: dominio en forma de elipse de la superficie. Debe ser una desigualdad estricta.
+          schema:
+            type: string
+            example: "u^2+v^2<1"
+
+        - name: u0
+          in: query
+          required: false
+          description: valor de la primera variable de la superficie del punto donde evaluar.
+          schema:
+            type: string
+            example: "pi"
+
+        - name: v0
+          in: query
+          required: false
+          description: valor de la segunda variable de la superficie del punto donde evaluar.
+          schema:
+            type: string
+            example: "0"
+
+        - name: const
+          in: query
+          required: false
+          description: definición de un constante, sus posible definiciones son 'positive', 'negative','integer','noninteger','even', 'odd'. Para añadir más de una se debe añadir el parámetro varias veces.
+          schema:
+            type: string
+            example: "[r, positive, integer]"
+
+        - name: func
+          in: query
+          required: false
+          description: definición de un función indefinida, sus posible definiciones son 'positive', 'negative','integer','noninteger','even', 'odd'. Para añadir más de una se debe añadir el parámetro varias veces.
+          schema:
+            type: string
+            example: "[f(u,v), positive, integer]"
+
+        - name: trig
+          in: query
+          required: false
+          description: Flag que indica si realizar un simplificación más profunda de expresiones trigonométricas. Se tarda considerablemente más tiempo. Para activarla basta con poner cualquier valor.
+          default: ""
+          schema:
+            type: string
+            example: "True"
+
+    responses:
+        200:
+            description: Si se proporcionan los datos necesarios para los cálculos, se devuelve un JSON con los pasos a seguir.
+        400:
+            description: Parámetros incorrectos.
+
+    """
     return procesar_solicitud_param(calcp.descripccion, calcp.descripccion_pt_uv, txparamres.res_analisis_completo, txparamres.res_analisis_completo_pt, txparamth.TH_ANALISIS)
 
 @param_surf_bp.route('/grafica')
 def grafica():
+    """Representación gráfica de una superficie parametrizada
+    Método que la representación gráfica de una superficie parametrizada. Si se indica un punto se pueden representar algunas características de la superficie en ese punto.
+
+    ---
+    tags:
+        - Superficie parametrizada
+    parameters:
+        - name: superficie
+          in: query
+          required: true
+          description: superficie parametrizada que se quiere representar.
+          schema:
+            type: string
+            example: "[cos(u), sin(u), v]"
+
+        - name: var1
+          in: query
+          required: false
+          description: primera variable de dependencia de la superficie. 
+          default: "u"
+          schema:
+            type: string
+            example: "u"
+
+        - name: var2
+          in: query
+          required: false
+          description: segunda variable de dependencia de la superficie. 
+          default: "v"
+          schema:
+            type: string
+            example: "v"
+
+        - name: dom_var1
+          in: query
+          required: false
+          description: dominio de la primera variable de dependencia.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(0,pi/2)"
+
+        - name: dom_var2
+          in: query
+          required: false
+          description: dominio de la segunda variable de dependencia.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(-1,1)"
+
+        - name: cond
+          in: query
+          required: false
+          description: dominio en forma de elipse de la superficie. Debe ser una desigualdad estricta.
+          schema:
+            type: string
+            example: "u^2+v^2<1"
+
+        - name: u0
+          in: query
+          required: false
+          description: valor de la primera variable de la superficie del punto si se quiere representar alguna característica de las superficie.
+          schema:
+            type: string
+            example: "pi"
+
+        - name: v0
+          in: query
+          required: false
+          description: valor de la segunda variable de la superficie del punto si se quiere representar alguna característica de las superficie.
+          schema:
+            type: string
+            example: "0"
+
+        - name: normal
+          in: query
+          required: false
+          description: Flag que indica si se desea representar el vector normal en un punto de la superficie. Si no se han especificado 'u0' y 'v0' el Flag se ignora. Para activarla basta con poner cualquier valor.
+          default: ""
+          schema:
+            type: string
+            example: "True"
+
+        - name: tangente
+          in: query
+          required: false
+          description: Flag que indica si se desea representar el plano tangente en un punto de la superficie. Si no se han especificado 'u0' y 'v0' el Flag se ignora. Para activarla basta con poner cualquier valor.
+          default: ""
+          schema:
+            type: string
+            example: "True"
+
+        - name: dirs_principales
+          in: query
+          required: false
+          description: Flag que indica si se desean representar las direcciones principales en un punto de la superficie. Si no se han especificado 'u0' y 'v0' el Flag se ignora. Para activarla basta con poner cualquier valor.
+          default: ""
+          schema:
+            type: string
+            example: "True"
+
+        - name: curvs_principales
+          in: query
+          required: false
+          description: Flag que indica si se desean representar las curvaturas principales en un punto de la superficie. Si no se han especificado 'u0' y 'v0' el Flag se ignora. Para activarla basta con poner cualquier valor.
+          default: ""
+          schema:
+            type: string
+            example: "True"
+
+        - name: dirs_asintoticas
+          in: query
+          required: false
+          description: Flag que indica si se desean representar las direcciones asintóticas en un punto de la superficie. Si no se han especificado 'u0' y 'v0' el Flag se ignora. Para activarla basta con poner cualquier valor.
+          default: ""
+          schema:
+            type: string
+            example: "True"
+
+    responses:
+        200:
+            description: Si se proporcionan los datos necesarios para los cálculos, se devuelve un código HTML con la representación deseada.
+        400:
+            description: Parámetros incorrectos.
+
+    """
     superficie_str  = request.args.get('superficie', None)
     if superficie_str == None:
         return respuesta_error("No se ha encontrado la parametrización de la superficie")
@@ -511,18 +1972,376 @@ def normaliza_implicita(sup: str, consts: list, funcs: list) -> tuple:
 #ENDPOINTS
 @imp_surf_bp.route('/vector_normal')
 def vector_normal():
+    """Vector normal a una superficie implícita
+    Método que devuelve el vector normal a una superficie parametrizada. Si se indica un punto se devuelve el vector normal en ese punto.
+
+    ---
+    tags:
+        - Superficie implícita
+    parameters:
+        - name: superficie
+          in: query
+          required: true
+          description: superficie implícita que se quiere analizar. La ecuación debe ser igualada a cero. Si no se proporciona se devuelve la teoría y algoritmos asociados.
+          schema:
+            type: string
+            example: "x^2 %2B y^2 %2B z^2-1"
+
+        - name: dom_x
+          in: query
+          required: false
+          description: dominio de x.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(-1,1)"
+
+        - name: dom_y
+          in: query
+          required: false
+          description: dominio de y.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(-1,1)"
+
+        - name: dom_z
+          in: query
+          required: false
+          description: dominio de z.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(-1,1)"
+
+        - name: x0
+          in: query
+          required: false
+          description: valor de x del punto de la superficie donde evaluar.
+          schema:
+            type: string
+            example: "1"
+
+        - name: y0
+          in: query
+          required: false
+          description: valor de y del punto de la superficie donde evaluar.
+          schema:
+            type: string
+            example: "0"
+
+        - name: z0
+          in: query
+          required: false
+          description: valor de z del punto de la superficie donde evaluar.
+          schema:
+            type: string
+            example: "0"
+
+        - name: const
+          in: query
+          required: false
+          description: definición de un constante, sus posible definiciones son 'positive', 'negative','integer','noninteger','even', 'odd'. Para añadir más de una se debe añadir el parámetro varias veces.
+          schema:
+            type: string
+            example: "[r, positive, integer]"
+
+        - name: func
+          in: query
+          required: false
+          description: definición de un función indefinida, sus posible definiciones son 'positive', 'negative','integer','noninteger','even', 'odd'. Para añadir más de una se debe añadir el parámetro varias veces.
+          schema:
+            type: string
+            example: "[f(u,v), positive, integer]"
+
+    responses:
+        200:
+            description: Si se proporcionan los datos necesarios para los cálculos, se devuelve un JSON con los pasos a seguir. Si no se proporciona la superficie se devuelve la teoría y algoritmos asociados.
+        400:
+            description: Parámetros incorrectos.
+
+    """
     return procesar_solicitud_imp(calci.normal, calci.normal_pt, txsimplres.res_vect_normal, txsimplres.res_vect_normal_pt, txsimplth.TH_VEC_NORMAL)
 
 @imp_surf_bp.route('/plano_tangente')
 def plano_tangente():
+    """Plano tangente a una superficie implícita
+    Método que devuelve el plano tangente a una superficie parametrizada. Si se indica un punto se devuelve el plano tangente en ese punto.
+
+    ---
+    tags:
+        - Superficie implícita
+    parameters:
+        - name: superficie
+          in: query
+          required: true
+          description: superficie implícita que se quiere analizar. La ecuación debe ser igualada a cero. Si no se proporciona se devuelve la teoría y algoritmos asociados.
+          schema:
+            type: string
+            example: "x^2 %2B y^2 %2B z^2-1"
+
+        - name: dom_x
+          in: query
+          required: false
+          description: dominio de x.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(-1,1)"
+
+        - name: dom_y
+          in: query
+          required: false
+          description: dominio de y.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(-1,1)"
+
+        - name: dom_z
+          in: query
+          required: false
+          description: dominio de z.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(-1,1)"
+
+        - name: x0
+          in: query
+          required: false
+          description: valor de x del punto de la superficie donde evaluar.
+          schema:
+            type: string
+            example: "1"
+
+        - name: y0
+          in: query
+          required: false
+          description: valor de y del punto de la superficie donde evaluar.
+          schema:
+            type: string
+            example: "0"
+
+        - name: z0
+          in: query
+          required: false
+          description: valor de z del punto de la superficie donde evaluar.
+          schema:
+            type: string
+            example: "0"
+
+        - name: const
+          in: query
+          required: false
+          description: definición de un constante, sus posible definiciones son 'positive', 'negative','integer','noninteger','even', 'odd'. Para añadir más de una se debe añadir el parámetro varias veces.
+          schema:
+            type: string
+            example: "[r, positive, integer]"
+
+        - name: func
+          in: query
+          required: false
+          description: definición de un función indefinida, sus posible definiciones son 'positive', 'negative','integer','noninteger','even', 'odd'. Para añadir más de una se debe añadir el parámetro varias veces.
+          schema:
+            type: string
+            example: "[f(u,v), positive, integer]"
+
+    responses:
+        200:
+            description: Si se proporcionan los datos necesarios para los cálculos, se devuelve un JSON con los pasos a seguir. Si no se proporciona la superficie se devuelve la teoría y algoritmos asociados.
+        400:
+            description: Parámetros incorrectos.
+
+    """
     return procesar_solicitud_imp(calci.tangente, calci.tangente_pt, txsimplres.res_plano_tangente, txsimplres.res_plano_tangente_pt, txsimplth.TH_PLANO_TANG)
 
 @imp_surf_bp.route('/description')
 def description():
+    """Análisis completo una superficie implícita
+    Método que devuelve un análisis completo de una superficie parametrizada. Si se indica un punto se devuelve el análisis en ese punto.
+
+    ---
+    tags:
+        - Superficie implícita
+    parameters:
+        - name: superficie
+          in: query
+          required: true
+          description: superficie implícita que se quiere analizar. La ecuación debe ser igualada a cero. Si no se proporciona se devuelve la teoría y algoritmos asociados.
+          schema:
+            type: string
+            example: "x^2 %2B y^2 %2B z^2-1"
+
+        - name: dom_x
+          in: query
+          required: false
+          description: dominio de x.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(-1,1)"
+
+        - name: dom_y
+          in: query
+          required: false
+          description: dominio de y.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(-1,1)"
+
+        - name: dom_z
+          in: query
+          required: false
+          description: dominio de z.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(-1,1)"
+
+        - name: x0
+          in: query
+          required: false
+          description: valor de x del punto de la superficie donde evaluar.
+          schema:
+            type: string
+            example: "1"
+
+        - name: y0
+          in: query
+          required: false
+          description: valor de y del punto de la superficie donde evaluar.
+          schema:
+            type: string
+            example: "0"
+
+        - name: z0
+          in: query
+          required: false
+          description: valor de z del punto de la superficie donde evaluar.
+          schema:
+            type: string
+            example: "0"
+
+        - name: const
+          in: query
+          required: false
+          description: definición de un constante, sus posible definiciones son 'positive', 'negative','integer','noninteger','even', 'odd'. Para añadir más de una se debe añadir el parámetro varias veces.
+          schema:
+            type: string
+            example: "[r, positive, integer]"
+
+        - name: func
+          in: query
+          required: false
+          description: definición de un función indefinida, sus posible definiciones son 'positive', 'negative','integer','noninteger','even', 'odd'. Para añadir más de una se debe añadir el parámetro varias veces.
+          schema:
+            type: string
+            example: "[f(u,v), positive, integer]"
+
+    responses:
+        200:
+            description: Si se proporcionan los datos necesarios para los cálculos, se devuelve un JSON con los pasos a seguir. Si no se proporciona la superficie se devuelve la teoría y algoritmos asociados.
+        400:
+            description: Parámetros incorrectos.
+
+    """
     return procesar_solicitud_imp(calci.descripccion, calci.descripccion_pt_uv, txsimplres.res_analisis_completo, txsimplres.res_analisis_completo_pt, txsimplth.TH_ANALISIS)
 
 @imp_surf_bp.route('/grafica')
 def grafica():
+    """Representación gráfica de una superficie implícita
+    Método que la representación gráfica de una superficie implícita. Si se indica un punto se pueden representar algunas características de la superficie en ese punto.
+
+    ---
+    tags:
+        - Superficie implícita
+    parameters:
+        - name: superficie
+          in: query
+          required: true
+          description: superficie implícita que se quiere representar. La ecuación debe ser igualada a cero.
+          schema:
+            type: string
+            example: "x^2 %2B y^2 %2B z^2-1"
+
+        - name: dom_x
+          in: query
+          required: false
+          description: dominio de x.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(-1,1)"
+
+        - name: dom_y
+          in: query
+          required: false
+          description: dominio de y.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(-1,1)"
+
+        - name: dom_z
+          in: query
+          required: false
+          description: dominio de z.
+          default: "(-5,5)"
+          schema:
+            type: string
+            example: "(-1,1)"
+
+        - name: x0
+          in: query
+          required: false
+          description: valor de x del punto de la superficie si se quiere representar alguna característica de la superficie.
+          schema:
+            type: string
+            example: "1"
+
+        - name: y0
+          in: query
+          required: false
+          description: valor de y del punto de la superficie si se quiere representar alguna característica de la superficie.
+          schema:
+            type: string
+            example: "0"
+
+        - name: z0
+          in: query
+          required: false
+          description: valor de z del punto de la superficie si se quiere representar alguna característica de la superficie.
+          schema:
+            type: string
+            example: "0"
+
+        - name: normal
+          in: query
+          required: false
+          description: Flag que indica si se desea representar el vector normal en un punto de la superficie. Si no se han especificado 'u0' y 'v0' el Flag se ignora. Para activarla basta con poner cualquier valor.
+          default: ""
+          schema:
+            type: string
+            example: "True"
+
+        - name: tangente
+          in: query
+          required: false
+          description: Flag que indica si se desea representar el plano tangente en un punto de la superficie. Si no se han especificado 'u0' y 'v0' el Flag se ignora. Para activarla basta con poner cualquier valor.
+          default: ""
+          schema:
+            type: string
+            example: "True"
+
+    responses:
+        200:
+            description: Si se proporcionan los datos necesarios para los cálculos, se devuelve un código HTML con la representación deseada.
+        400:
+            description: Parámetros incorrectos.
+
+    """
     superficie_str  = request.args.get('superficie', None)
     if superficie_str == None:
         return respuesta_error("No se ha encontrado la superficie")

@@ -70,7 +70,7 @@ def EscribeVectNormal(res):
 def EscribePlanoTang(res):
     return [
         {
-            'descripcion' : r'Cálculo del afín plano tangente: Aplicando su fórmula, el plano afín tangente es',
+            'descripcion' : r'Cálculo del plano tangente: Aplicando su fórmula, el plano afín tangente es',
             'paso' : str(res['tangente']),
             'pasoLatex' : latex(res['tangente'])
         }

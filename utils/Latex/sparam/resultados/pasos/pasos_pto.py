@@ -80,7 +80,7 @@ def EscribeVectNormal_pt(res):
 def EscribePlanoTang_pt(res):
     return [
         {
-            'descripcion' : r'Cálculo del afín plano tangente: aplicando su fórmula, el plano afín tangente en el punto $\varphi('+latex(res['u0'])+','+latex(res['v0'])+')$ es',
+            'descripcion' : r'Cálculo del plano tangente: aplicando su fórmula, el plano afín tangente en el punto $\varphi('+latex(res['u0'])+','+latex(res['v0'])+')$ es',
             'paso' : str(res['tangente_pt']),
             'pasoLatex' : latex(res['tangente_pt'])
         }
