@@ -45,8 +45,8 @@ def res_analisis_completo(res):
         EscribeDerivadas(res) +
         EscribeSupNivel(res) +
         EscribeGradiente(res) +
-        EscribeVectNormal(res) +
-        EscribePlanoTang(res)
+        EscribePlanoTang(res) +
+        EscribeVectNormal(res)
     )
 
 
@@ -92,6 +92,7 @@ def res_analisis_completo_pt(res):
         EscribeDerivadas_pt(res) +
         EscribeSupNivel(res) +
         EscribeGradiente_pt(res) +
-        EscribeVectNormal_pt(res) +
-        EscribePlanoTang_pt(res)
+        EscribePlanoTang_pt(res) +
+        EscribeVectNormal_pt(res)
+        
     )

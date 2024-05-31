@@ -746,11 +746,11 @@ def dirAsin_pt_uv(res):
         w1, w2 = sp.symbols('w_1, w_2', real=True)
         res['Dirs_asint'] = [sp.Matrix([w1, w2]).T]
     elif res['e_pt']==0:
-        res['Dirs_asint'] = [sp.Matrix([1, 0]).T, sp.Matrix([-res['g_pt'], 2*res['f_pt']]).T]
-        if res['Dirs_asint'][0] == res['Dirs_asint'][1]: del res['Dirs_asint'][1]
+        if res['f_pt'] == 0: res['Dirs_asint'] = [sp.Matrix([1, 0]).T]
+        else: res['Dirs_asint'] = [sp.Matrix([1, 0]).T, sp.Matrix([-res['g_pt'], 2*res['f_pt']]).T]
     elif res['g_pt']==0:
-        res['Dirs_asint'] = [sp.Matrix([0, 1]).T, sp.Matrix([-2*res['f_pt'], -res['e_pt'], ]).T]
-        if res['Dirs_asint'][0] == res['Dirs_asint'][1]: del res['Dirs_asint'][1]
+        if res['f_pt'] == 0: res['Dirs_asint'] = [sp.Matrix([0, 1]).T]
+        else: res['Dirs_asint'] = [sp.Matrix([0, 1]).T, sp.Matrix([-2*res['f_pt'], -res['e_pt'], ]).T]
     elif res['f_pt']**2- res['g_pt']*res['e_pt'] < 0:
         res['Dirs_asint'] = []
     else:

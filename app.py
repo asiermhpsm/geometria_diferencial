@@ -11,6 +11,7 @@ import re
 import utils.calc_param as calcp
 import utils.calc_imp as calci
 import utils.graph as graph
+from utils.utils import normalizaSimbolos
 
 import utils.Latex.sparam.teoria.teoria as txparamth
 import utils.Latex.sparam.resultados.resultados as txparamres
@@ -60,8 +61,8 @@ def extrae_dominio(dom_var: str) -> tuple:
         if len(lista_dom_var) != 2:
             raise Exception(f"Error al procesar el dominio: {dom_var}")
         
-        start = sp.sympify(lista_dom_var[0].strip('()'))
-        end = sp.sympify(lista_dom_var[1].strip('()'))
+        start = sp.sympify(normalizaSimbolos(lista_dom_var[0].strip('()')))
+        end = sp.sympify(normalizaSimbolos(lista_dom_var[1].strip('()')))
         if not start.is_number or not end.is_number:
             raise Exception(f"Error al procesar el dominio: {dom_var}")
         dominio = sp.Interval.open(start, end)
@@ -88,7 +89,7 @@ def obtiene_valor_pt(pt: str):
     Argumentos:
     pt              string con el valor del punto que se quiere obtener
     """
-    pt = sp.sympify(pt) if pt else None
+    pt = sp.sympify(normalizaSimbolos(pt)) if pt else None
     if pt != None and not pt.is_number:
         pt = None
     return pt
@@ -101,7 +102,7 @@ SUPERFICIE PARAMETRIZADA
 param_surf_bp = Blueprint('parametrizada', __name__)
 
 #FUNCION AUXILIARES
-def procesar_solicitud_param(func: callable, func_pt_uv: callable, dict2latex: callable, dict2latex_pt: callable, txth: str='') -> dict:
+def procesar_solicitud_param(func: callable, func_pt_uv: callable, dict2latex: callable, dict2latex_pt: callable, txth: dict={}) -> dict:
     """
     Procesa una solicitud
     Argumentos:
@@ -113,7 +114,7 @@ def procesar_solicitud_param(func: callable, func_pt_uv: callable, dict2latex: c
     """
     superficie_str  = request.args.get('superficie', None)
     if not superficie_str:
-        return {'titulo': 'Superficie parametrizada', 'descripcion' : txth, 'algoritmo': txth}
+        return jsonify(txth)
 
 
     #Se consigue la parametrización de la superficie convertida a objeto sympy
@@ -150,7 +151,7 @@ def procesar_solicitud_param(func: callable, func_pt_uv: callable, dict2latex: c
     cond_str = request.args.get('cond', None)
     if cond_str != None:
         try:
-            sy_cond = sp.sympify(cond_str, locals=variables)
+            sy_cond = sp.sympify(normalizaSimbolos(cond_str), locals=variables)
             if sy_cond.free_symbols.issubset(set([variables['u'], variables['v']])) and isinstance(sy_cond, sp.StrictLessThan):
                 expr = sy_cond.lhs - sy_cond.rhs
                 a = expr.coeff(variables['u']**2)
@@ -254,7 +255,7 @@ def normaliza_parametrizacion(var1: str, var2: str, sup: str, consts: list, func
     superficie = sup.strip('[] ').split(',')
     if len(superficie) == 3:
         try:
-            return sp.Matrix([sp.sympify(elem, locals=variables) for elem in superficie]).T, variables_sup
+            return sp.Matrix([sp.sympify(normalizaSimbolos(elem), locals=variables) for elem in superficie]).T, variables_sup
         except Exception as e:
             raise Exception(f"Error al procesar la superficie: {e}")
     else:
@@ -1770,7 +1771,7 @@ def grafica():
     """
     superficie_str  = request.args.get('superficie', None)
     if superficie_str == None:
-        return respuesta_error("No se ha encontrado la parametrización de la superficie")
+        return jsonify(txparamth.TH_GRAFICAR)
     else:
         #Se obtienen las variables de la parametrización
         variables = {}
@@ -1796,7 +1797,7 @@ def grafica():
         superficie = superficie_str.strip('[] ').split(',')
         if len(superficie) == 3:
             try:
-                sup = sp.Matrix([sp.sympify(elem, locals=variables) for elem in superficie]).T
+                sup = sp.Matrix([sp.sympify(normalizaSimbolos(elem), locals=variables) for elem in superficie]).T
             except Exception as e:
                 return respuesta_error(f"Error al procesar la superficie: {e}")
         else:
@@ -1811,7 +1812,7 @@ def grafica():
         cond_str = request.args.get('cond', None)
         if cond_str!=None:
             try:
-                sy_cond = sp.sympify(cond_str, locals=variables)
+                sy_cond = sp.sympify(normalizaSimbolos(cond_str), locals=variables)
                 if sy_cond.free_symbols.issubset(set([u, v])) and isinstance(sy_cond, sp.StrictLessThan):
                     expr = sy_cond.lhs - sy_cond.rhs
                     a = expr.coeff(u**2)
@@ -1869,7 +1870,7 @@ ENDPOINTS SUPERFICIE IMPLICITA
 imp_surf_bp = Blueprint('implicita', __name__)
 
 #FUNCION AUXILIARES
-def procesar_solicitud_imp(func: callable, func_pt: callable, dict2latex: callable, dict2latex_pt: callable, txth: str='') -> dict:
+def procesar_solicitud_imp(func: callable, func_pt: callable, dict2latex: callable, dict2latex_pt: callable, txth: dict='') -> dict:
     """
     Procesa una solicitud
     Argumentos:
@@ -1882,7 +1883,7 @@ def procesar_solicitud_imp(func: callable, func_pt: callable, dict2latex: callab
     func_str = request.args.getlist('func')
     
     if not superficie_str:
-        return {'titulo': 'Superficie implicita', 'descripcion' : txth, 'algoritmo': txth}
+        return jsonify(txth)
 
     #Se consigue la parametrización de la superficie convertida a objeto sympy
     try:
@@ -1964,7 +1965,7 @@ def normaliza_implicita(sup: str, consts: list, funcs: list) -> tuple:
 
     #Se obtiene la superficie implicita a expresion sympy
     try:
-        return sp.sympify(sup, locals=variables), x, y, z
+        return sp.sympify(normalizaSimbolos(sup), locals=variables), x, y, z
     except Exception as e:
         raise Exception(f"Error al procesar la superficie: {e}")
 
@@ -2045,14 +2046,6 @@ def vector_normal():
           schema:
             type: string
             example: "[r, positive, integer]"
-
-        - name: func
-          in: query
-          required: false
-          description: definición de un función indefinida, sus posible definiciones son 'positive', 'negative','integer','noninteger','even', 'odd'. Para añadir más de una se debe añadir el parámetro varias veces.
-          schema:
-            type: string
-            example: "[f(u,v), positive, integer]"
 
     responses:
         200:
@@ -2139,14 +2132,6 @@ def plano_tangente():
             type: string
             example: "[r, positive, integer]"
 
-        - name: func
-          in: query
-          required: false
-          description: definición de un función indefinida, sus posible definiciones son 'positive', 'negative','integer','noninteger','even', 'odd'. Para añadir más de una se debe añadir el parámetro varias veces.
-          schema:
-            type: string
-            example: "[f(u,v), positive, integer]"
-
     responses:
         200:
             description: Si se proporcionan los datos necesarios para los cálculos, se devuelve un JSON con los pasos a seguir. Si no se proporciona la superficie se devuelve la teoría y algoritmos asociados.
@@ -2231,14 +2216,6 @@ def description():
           schema:
             type: string
             example: "[r, positive, integer]"
-
-        - name: func
-          in: query
-          required: false
-          description: definición de un función indefinida, sus posible definiciones son 'positive', 'negative','integer','noninteger','even', 'odd'. Para añadir más de una se debe añadir el parámetro varias veces.
-          schema:
-            type: string
-            example: "[f(u,v), positive, integer]"
 
     responses:
         200:
@@ -2344,7 +2321,7 @@ def grafica():
     """
     superficie_str  = request.args.get('superficie', None)
     if superficie_str == None:
-        return respuesta_error("No se ha encontrado la superficie")
+        return jsonify(txsimplth.TH_GRAFICAR)
     else:
         x = sp.symbols('x', real=True)
         y = sp.symbols('y', real=True)
@@ -2353,7 +2330,7 @@ def grafica():
         variables = {'x':x, 'y':y, 'z':z}
 
         try:
-            superficie = sp.sympify(superficie_str, locals=variables)
+            superficie = sp.sympify(normalizaSimbolos(superficie_str), locals=variables)
         except Exception as e:
             return respuesta_error(f"Error al procesar la superficie: {e}")
         
