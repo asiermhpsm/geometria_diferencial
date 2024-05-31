@@ -73,14 +73,14 @@ def EscribeVectNormal_pt(res):
         {
             'descripcion' : r'Aplicación de la fórmula del vector normal: aplicando su fórmula, el vector normal en el punto $\varphi('+latex(res['u0'])+','+latex(res['v0'])+')$ es',
             'paso' : str(res['normal_pt']),
-            'pasoLatex' : r'\Vec{n}='+ latex(res['normal_pt'], mat_delim='(')
+            'pasoLatex' : r'\vec{n}=\frac{\vec{\varphi}_u \times \vec{\varphi}_v}{\|\vec{\varphi}_u \times \vec{\varphi}_v\|}='+ latex(res['normal_pt'], mat_delim='(')
         }
     ]
 
 def EscribePlanoTang_pt(res):
     return [
         {
-            'descripcion' : r'Cálculo del plano tangente: aplicando su fórmula, el plano afín tangente en el punto $\varphi('+latex(res['u0'])+','+latex(res['v0'])+')$ es',
+            'descripcion' : r'Cálculo del plano tangente: aplicando su fórmula $(\vec{\varphi}_u(p) \times \vec{\varphi}_v(p)) \cdot ((x, y, z)-\varphi(p)) = 0$, el plano tangente en el punto $\varphi('+latex(res['u0'])+','+latex(res['v0'])+')$ es',
             'paso' : str(res['tangente_pt']),
             'pasoLatex' : latex(res['tangente_pt'])
         }
@@ -91,7 +91,7 @@ def EscribePFF_pt(res):
         {
             'descripcion' : r'Cálculo de la primera forma fundamental: aplicando las fórmulas de cada una de sus componenetes, la primera forma fundamental en el punto $\varphi('+latex(res['u0'])+','+latex(res['v0'])+')$ es',
             'paso' : '(' + str(res['E_pt']) + ', ' + str(res['F_pt']) + ', ' + str(res['G_pt']) + ')',
-            'pasoLatex' : r'\left[I\right]=\left(\begin{matrix}'+latex(res['E_pt'])+r' & '+latex(res['F_pt'])+r' \\ '+latex(res['F_pt'])+r' & '+latex(res['G_pt'])+r'\end{matrix}\right)'
+            'pasoLatex' : r'\left[I\right]=\left(\begin{matrix} \vec{\varphi}_u \cdot \vec{\varphi}_u & \vec{\varphi}_u \cdot \vec{\varphi}_v \\ \vec{\varphi}_u \cdot \vec{\varphi}_v & \vec{\varphi}_v \cdot \vec{\varphi}_v \end{matrix}\right)=\left(\begin{matrix}'+latex(res['E_pt'])+r' & '+latex(res['F_pt'])+r' \\ '+latex(res['F_pt'])+r' & '+latex(res['G_pt'])+r'\end{matrix}\right)'
         }
     ]
 
@@ -100,7 +100,7 @@ def EscribeSFF_pt(res):
         {
             'descripcion' : r'Cálculo de la segunda forma fundamental: aplicando las fórmulas de cada una de sus componenetes, la segunda forma fundamental en el punto $\varphi('+latex(res['u0'])+','+latex(res['v0'])+')$ es',
             'paso' : '(' + str(res['e_pt']) + ', ' + str(res['f_pt']) + ', ' + str(res['g_pt']) + ')',
-            'pasoLatex' : r'\left[II\right]=\left(\begin{matrix}'+latex(res['e_pt'])+r' & '+latex(res['f_pt'])+r' \\ '+latex(res['f_pt'])+r' & '+latex(res['g_pt'])+r'\end{matrix}\right)'
+            'pasoLatex' : r'\left[II\right]=\left(\begin{matrix} \vec{n}\cdot \vec{\varphi}_{uu} & \vec{n}\cdot \vec{\varphi}_{uv} \\ \vec{n}\cdot \vec{\varphi}_{uv} & \vec{n}\cdot \vec{\varphi}_{vv} \end{matrix}\right)=\left(\begin{matrix}'+latex(res['e_pt'])+r' & '+latex(res['f_pt'])+r' \\ '+latex(res['f_pt'])+r' & '+latex(res['g_pt'])+r'\end{matrix}\right)'
         }
     ]
 
@@ -109,7 +109,7 @@ def EscribeCurvGauss_pt(res):
         {
             'descripcion' : r'Cálculo de la curvatura de Gauss: aplicando su fórmula, la curvatura de Gauss en el punto $\varphi('+latex(res['u0'])+','+latex(res['v0'])+')$ es',
             'paso' : str(res['K_pt']),
-            'pasoLatex' : r'K='+ latex(res['K_pt'])
+            'pasoLatex' : r'K=\frac{eg-f^2}{EG-F^2}='+ latex(res['K_pt'])
         }
     ]
 
@@ -118,7 +118,7 @@ def EscribeCurvMedia_pt(res):
         {
             'descripcion' : r'Cálculo de la curvatura media: aplicando su fórmula, la curvatura media en el punto $\varphi('+latex(res['u0'])+','+latex(res['v0'])+')$ es',
             'paso' : str(res['H_pt']),
-            'pasoLatex' : r'H='+ latex(res['H_pt'])
+            'pasoLatex' : r'H=\frac{eG+gE-2fF}{2(EG-F^2)}='+ latex(res['H_pt'])
         }
     ]
 
@@ -127,7 +127,7 @@ def EscribeCurvsPrincipales_pt(res):
         {
             'descripcion' : r'Cálculo de las curvaturas principales: aplicando su fórmula, las curvaturas principales en el punto $\varphi('+latex(res['u0'])+','+latex(res['v0'])+')$ son',
             'paso' : '(' + str(res['k1_pt']) + ', ' + str(res['k2_pt']) + ')',
-            'pasoLatex' : r'(\kappa_1, \kappa_2)=\left(\begin{matrix}'+latex(res['k1_pt'])+r' , & '+latex(res['k2_pt'])+r'\end{matrix}\right)'
+            'pasoLatex' : r'\kappa_1, \kappa_2=H \pm \sqrt{H^2-K}='+latex(res['k1_pt'])+r', '+latex(res['k2_pt'])
         }
     ]
 
@@ -136,7 +136,7 @@ def EscribeWeingarten_pt(res):
         {
             'descripcion' : r'Cálculo de la matriz de Weingarten: aplicando su fórmula, la matriz de Weingarten en el punto $\varphi('+latex(res['u0'])+','+latex(res['v0'])+')$ es',
             'paso' : str(res['W_pt']),
-            'pasoLatex' : r'\left[W\right]='+ latex(res['W_pt'], mat_delim='(')
+            'pasoLatex' : r'\left[W\right]=\frac{1}{EG-F^2}\left(\begin{matrix}eG-fF & fG-gF \\ fG-gF & gE-fF\end{matrix}\right)='+ latex(res['W_pt'], mat_delim='(')
         }
     ]
 
@@ -145,7 +145,7 @@ def EscribeDirsPrincipales_pt(res):
         {
             'descripcion' : r'Cálculo de  autovalores: calculando los autovalores de la matriz de Weingarten, se tiene que las direcciones principales en el punto $\varphi('+latex(res['u0'])+r','+latex(res['v0'])+r')$ son',
             'paso' : '(' + str(res['k1_pt']) + ', ' + str(res['k2_pt']) + ')',
-            'pasoLatex' : r'(\kappa_1, \kappa_2)=\left(\begin{matrix}'+latex(res['k1_pt'])+r' , & '+latex(res['k2_pt'])+r'\end{matrix}\right)'
+            'pasoLatex' : r'\kappa_1, \kappa_2='+latex(res['k1_pt'])+r', '+latex(res['k2_pt'])
         },{
             'descripcion' : r'Cálculo del primer autovector: usando el primer autovector, se tiene que el espacio propio asociado a $\kappa_1$ en el punto $\varphi('+latex(res['u0'])+r','+latex(res['v0'])+r')$ es',
             'paso' : str(res['coord_d1_pt']),

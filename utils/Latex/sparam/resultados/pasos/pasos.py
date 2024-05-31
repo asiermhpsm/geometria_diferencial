@@ -63,14 +63,14 @@ def EscribeVectNormal(res):
         {
             'descripcion' : r'Aplicación de la fórmula del vector normal: aplicando su fórmula, el vector normal es',
             'paso' : str(res['normal']),
-            'pasoLatex' : r'\Vec{n}='+ latex(res['normal'], mat_delim='(')
+            'pasoLatex' : r'\vec{n}=\frac{\vec{\varphi}_u \times \vec{\varphi}_v}{\|\vec{\varphi}_u \times \vec{\varphi}_v\|}='+ latex(res['normal'], mat_delim='(')
         }
     ]
 
 def EscribePlanoTang(res):
     return [
         {
-            'descripcion' : r'Cálculo del plano tangente: Aplicando su fórmula, el plano afín tangente es',
+            'descripcion' : r'Cálculo del plano tangente: Aplicando su fórmula $(\vec{\varphi}_u(p) \times \vec{\varphi}_v(p)) \cdot ((x, y, z)-\varphi(p)) = 0$, el plano tangente es',
             'paso' : str(res['tangente']),
             'pasoLatex' : latex(res['tangente'])
         }
@@ -79,18 +79,18 @@ def EscribePlanoTang(res):
 def EscribePFF(res):
     return [
         {
-            'descripcion' : r'Cálculo de la primera forma fundamental: aplicando las fórmulas de cada una de sus componenetes, la primera forma fundamental es',
+            'descripcion' : r'Cálculo de la primera forma fundamental: aplicando las fórmulas de cada una de sus componentes, la primera forma fundamental es',
             'paso' : '(' + str(res['E']) + ', ' + str(res['F']) + ', ' + str(res['G']) + ')',
-            'pasoLatex' : r'\left[I\right]=\left(\begin{matrix}'+latex(res['E'])+r' & '+latex(res['F'])+r' \\ '+latex(res['F'])+r' & '+latex(res['G'])+r'\end{matrix}\right)'
+            'pasoLatex' : r'\left[I\right]=\left(\begin{matrix} \vec{\varphi}_u \cdot \vec{\varphi}_u & \vec{\varphi}_u \cdot \vec{\varphi}_v \\ \vec{\varphi}_u \cdot \vec{\varphi}_v & \vec{\varphi}_v \cdot \vec{\varphi}_v \end{matrix}\right)=\left(\begin{matrix}'+latex(res['E'])+r' & '+latex(res['F'])+r' \\ '+latex(res['F'])+r' & '+latex(res['G'])+r'\end{matrix}\right)'
         }
     ]
 
 def EscribeSFF(res):
     return [
         {
-            'descripcion' : r'Cálculo de la segunda forma fundamental: aplicando las fórmulas de cada una de sus componenetes, la segunda forma fundamental es',
+            'descripcion' : r'Cálculo de la segunda forma fundamental: aplicando las fórmulas de cada una de sus componentes, la segunda forma fundamental es',
             'paso' : '(' + str(res['e']) + ', ' + str(res['f']) + ', ' + str(res['g']) + ')',
-            'pasoLatex' : r'\left[II\right]=\left(\begin{matrix}'+latex(res['e'])+r' & '+latex(res['f'])+r' \\ '+latex(res['f'])+r' & '+latex(res['g'])+r'\end{matrix}\right)'
+            'pasoLatex' : r'\left[II\right]=\left(\begin{matrix} \vec{n}\cdot \vec{\varphi}_{uu} & \vec{n}\cdot \vec{\varphi}_{uv} \\ \vec{n}\cdot \vec{\varphi}_{uv} & \vec{n}\cdot \vec{\varphi}_{vv} \end{matrix}\right)=\left(\begin{matrix}'+latex(res['e'])+r' & '+latex(res['f'])+r' \\ '+latex(res['f'])+r' & '+latex(res['g'])+r'\end{matrix}\right)'
         }
     ]
 
@@ -99,7 +99,7 @@ def EscribeCurvGauss(res):
         {
             'descripcion' : r'Cálculo de la curvatura de Gauss: aplicando su fórmula, la curvatura de Gauss es',
             'paso' : str(res['K']),
-            'pasoLatex' : r'K='+latex(res['K'])
+            'pasoLatex' : r'K=\frac{eg-f^2}{EG-F^2}='+latex(res['K'])
         }
     ]
 
@@ -108,7 +108,7 @@ def EscribeCurvMedia(res):
         {
             'descripcion' : r'Cálculo de la curvatura media: aplicando su fórmula, la curvatura media es',
             'paso' : str(res['H']),
-            'pasoLatex' : r'H='+latex(res['H'])
+            'pasoLatex' : r'H=\frac{eG+gE-2fF}{2(EG-F^2)}='+latex(res['H'])
         }
     ]
 
@@ -117,7 +117,7 @@ def EscribeCurvsPrincipales(res):
         {
             'descripcion' : r'Cálculo de las curvaturas principales: aplicando su fórmula, las curvaturas principales son',
             'paso' : '(' + str(res['k1']) + ', ' + str(res['k2']) + ')',
-            'pasoLatex' : r'(\kappa_1, \kappa_2)=\left(\begin{matrix}'+latex(res['k1'])+r' & '+latex(res['k2'])+r'\end{matrix}\right)'
+            'pasoLatex' : r'\kappa_1, \kappa_2=H \pm \sqrt{H^2-K}='+latex(res['k1'])+r', '+latex(res['k2'])
         }
     ]
 
@@ -126,7 +126,7 @@ def EscribeWeingarten(res):
         {
             'descripcion' : r'Cálculo de la matriz de Weingarten: aplicando su fórmula, la matriz de Weingarten es',
             'paso' : str(res['W']),
-            'pasoLatex' : r'\left[W\right]='+latex(res['W'], mat_delim='(')
+            'pasoLatex' : r'\left[W\right]=\frac{1}{EG-F^2}\left(\begin{matrix}eG-fF & fG-gF \\ fG-gF & gE-fF\end{matrix}\right)='+latex(res['W'], mat_delim='(')
         }
     ]
 
@@ -135,7 +135,7 @@ def EscribeDirsPrincipales(res):
         {
             'descripcion' : r'Cálculo de las curvaturas principales: calculando los autovalores de la matriz de Weingarten, las curvaturas principales son',
             'paso' : '(' + str(res['k1']) + ', ' + str(res['k2']) + ')',
-            'pasoLatex' : r'(\kappa_1, \kappa_2)=\left(\begin{matrix}'+latex(res['k1'])+r' & '+latex(res['k2'])+r'\end{matrix}\right)'
+            'pasoLatex' : r'\kappa_1, \kappa_2='+latex(res['k1'])+r', '+latex(res['k2'])
         },{
             'descripcion' : r'Cálculo del primer autovector: usando el primer autovector, se tiene que el espacio propio asociado a $\kappa_1$ es',
             'paso' : str(res['coord_d1']),
@@ -180,51 +180,3 @@ def EscribePuntosUmbilicos(res):
         }
     ]
 
-
-
-
-"""import sympy as sp
-u, v, = sp.symbols('u v', real=True)
-x, y, z = sp.symbols('x y z', real=True)
-resultado = {
-  "E": 4*u**2 + 1,
-  "F": 4*u*v,
-  "G": 4*v**2 + 1,
-  "H": 2*(2*u**2 + 2*v**2 + 1)/(4*u**2 + 4*v**2 + 1)**(3/2),
-  "K": 4/(16*u**4 + 32*u**2*v**2 + 8*u**2 + 16*v**4 + 8*v**2 + 1),
-  "W": sp.Matrix([[2*(4*v**2 + 1)/(4*u**2 + 4*v**2 + 1)**(3/2), -8*u*v/(4*u**2 + 4*v**2 + 1)**(3/2)], [-8*u*v/(4*u**2 + 4*v**2 + 1)**(3/2), 2*(4*u**2 + 1)/(4*u**2 + 4*v**2 + 1)**(3/2)]]),
-  "coord_d1": sp.Matrix([[2*u*v*(4*u**2 + 4*v**2 + 1)/(-4*u**4 - u**2 + 4*v**4 + v**2 + sp.sqrt(16*u**8 + 64*u**6*v**2 + 8*u**6 + 96*u**4*v**4 + 24*u**4*v**2 + u**4 + 64*u**2*v**6 + 24*u**2*v**4 + 2*u**2*v**2 + 16*v**8 + 8*v**6 + v**4))], [1]]),
-  "coord_d2": sp.Matrix([[2*u*v*(-4*u**2 - 4*v**2 - 1)/(4*u**4 + u**2 - 4*v**4 - v**2 + sp.sqrt(16*u**8 + 64*u**6*v**2 + 8*u**6 + 96*u**4*v**4 + 24*u**4*v**2 + u**4 + 64*u**2*v**6 + 24*u**2*v**4 + 2*u**2*v**2 + 16*v**8 + 8*v**6 + v**4))], [1]]),
-  "d1": sp.Matrix([[2*u*v*(4*u**2 + 4*v**2 + 1)/(-4*u**4 - u**2 + 4*v**4 + v**2 + sp.sqrt(16*u**8 + 64*u**6*v**2 + 8*u**6 + 96*u**4*v**4 + 24*u**4*v**2 + u**4 + 64*u**2*v**6 + 24*u**2*v**4 + 2*u**2*v**2 + 16*v**8 + 8*v**6 + v**4)), 1, 4*u**2*v*(4*u**2 + 4*v**2 + 1)/(-4*u**4 - u**2 + 4*v**4 + v**2 + sp.sqrt(16*u**8 + 64*u**6*v**2 + 8*u**6 + 96*u**4*v**4 + 24*u**4*v**2 + u**4 + 64*u**2*v**6 + 24*u**2*v**4 + 2*u**2*v**2 + 16*v**8 + 8*v**6 + v**4)) + 2*v]]),
-  "d2": sp.Matrix([[-2*u*v*(4*u**2 + 4*v**2 + 1)/(4*u**4 + u**2 - 4*v**4 - v**2 + sp.sqrt(16*u**8 + 64*u**6*v**2 + 8*u**6 + 96*u**4*v**4 + 24*u**4*v**2 + u**4 + 64*u**2*v**6 + 24*u**2*v**4 + 2*u**2*v**2 + 16*v**8 + 8*v**6 + v**4)), 1, -4*u**2*v*(4*u**2 + 4*v**2 + 1)/(4*u**4 + u**2 - 4*v**4 - v**2 + sp.sqrt(16*u**8 + 64*u**6*v**2 + 8*u**6 + 96*u**4*v**4 + 24*u**4*v**2 + u**4 + 64*u**2*v**6 + 24*u**2*v**4 + 2*u**2*v**2 + 16*v**8 + 8*v**6 + v**4)) + 2*v]]),
-  "dom_u": sp.Interval.open(-2, 2),
-  "dom_v": sp.Interval.open(-2, 2),
-  "du": sp.Matrix([[1, 0, 2*u]]),
-  "duXdv": sp.Matrix([[-2*u, -2*v, 1]]),
-  "duu": sp.Matrix([[0, 0, 2]]),
-  "duv": sp.Matrix([[0, 0, 0]]),
-  "dv": sp.Matrix([[0, 1, 2*v]]),
-  "dvv": sp.Matrix([[0, 0, 2]]),
-  "e": 2/sp.sqrt(4*u**2 + 4*v**2 + 1),
-  "f": 0,
-  "g": 2/sp.sqrt(4*u**2 + 4*v**2 + 1),
-  "k1": sp.sqrt(4*(2*u**2 + 2*v**2 + 1)**2/(4*u**2 + 4*v**2 + 1)**3 - 4/(16*u**4 + 32*u**2*v**2 + 8*u**2 + 16*v**4 + 8*v**2 + 1)) + 2*(2*u**2 + 2*v**2 + 1)/(4*u**2 + 4*v**2 + 1)**(3/2),
-  "k2": -sp.sqrt(4*(2*u**2 + 2*v**2 + 1)**2/(4*u**2 + 4*v**2 + 1)**3 - 4/(16*u**4 + 32*u**2*v**2 + 8*u**2 + 16*v**4 + 8*v**2 + 1)) + 2*(2*u**2 + 2*v**2 + 1)/(4*u**2 + 4*v**2 + 1)**(3/2),
-  "norma": sp.sqrt(4*u**2 + 4*v**2 + 1),
-  "normal": sp.Matrix([[-2*u/sp.sqrt(4*u**2 + 4*v**2 + 1), -2*v/sp.sqrt(4*u**2 + 4*v**2 + 1), 1/sp.sqrt(4*u**2 + 4*v**2 + 1)]]),
-  "sup": sp.Matrix([[u, v, u**2 + v**2]]),
-  "tangente": sp.Eq(u**2 + v**2, 2*u*x + 2*v*y - z),
-  "u": u,
-  "umbilico": {(0, v)},
-  "v": v
-}
-
-
-funcs = [EscribeDerivadasPrimerOrden, EscribeDerivadasSegundoOrden, EscribeProdVect, EscribeSupRegular, EscribeNormProdVect, EscribeSupRegular, EscribeVectNormal, EscribePlanoTang, EscribePFF, EscribeSFF, EscribeCurvGauss, EscribeCurvMedia, EscribeCurvsPrincipales, EscribeWeingarten, EscribeDirsPrincipales, EscribePuntosUmbilicos]
-for f in funcs:
-    print(r'\section{Resultados de ' + f.__name__ + r'}')
-    res = f(resultado)
-    for r in res:
-        print(r['descripcion'])
-        print('$$'+r['pasoLatex']+'$$')
-    print(r'\newpage')"""
