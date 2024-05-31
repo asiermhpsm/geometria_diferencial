@@ -171,6 +171,3 @@ $$\kappa_1 = \kappa_2$$''',
 \end{enumerate}'''
 ]
 
-
-for paso, i in enumerate(ALG_ANALISIS_COMPLETO):
-    print(f'Paso {paso+1}: {i}')
