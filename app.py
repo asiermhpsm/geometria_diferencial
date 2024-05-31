@@ -2402,4 +2402,4 @@ app.register_blueprint(param_surf_bp, url_prefix='/param_surf')
 app.register_blueprint(imp_surf_bp, url_prefix='/imp_surf')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
