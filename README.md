@@ -2,6 +2,8 @@
 
 ## Instalación
 
+Utilizar una versión de Python 3.11. Otras versiones pueden llegar a dar problemas con la librería Flassger, como es el caso de las versiones 3.12.
+
 Crear un entorno vitual para instalar las dependencias del proyecto.
 
 Consultar versión de entorno virtual: 
