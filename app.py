@@ -174,6 +174,8 @@ def procesar_solicitud_param(func: callable, func_pt_uv: callable, dict2latex: c
     u0 = obtiene_valor_pt(request.args.get('u0', None))
     v0 = obtiene_valor_pt(request.args.get('v0', None))
     if u0!=None and v0!=None :
+        if not dom_u.contains(u0) or not dom_v.contains(v0):
+            return respuesta_error("El punto no pertenece al dominio de la superficie")
         resultados['u0'] = u0
         resultados['v0'] = v0
         func_pt_uv(resultados)
@@ -1855,6 +1857,8 @@ def grafica():
         u0 = obtiene_valor_pt(request.args.get('u0', None))
         v0 = obtiene_valor_pt(request.args.get('v0', None))
         if u0!=None and v0!=None :
+            if not dom_u.contains(u0) or not dom_v.contains(v0):
+              return respuesta_error("El punto no pertenece al dominio de la superficie")
             tangente = request.args.get('tangente', None)!=None
             normal = request.args.get('normal', None)!=None
             dirs_principales = request.args.get('dirs_principales', None)!=None
@@ -1920,6 +1924,8 @@ def procesar_solicitud_imp(func: callable, func_pt: callable, dict2latex: callab
     y0 = obtiene_valor_pt(request.args.get('y0', None))
     z0 = obtiene_valor_pt(request.args.get('z0', None))
     if x0!=None and y0!=None and z0!=None:
+        if superficie.subs({x:x0, y:y0, z:z0}) > 0.1:
+              return respuesta_error("El punto no pertenece al dominio de la superficie")
         resultados['x0'] = x0
         resultados['y0'] = y0
         resultados['z0'] = z0
@@ -2385,6 +2391,8 @@ def grafica():
         y0 = obtiene_valor_pt(request.args.get('y0', None))
         z0 = obtiene_valor_pt(request.args.get('z0', None))
         if x0!=None and y0!=None and z0!=None:
+            if superficie.subs({x:x0, y:y0, z:z0}) > 0.1:
+              return respuesta_error("El punto no pertenece al dominio de la superficie")
             tangente = request.args.get('tangente', None)!=None
             normal = request.args.get('normal', None)!=None
             fig = graph.imp_desc_pt(superficie, x, y, z, 
@@ -2400,8 +2408,13 @@ def grafica():
 
 
 
+
+
+
+
+
 app.register_blueprint(param_surf_bp, url_prefix='/param_surf')
 app.register_blueprint(imp_surf_bp, url_prefix='/imp_surf')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()

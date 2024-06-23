@@ -233,11 +233,11 @@ def param_desc_pt_uv(sup, u, v, u0, v0, dom_u=sp.Interval(-5,5), dom_v=sp.Interv
     }
     resultados = calcp.descripccion_pt_uv(resultados)
 
+    punto = sup.subs({u:u0, v:v0})
     if tangente or normal or dirs_principales or curvs_principales or dirs_asintoticas:
         fig.data[0].update(opacity=0.7)
-    
-    punto = sup.subs({u:u0, v:v0})
-    fig = point(punto, fig=fig, titulo=r'$\varphi('+sp.latex(u0)+r','+sp.latex(v0)+r')='+sp.latex(punto, mat_delim='(')+r'$' if leyenda else "")
+        fig = point(punto, fig=fig, titulo=r'$\varphi('+sp.latex(u0)+r','+sp.latex(v0)+r')='+sp.latex(punto, mat_delim='(')+r'$' if leyenda else "")
+        
     
     if tangente:
         plano = sp.Matrix([u*resultados['d1_pt'].normalized() + v*resultados['d2_pt'].normalized() + punto])
@@ -409,11 +409,10 @@ def imp_desc_pt(f, x, y, z, x0, y0, z0,
     """
     fig = sup_imp(f, x, y, z, dom_x=dom_x, dom_y=dom_y, dom_z=dom_z, titulo=r'$'+sp.latex(f)+r'=0$' if leyenda else "", leyenda=leyenda)
 
+    punto = (x0, y0, z0)
     if tangente or normal:
         fig.data[0].update(opacity=0.6)
-
-    punto = (x0, y0, z0)
-    fig = point(punto, fig=fig, titulo='Punto' if leyenda else "")
+        fig = point(punto, fig=fig, titulo='Punto' if leyenda else "")
 
     resultados = {
         'sup' : f,
