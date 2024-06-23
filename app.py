@@ -1762,6 +1762,15 @@ def grafica():
             type: string
             example: "True"
 
+          - name: leyenda
+          in: query
+          required: false
+          description: Flag que indica si se desea mostrar la leyenda. Para activarla basta con poner cualquier valor.
+          default: ""
+          schema:
+            type: string
+            example: "True"
+
     responses:
         200:
             description: Si se proporcionan los datos necesarios para los cálculos, se devuelve un código HTML con la representación deseada.
@@ -1855,9 +1864,13 @@ def grafica():
                                          tangente=tangente, normal=normal, dirs_principales=dirs_principales, 
                                          curvs_principales=curvs_principales, dirs_asintoticas=dirs_asintoticas)
         elif a!=None and b!=None:
-            fig = graph.sup_param_cond_elipse(sup, u, v, a, b, titulo=r'$\vec{\varphi}='+sp.latex(sup, mat_delim='(')+r'$')
+            fig = graph.sup_param_cond_elipse(sup, u, v, a, b, 
+                                              titulo=r'$\vec{\varphi}='+sp.latex(sup, mat_delim='(')+r'$', 
+                                              leyenda=request.args.get('leyenda', None)!=None)
         else:
-            fig = graph.sup_param(sup, u, v, dom_u=dom_u, dom_v=dom_v, titulo=r'$\vec{\varphi}='+sp.latex(sup, mat_delim='(')+r'$')
+            fig = graph.sup_param(sup, u, v, dom_u=dom_u, dom_v=dom_v, 
+                                  titulo=r'$\vec{\varphi}='+sp.latex(sup, mat_delim='(')+r'$',
+                                  leyenda=request.args.get('leyenda', None)!=None)
         return fig.to_html(include_mathjax="cdn")
     
 
@@ -2312,6 +2325,15 @@ def grafica():
             type: string
             example: "True"
 
+        - name: leyenda
+          in: query
+          required: false
+          description: Flag que indica si se desea mostrar la leyenda. Para activarla basta con poner cualquier valor.
+          default: ""
+          schema:
+            type: string
+            example: "True"
+
     responses:
         200:
             description: Si se proporcionan los datos necesarios para los cálculos, se devuelve un código HTML con la representación deseada.
@@ -2365,9 +2387,12 @@ def grafica():
         if x0!=None and y0!=None and z0!=None:
             tangente = request.args.get('tangente', None)!=None
             normal = request.args.get('normal', None)!=None
-            fig = graph.imp_desc_pt(superficie, x, y, z, x0, y0, z0,dom_x=dom_x, dom_y=dom_y, dom_z=dom_z, tangente=tangente, normal=normal)
+            fig = graph.imp_desc_pt(superficie, x, y, z, 
+                                    x0, y0, z0,dom_x=dom_x, dom_y=dom_y, dom_z=dom_z, 
+                                    tangente=tangente, normal=normal, leyenda=request.args.get('leyenda', None)!=None)
         else:
-            fig = graph.sup_imp(superficie, x, y, z,dom_x=dom_x, dom_y=dom_y, dom_z=dom_z,titulo=r'$'+sp.latex(superficie)+r'=0$')
+            fig = graph.sup_imp(superficie, x, y, z,dom_x=dom_x, dom_y=dom_y, dom_z=dom_z,
+                                titulo=r'$'+sp.latex(superficie)+r'=0$', leyenda=request.args.get('leyenda', None)!=None)
         return fig.to_html(include_mathjax="cdn")
 
 

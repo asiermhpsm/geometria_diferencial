@@ -10,9 +10,9 @@ TH_GRAFICAR = {
 TH_VEC_NORMAL = {
     'titulo' : r'Vector normal a una superficie parametrizada',
     'descripcion' : r'''El vector normal a una superficie en el punto $p$ es el vector ortogonal a la superficie en ese punto.''',
-    'algoritmo': r'''Sea $(U, \varphi)$ una superficie regular y $p=(u_0, v_0)\in U$. Se llama \textbf{vector unitario normal} a la superficie en $p$ al vector:
+    'algoritmo': r'''Sea $(U, \varphi)$ una superficie regular y $p=(u_0, v_0)\in U$. Se llama vector unitario normal a la superficie en $p$ al vector:
 $$'''+FORMULA_VECTOR_NORMAL+r'''$$
-La recto que pasa por $\varphi(p)$ con la dirección del vector unitario normal se denomina \textbf{recta normal} a la superficie en el punto $p$.'''
+La recto que pasa por $\varphi(p)$ con la dirección del vector unitario normal se denomina recta normal a la superficie en el punto $p$.'''
 }
 
 TH_PLANO_TANG = {
