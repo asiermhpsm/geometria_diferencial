@@ -319,7 +319,6 @@ def param_desc_pt_uv(sup, u, v, u0, v0, dom_u=sp.Interval(-5,5), dom_v=sp.Interv
             scene=dict(aspectmode='data'),
             showlegend=False
             )
-    
     return fig
 
 

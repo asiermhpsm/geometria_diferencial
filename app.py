@@ -1878,6 +1878,21 @@ def grafica():
         return fig.to_html(include_mathjax="cdn")
     
 
+@param_surf_bp.route('/formas_fundamentales')
+def formas_fundamentales():
+    return jsonify(txparamth.TH_FORMAS_FUNDAMENTALES)
+
+@param_surf_bp.route('/curvaturas')
+def curvaturas():
+    return jsonify(txparamth.TH_CURVATURAS)
+
+@param_surf_bp.route('/curvs_dirs_principales')
+def curvs_dirs_principales():
+    return jsonify(txparamth.TH_CURV_DIRS_PRINCIPALES)
+
+@param_surf_bp.route('/clasificacion_punto_completo')
+def clasificacion_punto_completo():
+    return jsonify(txparamth.TH_CLASIFICACION_PTOS_COMPLETO)
 
 """
 -------------------------------------------------------------------------------

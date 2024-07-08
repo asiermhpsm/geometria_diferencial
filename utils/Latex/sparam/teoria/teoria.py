@@ -98,7 +98,7 @@ TH_DIRS_PRINCIPALES = {
 TH_WEINGARTEN = {
     'titulo' : r'Aplicación de Weingarten de una superficie parametrizada',
     'descripcion' : r'''La aplicación de Weingarten es una herramienta que permite estudiar el comportamiento de las superficies además de definir y calcular otros elementos de la superficie.''',
-    'algoritmo': r'''Sea $(U, \varphi)$ una superficie orientada. Se llama aplicación de Weingarten de $(U, \varphi)$ en $p \in U$ el endomorfismo W_p : T_p\varphi \longrightarrow T_p\varphi que verifica
+    'algoritmo': r'''Sea $(U, \varphi)$ una superficie orientada. Se llama aplicación de Weingarten de $(U, \varphi)$ en $p \in U$ el endomorfismo $W_p : T_p\varphi \longrightarrow T_p\varphi$ que verifica
 $$ \left\{W_p(\vec{\varphi}_u) = -\vec{n}_u \atop W_p(\vec{\varphi}_v) = -\vec{n}_v\right.$$
 La matriz del endomorfismo de Weingarten $W_p$ en la base asociada del plano tangente $B_{T_p\varphi} = \{\vec{\varphi}_u, \vec{\varphi}_v\}$, llamada matriz de Weingarten, es
 $$\left[W_p\right] = \left[I_p\right]^{-1}\left[II_p\right]=\frac{1}{EG-F^2}\left(\begin{matrix}eG-fF & fG-gF \\ fG-gF & gE-fF\end{matrix}\right)$$'''
@@ -148,7 +148,62 @@ TH_ANALISIS = {
 
 
 
+TH_FORMAS_FUNDAMENTALES = {
+    'titulo' : r'Formas fundamentales de una superficie parametrizada',
+    'descripcion' : r'''Las fomas fundamentales son herramientas muy útiles para estudiar el comportamiento de una superficie y sirven para calcular de manera sencilla otras características de la superficie.''',
+    'algoritmo': r'''La expresión matricial de la Primera Forma Fundametal es
+    $$''' + FORMULA_PFF + r'''$$
+    donde
+    $$''' + FORMULA_COMP_PFF + r'''$$
 
+    La expresión matricial de la Segunda Forma Fundametal es
+    $$''' + FORMULA_SFF + r'''$$
+    donde
+    $$''' + FORMULA_COMP_SFF + r'''$$
+    '''
+}
 
+TH_CURVATURAS = {
+    'titulo' : r'Curvaturas de una superficie parametrizada',
+    'descripcion' : r'''Las curvaturas media y de Gauss permiten conocer el comportamiento local de una superficie: la curvatura de Gauss mide un promedio de cómo son las curvaturas en todas las direcciones del punto y la curvatura media mide el promedio de las curvaturas principales del punto.''',
+    'algoritmo': r'''La curvatura de Gauss de una superficie en un punto $p$ es el determinante de la matriz de Weingarten en dicho punto
+    $$K(p)=\text{det}(\left[W_p\right])=\frac{eg-f^2}{EG-F^2}$$
+
+    La curvatura media de una superficie en un punto $p$ es la traza de la matriz de Weingarten en dicho punto
+    $$H(p)=\frac{1}{2}\text{traza}(\left[W_p\right])=\frac{eG+gE-2fF}{2(EG-F^2)}$$
+    '''
+}
+
+TH_CURV_DIRS_PRINCIPALES = {
+    'titulo' : r'Curvaturas y direccioens principales de una superficie parametrizada',
+    'descripcion' : r'''Las curvaturas principales son las los valores máximo y mínimo que toman las curvaturas normales en un punto y toman esos valores en las direcciones principales.''',
+    'algoritmo': r'''Las curvaturas principales son los autovectores de la matriz de Weingarten. También se pueden calcular mediante las siguientes fórmulas:
+    $$'''+FORMULA_CURVS_PRINCIPALES+r'''$$
+    Las direcciones principales son los autovectores de la matriz de Weingarten.
+    '''
+}
+
+TH_CLASIFICACION_PTOS_COMPLETO = {
+    'titulo' : r'Clasificación de un punto de una superficie parametrizada',
+    'descripcion' : r'''Un punto de una superficie se puede clasificar según el comportamiento de la superficie a su alrededor, se puede calcular sus direcciones asintóticas (si existen) y se puede comprobar si es umbílico.''',
+    'algoritmo': r'''Un punto de una superficie se puede clasificar en cuatro tipos:
+    1.Si $\kappa_1\kappa_2>0$ se dice que $p$ es un punto elíptico.
+    2.Si $\kappa_1\kappa_2<0$ se dice que $p$ es un punto hiperbólico.
+    3.Si $\kappa_1\kappa_2=0$ y $\kappa_1 \neq \kappa_2$ se dice que $p$ es un punto parabólico.
+    4.Si $\kappa_1=\kappa_2=0$ se dice que $p$ es un punto planar.
+
+    Un punto es umbílico si cumple que $\kappa_1(p)=\kappa_2(p)$.
+
+    Las direcciones asintóticas son aquellas direcciones en las que las curvaturas normales de la superficie en el punto $p$ son nulas. Equivalentemente se puede comprobar de forma secuencial las siguientes condiciones:
+    1.Si $e = f = g = 0$, entonces el punto el planar y todas las direcciones son asintótica
+    2.Si $e = 0, g \neq 0$, entonces las coordenadas de las direcciones con respeto a a base $\{\varphi_u, \varphi_v\}$ son 
+    $$\{(1, 0),(-g, 2f)\}$$
+    3.Si $e \neq 0, g = 0$, entonces las coordenadas de las direcciones con respeto a a base $\{\varphi_u, \varphi_v\}$ son 
+    $$\{(0, 1),(-2f, e)\}$$
+    4.Si $f^2 - ge < 0$, entonces estamos ante un punto elíptico y por lo tanto no hay direcciones asintóticas
+    5.En el resto de casos, las coordenadas de las direcciones con respeto a la base $\{\varphi_u, \varphi_v\}$ son 
+    $$\{(g, -f + \sqrt{f^2 - ge}), (g, -f - \sqrt{f^2 - ge})\}$$
+    '''
+}
 
 
